@@ -1,6 +1,33 @@
+<style>
+    .block {
+        display: inline-block;
+    }
+</style>
 
-<canvas id="original" width="300" height="227"></canvas>
-<canvas id="generate" width="300" height="227"></canvas>
+<div class="block">
+    <canvas id="original"></canvas>
+    <legend>Original</legend>
+</div>
+
+<div class="block">
+    <canvas id="test-hsv"></canvas>
+    <legend>Test HSV</legend>
+</div>
+
+<div class="block">
+    <canvas id="only-hue"></canvas>
+    <legend>Only Hue</legend>
+</div>
+
+<div class="block">
+    <canvas id="only-hue-saturation"></canvas>
+    <legend>Only Hue + Saturation</legend>
+</div>
+
+<div class="block">
+    <canvas id="only-hue-value"></canvas>
+    <legend>Only Hue + Value</legend>
+</div>
 
 <script type="text/javascript" src="script.js"></script>
 
