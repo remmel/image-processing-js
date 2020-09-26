@@ -3,6 +3,25 @@ img.src = 'rhino.jpg';
 var canvasOriginal = document.getElementById('original');
 var ctxOriginal = canvasOriginal.getContext('2d');
 
+ImageData.prototype.setRgba = function (x, y, rgba) {
+    var index = 4 * (x + y * this.width);
+    this.data[index + 0] = rgba.r;
+    this.data[index + 1] = rgba.g;
+    this.data[index + 2] = rgba.b;
+    this.data[index + 3] = rgba.a;
+};
+
+ImageData.prototype.getRgba = function (x, y) {
+    var index = 4 * (x + y * this.width);
+
+    return {
+        r: this.data[index + 0],
+        g: this.data[index + 1],
+        b: this.data[index + 2],
+        a: this.data[index + 3],
+    }
+};
+
 
 function fnCopy(rgba) {
     var r = rgba.r, g = rgba.g, b = rgba.b, a = rgba.a;
@@ -31,25 +50,17 @@ function generateImage(fn) {
     var w = canvasGenerate.width;
     var h = canvasGenerate.height;
     ctxGenerate.clearRect(0, 0, w, h);
-    var id = ctxGenerate.getImageData(0, 0, w, h);
-    var pixels = id.data;
-
+    var imgData2 = ctxGenerate.getImageData(0, 0, w, h);
+    var imgDataOriginal = ctxOriginal.getImageData(0, 0, w, h);
 
     for (var x = 0; x < w; x++) {
         for (var y = 0; y < h; y++) {
-            var imgDataOriginal = ctxOriginal.getImageData(x, y, 1, 1);
-            var d = imgDataOriginal.data;
-            var rgba = {r: d[0], g: d[1], b: d[2], a: d[3]};
+            var rgba = imgDataOriginal.getRgba(x,y);
             var rgba2 = fn(rgba);
-
-            var off = (y * id.width + x) * 4;
-            pixels[off] = rgba2.r;
-            pixels[off + 1] = rgba2.g;
-            pixels[off + 2] = rgba2.b;
-            pixels[off + 3] = rgba2.a;
+            imgData2.setRgba(x,y,rgba2);
         }
     }
-    ctxGenerate.putImageData(id, 0, 0);
+    ctxGenerate.putImageData(imgData2, 0, 0);
 }
 
 img.onload = function () {
