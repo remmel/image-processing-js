@@ -4,18 +4,6 @@ var canvasOriginal = document.getElementById('original');
 var ctxOriginal = canvasOriginal.getContext('2d');
 
 
-var color = document.getElementById('color');
-canvasOriginal.addEventListener('mousemove', function (event) {
-    var x = event.layerX;
-    var y = event.layerY;
-    var pixel = ctxOriginal.getImageData(x, y, 1, 1);
-    var data = pixel.data;
-    var rgba = 'rgba(' + data[0] + ', ' + data[1] + ', ' + data[2] + ', ' + (data[3] / 255) + ')';
-    color.style.background = rgba;
-    color.textContent = rgba;
-});
-
-
 function fnCopy(rgba) {
     var r = rgba.r, g = rgba.g, b = rgba.b, a = rgba.a;
     return {r: r, g: g, b: b, a: a}
