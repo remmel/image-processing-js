@@ -4,19 +4,35 @@ img.src = 'HSV_color_solid_cylinder.png';
 var canvasOriginal = document.getElementById('original');
 var ctxOriginal = canvasOriginal.getContext('2d');
 
+var zoom = document.getElementById('zoom');
+Object.values(document.getElementsByTagName('canvas')).forEach(function(item) {
+    item.addEventListener('mousemove', function (event) {
+        var x = event.layerX;
+        var y = event.layerY;
+        var ctx = this.getContext('2d');
+        var pixel = ctx.getImageData(x, y, 1, 1);
+        var data = pixel.data;
+        var rgba = 'rgba(' + data[0] + ', ' + data[1] + ', ' + data[2] + ', ' + (data[3] / 255) + ')';
+        zoom.style.background = rgba;
+        zoom.textContent = rgba;
+    })
+}
+);
 img.onload = function () {
     canvasOriginal.width = img.width;
     canvasOriginal.height = img.height;
     ctxOriginal.drawImage(img, 0, 0);
     img.style.display = 'none';
 
+    generateImage(canvasOriginal, document.getElementById('grayscale-average'), fnGrayscaleAverage);
+    generateImage(canvasOriginal, document.getElementById('grayscale-weighted'), fnGrayscaleWeighted);
     generateImage(canvasOriginal, document.getElementById('test-hsv'), fnHSVTest);
     generateImage(canvasOriginal, document.getElementById('only-hue'), fnHSVKeepHue);
     generateImage(canvasOriginal, document.getElementById('only-hue-saturation'), fnHSVKeepHueSaturation);
     generateImage(canvasOriginal, document.getElementById('only-hue-value'), fnHSVKeepHueValue);
 };
 
-//todo handle alpha + loop to get pixel color + understand why center is red instead of white
+//todo handle alpha + understand why center is red instead of white
 
 ImageData.prototype.setRgba = function (x, y, rgba) {
     var index = 4 * (x + y * this.width);
@@ -81,6 +97,15 @@ function fnHSVKeepHueValue(rgba) {
     return rgba2;
 }
 
+function fnGrayscaleWeighted(rgba) {
+    var gray = (rgba.r * 0.3 + rgba.g * 0.59 + rgba.b * 0.11 );
+    return {r:gray, g: gray, b: gray,a: 255};
+}
+
+function fnGrayscaleAverage(rgba) {
+    var gray = (rgba.r + rgba.g + rgba.b) / 3;
+    return {r:gray, g: gray, b: gray,a: 255};
+}
 
 function fnRandom(rgba) {
     var r = Math.floor(Math.random() * 256);
