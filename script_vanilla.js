@@ -225,6 +225,8 @@ function generateImageLaplace(canvasSrc, canvasDst) {
         }
     }
 
+    // todo use imgData with only 1 channel
+
     // 2. Apply filter
     for (var x = 0; x < w; x++) {
         for (var y = 0; y < h; y++) {
