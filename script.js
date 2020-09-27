@@ -1,6 +1,6 @@
 var img = new Image();
-// img.src = 'rhino.jpg';
-img.src = 'HSV_color_solid_cylinder.png';
+img.src = 'rhino.jpg';
+// img.src = 'HSV_color_solid_cylinder.png';
 var canvasOriginal = document.getElementById('original');
 var ctxOriginal = canvasOriginal.getContext('2d');
 
@@ -30,6 +30,7 @@ img.onload = function () {
     generateImage(canvasOriginal, document.getElementById('only-hue'), fnHSVKeepHue);
     generateImage(canvasOriginal, document.getElementById('only-hue-saturation'), fnHSVKeepHueSaturation);
     generateImage(canvasOriginal, document.getElementById('only-hue-value'), fnHSVKeepHueValue);
+    generateImageLaplace(canvasOriginal, document.getElementById('edge-laplace'));
 };
 
 //todo handle alpha + understand why center is red instead of white
@@ -98,7 +99,7 @@ function fnHSVKeepHueValue(rgba) {
 }
 
 function fnGrayscaleWeighted(rgba) {
-    var gray = (rgba.r * 0.3 + rgba.g * 0.59 + rgba.b * 0.11 );
+    var gray = (rgba.r * 0.299 + rgba.g * 0.587 + rgba.b * 0.114 );
     return {r:gray, g: gray, b: gray,a: 255};
 }
 
@@ -113,6 +114,10 @@ function fnRandom(rgba) {
     var b = Math.floor(Math.random() * 256);
     var a = 255;
     return {r,g,b,a};
+}
+
+function fnEdgeLaplace(rgba) {
+
 }
 
 function rgb2hsvl(rgba) { //http://www.easyrgb.com/en/math.php
@@ -180,22 +185,58 @@ function hsl2rgb(hsvl) { //check with https://gist.github.com/mjackson/5311256
 }
 
 
-function generateImage(canvasOriginal, canvasGenerate, fn) {
-    var w = canvasOriginal.width;
-    var h = canvasOriginal.height;
-    canvasGenerate.width = w;
-    canvasGenerate.height = h;
+function generateImage(canvasSrc, canvasDst, fn) {
+    var w = canvasSrc.width;
+    var h = canvasSrc.height;
+    canvasDst.width = w;
+    canvasDst.height = h;
 
     // w = h = 5;
-    var imgData2 = canvasGenerate.getContext('2d').getImageData(0, 0, w, h);
-    var imgDataOriginal = canvasOriginal.getContext('2d').getImageData(0, 0, w, h);
+    var imgDataSrc = canvasSrc.getContext('2d').getImageData(0, 0, w, h);
+    var imgDataDst = canvasDst.getContext('2d').getImageData(0, 0, w, h);
 
     for (var x = 0; x < w; x++) {
         for (var y = 0; y < h; y++) {
-            var rgba = imgDataOriginal.getRgba(x,y);
-            var rgba2 = fn(rgba);
-            imgData2.setRgba(x,y,rgba2);
+            var rgbaSrc = imgDataSrc.getRgba(x,y);
+            var rgbaDst = fn(rgbaSrc);
+            imgDataDst.setRgba(x,y,rgbaDst);
         }
     }
-    canvasGenerate.getContext('2d').putImageData(imgData2, 0, 0);
+    canvasDst.getContext('2d').putImageData(imgDataDst, 0, 0);
+}
+
+function generateImageLaplace(canvasSrc, canvasDst) {
+    var w = canvasSrc.width;
+    var h = canvasSrc.height;
+    canvasDst.width = w;
+    canvasDst.height = h;
+
+    // w = h = 5;
+    var imgDataSrc = canvasSrc.getContext('2d').getImageData(0, 0, w, h);
+    var imgDataGray = canvasSrc.getContext('2d').getImageData(0, 0, w, h);
+    var imgDataDst = canvasDst.getContext('2d').getImageData(0, 0, w, h);
+
+    // 1. Grayscale
+    for (var x = 0; x < w; x++) {
+        for (var y = 0; y < h; y++) {
+            var rgbaSrc = imgDataSrc.getRgba(x,y);
+            var rgbaDst = fnGrayscaleWeighted(rgbaSrc);
+            imgDataGray.setRgba(x,y,rgbaDst);
+        }
+    }
+
+    // 2. Apply filter
+    for (var x = 0; x < w; x++) {
+        for (var y = 0; y < h; y++) {
+            if(x>0 && x<w-1 && y>0 && y<h-1) { //do not go out of array
+                var value =
+                    imgDataGray.getRgba(x-1,y-1).r *-1 + imgDataGray.getRgba(x,y-1).r *-1 + imgDataGray.getRgba(x+1,y-1).r *-1
+                + imgDataGray.getRgba(x-1,y).r *-1 + imgDataGray.getRgba(x,y).r *8 + imgDataGray.getRgba(x+1,y-1).r *-1
+                + imgDataGray.getRgba(x-1,y+1).r *-1 + imgDataGray.getRgba(x,y+1).r *-1 + imgDataGray.getRgba(x+1,y+1).r *-1;
+
+                imgDataDst.setRgba(x,y,{r:value, g:value, b:value, a:255});
+            }
+        }
+    }
+    canvasDst.getContext('2d').putImageData(imgDataDst, 0, 0);
 }
