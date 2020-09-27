@@ -16,8 +16,8 @@ Object.values(document.getElementsByTagName('canvas')).forEach(function(item) {
         zoom.style.background = rgba;
         zoom.textContent = rgba;
     })
-}
-);
+});
+
 img.onload = function () {
     canvasOriginal.width = img.width;
     canvasOriginal.height = img.height;
@@ -152,7 +152,7 @@ function rgb2hsvl(rgba) { //http://www.easyrgb.com/en/math.php
     return {h,s,v,l};
 }
 
-function hsl2rgb(hsvl) {
+function hsl2rgb(hsvl) { //check with https://gist.github.com/mjackson/5311256
     var h = hsvl.h, s = hsvl.s, v = hsvl.v, l = hsvl.l;
 
     var r = v*255, g = v*255, b=v*255, a=255;
