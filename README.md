@@ -11,7 +11,7 @@ or php server:
 
 
 
-`pose-viewer$ ln -s /home/remmel/workspace/photogrammetry/upload.scan3 data`
+`pose-viewer$ ln -s ~/workspace/photogrammetry/dataset dataset`
 
 
 
