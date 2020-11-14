@@ -11,7 +11,8 @@ or php server:
 
 
 
-`pose-viewer$ ln -s ~/workspace/photogrammetry/dataset dataset`
+`pose-viewer$ ln -s ~/workspace/photogrammetry/dataset dataset` (Linux)
+`pose-viewer> mklink dataset "C:\Users\remme\workspace\dataset"` (Windows: cmd as admin)
 
 
 
