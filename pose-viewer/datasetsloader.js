@@ -5,13 +5,19 @@ import {closest} from "./utils.js";
 import {Euler, Matrix4, Quaternion, Vector3} from "./copypaste/three.module.js";
 
 export const DATASET_TYPE = {
+    RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
     LUBOS: 'LUBOS', //https://play.google.com/store/apps/details?id=com.lvonasek.arcore3dscannerpro
     AR3DPLAN: 'AR3DPLAN', //https://github.com/remmel/ar3dplanphoto
-    RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
     ARENGINERECORDER: 'ARENGINERECORDER', //https://github.com/remmel/hms-AREngine-demo
     ALICEVISION_SFM: 'ALICEVISION_SFM', //https://meshroom-manual.readthedocs.io/en/latest/node-reference/nodes/ConvertSfMFormat.html
     AGISOFT: 'AGISOFT', //Agilesoft Metashape format (File > Export > Export Cameras)
 };
+
+var i=1;
+var $select = document.querySelector("select[name=datasetType]");
+for(var key in DATASET_TYPE) {
+    $select.options[i++] = new Option(key, key);
+}
 
 export async function loadPoses(type, folder) {
     var isUrl = folder.startsWith('http://') || folder.startsWith('https://');
@@ -51,9 +57,14 @@ async function loadAr3dplan(url) {
     data.list.forEach(item => {
         if (item.type !== "Photo") return;
 
+        var quaternion = new THREE.Quaternion(item.rotation.x, item.rotation.y, item.rotation.z, item.rotation.w);
+        quaternion.inverse();   //why?
+        var euler = new Euler();
+        euler.setFromQuaternion(quaternion);
+
         poses.push({
             'position': new Vector3(item.position.x, item.position.y, item.position.z),
-            'rotation': new Euler(THREE.Math.degToRad(item.eulerAngles.x), THREE.Math.degToRad(item.eulerAngles.y), THREE.Math.degToRad(item.eulerAngles.z)),
+            'rotation': euler, //new Euler(THREE.Math.degToRad(item.eulerAngles.x), THREE.Math.degToRad(item.eulerAngles.y), THREE.Math.degToRad(item.eulerAngles.z)),
             'path': url + "/" + item.name,
             'data' : item,
         })
