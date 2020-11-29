@@ -51,7 +51,19 @@
 <!--    <form>-->
 <!--        <input type="file" onchange='openFile(event)' />-->
 <!--    </form>-->
-    <span id="info-text">xxx</span>
+    <form>
+        <select name="querystring" onchange="document.location = this.form.querystring.value">
+            <option>- Load demo dataset -</option>
+            <option value="?datasetType=RGBDTUM&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk">RGBDTUM / rgbd_dataset_freiburg1_desk</option>
+            <option value="?datasetType=ARENGINERECORDER&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940">ARENGINERECORDER / 2020-11-26_121940</option>
+            <option value="?datasetType=ALICEVISION_SFM&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940">ALICEVISION_SFM / 2020-11-26_121940</option>
+            <option value="?datasetType=AGISOFT&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940">AGISOFT / 2020-11-26_121940</option>
+            
+            
+
+        </select>
+    </form>
+    <span id="info-text">Click on Tetrahedron to display pose & image details</span>
 </div>
 
 <div class="container">
@@ -61,7 +73,9 @@
         <img id="photo" src=""/>
     </div>
 </div>
-
+<!--https://github.com/abdolence/x2js-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/x2js/1.2.0/xml2json.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/xml2js@0.4.23/lib/xml2js.js"></script>-->
 <script type="module" src="main.js"></script>
 
 </body>

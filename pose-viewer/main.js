@@ -13,8 +13,20 @@ var camera, controls, scene, renderer, divScene,
 
 // datasetType = DATASET_TYPE.LUBOS; datasetFolder = 'dataset/20201003_161015.dataset';
 // datasetType = DATASET_TYPE.AR3DPLAN; datasetFolder = 'dataset/unityarf3dplanphoto';
-//     datasetType = DATASET_TYPE.RGBDTUM; datasetFolder = 'dataset/rgbd_dataset_freiburg1_desk2';
-datasetType = DATASET_TYPE.ARENGINERECORDER; datasetFolder = 'dataset/2020-11-14_135537';
+// datasetType = DATASET_TYPE.RGBDTUM; datasetFolder = 'dataset/rgbd_dataset_freiburg1_desk2';
+// datasetType = DATASET_TYPE.ARENGINERECORDER; datasetFolder = 'dataset/2020-11-26_121940';
+// datasetType = DATASET_TYPE.ALICEVISION_SFM; datasetFolder = 'dataset/2020-11-26_121940';
+// datasetType = DATASET_TYPE.AGILESOFT; datasetFolder = 'dataset/2020-11-26_121940';
+datasetType = DATASET_TYPE.ARENGINERECORDER; datasetFolder = 'https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940'
+
+var params = new URLSearchParams(window.location.search);
+var pdatasetType = params.get("datasetType");
+var pdatasetFolder = params.get("datasetFolder");
+
+if(pdatasetType && pdatasetFolder) {
+    datasetType = pdatasetType;
+    datasetFolder = pdatasetFolder;
+}
 
 async function main() {
     divScene = document.getElementById("scene3d");
@@ -114,12 +126,16 @@ function createFloor(datasetType) {
         case DATASET_TYPE.AR3DPLAN:
         case DATASET_TYPE.ARENGINERECORDER:
         case DATASET_TYPE.LUBOS:
+        case DATASET_TYPE.ALICEVISION_SFM:
+        case DATASET_TYPE.AGISOFT:
             //place floor like that as y is height
             plane.rotation.x = THREE.Math.degToRad(90); //plane.rotateX( - Math.PI / 2);
             plane.position.y = -1; //as I usally took the first image 1m
             break;
         case DATASET_TYPE.RGBDTUM:
             break;
+        default:
+            console.error("Default floor rotation as that dataset is not handled: "+datasetType)
     }
     return plane;
 }

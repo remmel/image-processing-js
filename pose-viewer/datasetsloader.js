@@ -2,43 +2,51 @@ import * as THREE from './copypaste/three.module.js';
 import {OrbitControls} from './copypaste/OrbitControls.js';
 import {csv2objects, rgbdtum2objects} from "./csv.js";
 import {closest} from "./utils.js";
-import {Euler, Vector3} from "./copypaste/three.module.js";
+import {Euler, Matrix4, Quaternion, Vector3} from "./copypaste/three.module.js";
 
 export const DATASET_TYPE = {
-    LUBOS: 'lubos3dscanner', //https://play.google.com/store/apps/details?id=com.lvonasek.arcore3dscannerpro
-    AR3DPLAN: 'ar3dplanphoto', //https://github.com/remmel/ar3dplanphoto
-    RGBDTUM: 'rgbdtum', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
-    ARENGINERECORDER: 'arenginerecorder' //https://github.com/remmel/hms-AREngine-demo
+    LUBOS: 'LUBOS', //https://play.google.com/store/apps/details?id=com.lvonasek.arcore3dscannerpro
+    AR3DPLAN: 'AR3DPLAN', //https://github.com/remmel/ar3dplanphoto
+    RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
+    ARENGINERECORDER: 'ARENGINERECORDER', //https://github.com/remmel/hms-AREngine-demo
+    ALICEVISION_SFM: 'ALICEVISION_SFM', //https://meshroom-manual.readthedocs.io/en/latest/node-reference/nodes/ConvertSfMFormat.html
+    AGISOFT: 'AGISOFT', //Agilesoft Metashape format (File > Export > Export Cameras)
 };
 
 export async function loadPoses(type, folder) {
+    var isUrl = folder.startsWith('http://') || folder.startsWith('https://');
+
+    var url = isUrl ? folder : './' + folder;
+
     switch (type) {
-        case DATASET_TYPE.RGBDTUM: return await loadTum(folder);
-        case DATASET_TYPE.AR3DPLAN: return await loadAr3dplan(folder);
-        case DATASET_TYPE.LUBOS: return await loadLubos(folder);
-        case DATASET_TYPE.ARENGINERECORDER: return await loadAREngineRecorder(folder)
+        case DATASET_TYPE.RGBDTUM: return await loadTum(url);
+        case DATASET_TYPE.AR3DPLAN: return await loadAr3dplan(url);
+        case DATASET_TYPE.LUBOS: return await loadLubos(url);
+        case DATASET_TYPE.ARENGINERECORDER: return await loadAREngineRecorder(url);
+        case DATASET_TYPE.ALICEVISION_SFM: return await loadAliceVisionSfm(url);
+        case DATASET_TYPE.AGISOFT: return await loadAgisoft(url);
     }
     throw "Wrong dataset type:"+type;
 }
 
-async function loadLubos(folder) {
+async function loadLubos(url) {
     var poses = [];
-    var text = await(await fetch('./' + folder + '/posesOBJ.csv')).text();
+    var text = await(await fetch(url + '/posesOBJ.csv')).text();
     var items = csv2objects(text);
     items.forEach(item => {
         poses.push({
             'position': new Vector3(item.x, item.y, item.z),
             'rotation': new Euler(THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.roll)),
-            'path': folder + "/" + item.frame_id.padStart(8, "0") + ".jpg", //set image path
+            'path': url + "/" + item.frame_id.padStart(8, "0") + ".jpg", //set image path
             'data': item
         })
     })
     return poses;
 }
 
-async function loadAr3dplan(folder) {
+async function loadAr3dplan(url) {
     var poses = [];
-    var data = await(await fetch('./' + folder + '/3dplanphoto_objs.json')).json();
+    var data = await(await fetch(url + '/3dplanphoto.json')).json();
 
     data.list.forEach(item => {
         if (item.type !== "Photo") return;
@@ -46,41 +54,52 @@ async function loadAr3dplan(folder) {
         poses.push({
             'position': new Vector3(item.position.x, item.position.y, item.position.z),
             'rotation': new Euler(THREE.Math.degToRad(item.eulerAngles.x), THREE.Math.degToRad(item.eulerAngles.y), THREE.Math.degToRad(item.eulerAngles.z)),
-            'path': folder + "/" + item.name,
+            'path': url + "/" + item.name,
             'data' : item,
         })
     });
     return poses;
 }
 
-async function loadAREngineRecorder(folder) {
+async function loadAREngineRecorder(url) {
     var poses = [];
-    var text = await(await fetch('./' + folder + '/poses.csv')).text();
+    var text = await(await fetch(url + '/poses.csv')).text();
 
     var items = csv2objects(text);
     items.forEach(item => {
         var quaternion = new THREE.Quaternion(parseFloat(item.qx), parseFloat(item.qy), parseFloat(item.qz), parseFloat(item.qw));
         var euler = new Euler();
         euler.setFromQuaternion(quaternion);
+        
+        // var euler2 = new Euler(THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.roll)); //not good?
+        // console.log(euler, euler2);
 
         poses.push({
             'position': new Vector3(item.tx, item.ty, item.tz),
             'rotation': euler,
-            'path': folder + "/" + item.frame + "_image.jpg",
+            'path': url + "/" + item.frame + "_image.jpg",
             'data' : item,
         })
     });
     return poses;
 }
 
-async function loadTum(folder) {
+async function loadTum(url) {
     var poses = [];
 
-    var images = await fetchAndAssociateRgbdTum(folder);
+    var images = await fetchAndAssociateRgbdTum(url);
 
     var i = 0;
+
+    var modulo = 1;
+    var maximagesdisplayed = 100;
+    if(images.length > maximagesdisplayed) {
+        var modulo = Math.floor(images.length / maximagesdisplayed); //limit display to maximagesdisplayed images
+        console.warn("Has "+ images.length + " images to display, display only ~"+maximagesdisplayed + ", thus 1 image every "+modulo);
+    }
+
     images.forEach(image => {
-        if(i++%5!==0) return; //one image out of 5
+        if(i++%modulo!==0) return;
         var quaternion = new THREE.Quaternion(parseFloat(image.qx), parseFloat(image.qy), parseFloat(image.qz), parseFloat(image.qw));
         var rotation = new Euler();
         rotation.setFromQuaternion(quaternion);
@@ -88,7 +107,7 @@ async function loadTum(folder) {
         poses.push({
             'position': new Vector3(image.tx, image.ty, image.tz),
             'rotation': rotation,
-            'path': folder + "/" + image.rgb_fn,
+            'path': url + "/" + image.rgb_fn,
             'data' : image,
         });
 
@@ -97,8 +116,8 @@ async function loadTum(folder) {
 }
 
 // get associated.txt data. If file missing get data from rgb.txt and groundtruth.txt
-async function fetchAndAssociateRgbdTum(rgbd) {
-    var response = await fetch('./' + rgbd + '/associate.txt');
+async function fetchAndAssociateRgbdTum(url) {
+    var response = await fetch(url + '/associate.txt');
     if(response.ok) { //already associated no need
         var text = await response.text();
         text = "pose_ts tx ty tz qx qy qz qw depth_ts depth_fn rgb_ts rgb_fn\n" + text;
@@ -106,8 +125,8 @@ async function fetchAndAssociateRgbdTum(rgbd) {
         return images;
     } else {
         console.warn("Missing associate.txt, will try to associate rgb.txt and groundtruth.txt");
-        var rgbText = await fetch('./' + rgbd + '/rgb.txt').then(response => response.text());
-        var groundtruthText = await fetch('./' + rgbd + '/groundtruth.txt').then(response => response.text());
+        var rgbText = await fetch(url + '/rgb.txt').then(response => response.text());
+        var groundtruthText = await fetch(url + '/groundtruth.txt').then(response => response.text());
 
         var rgbs = rgbdtum2objects(rgbText);
         var poses = rgbdtum2objects(groundtruthText);
@@ -137,4 +156,101 @@ async function fetchAndAssociateRgbdTum(rgbd) {
         });
         return images;
     }
+}
+
+async function loadAliceVisionSfm(url) {
+    var poses = [];
+    var data = await(await fetch(url + '/sfm.json')).json();
+
+    var viewsByPoseId = {};
+
+    data.views.forEach(item => {
+        viewsByPoseId[item.poseId] = item;
+    });
+
+    data.poses.forEach(item => {
+        var r = item.pose.transform.rotation.map(parseFloat);
+        var center = item.pose.transform.center;
+
+        // var m = new Matrix3(); m.fromArray(r);
+        // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
+        var qw = Math.sqrt(1+r[0]+r[4]+r[8])/2;
+        var w4 = 4*qw;
+        var qx = (r[7] - r[5]) / w4;
+        var qy = (r[2] - r[6]) / w4;
+        var qz = (r[3] - r[1]) / w4;
+
+        var quaternion = new THREE.Quaternion(qx, qy, qz, qw);
+        var rotation = new Euler();
+        rotation.setFromQuaternion(quaternion);
+
+        var view = viewsByPoseId[item.poseId];
+
+        var fn = view.path.split("/").pop();
+
+        poses.push({
+            'position': new Vector3(center[0], center[1], center[2]),
+            'rotation': rotation, //Euler rotation
+            'quaternion': quaternion, //Quaternion rotation
+            'path': url + "/" + fn,
+            'data' : item
+        })
+    });
+
+    // console.log("csv", exportPosesRemmelAndroid(poses));
+
+    return poses;
+}
+
+async function loadAgisoft(url) {
+    var poses = [];
+    var xml = await (await fetch(url + '/cameras.xml')).text();
+
+    var document = (new X2JS()).xml_str2json(xml);
+
+    document.document.chunk.cameras.camera.forEach(item => {
+        var transform = item.transform.split(" ").map(parseFloat);
+
+        var m = new Matrix4();
+        m.fromArray(transform);
+        m.transpose(); //or position.x = m.elements[3]; position.y = m.elements[7]; position.z = m.elements[11];
+
+        var position = new Vector3();
+        position.setFromMatrixPosition(m);
+        position.x /= 10; //is not scale like reality, I assume it changes all the time
+        position.y /= 10;
+        position.z /= 10;
+
+        var euler = (new Euler()).setFromRotationMatrix(m);
+
+        var quaternion = new Quaternion();
+        quaternion.setFromRotationMatrix(m);
+
+        poses.push({
+            'position': position,
+            'rotation': euler, //Euler rotation
+            'quaternion': quaternion, //Quaternion rotation
+            'path': url + "/" + item._label + ".jpg",
+            'data' : item
+        })
+    });
+
+    // console.log("csv", exportPosesRemmelAndroid(poses));
+
+    return poses;
+}
+
+//poses.csv to be compatible with https://github.com/remmel/hms-AREngine-demo
+function exportPosesRemmelAndroid(poses) {
+    var csv = "frame,tx,ty,tz,qx,qy,qz,qw,yaw,pitch,roll\n";
+    poses.forEach(item => { //item.rotation.x, item.rotation.y, item.rotation.z
+        var q = item.quaternion;
+        if(!q) { //no quaternion set, calculate it from euler rotation
+            q = new THREE.Quaternion();
+            q.setFromEuler(item.rotation);
+        }
+
+        csv += [item.path, item.position.x, item.position.y, item.position.z, q.x, q.y, q.z, q.w].join(',') + "\n";
+    });
+    return csv;
 }
