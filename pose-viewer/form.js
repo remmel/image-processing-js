@@ -7,6 +7,7 @@ export function getForm() {
     var params = new URLSearchParams(window.location.search);
     var datasetType = params.get("datasetType");
     var datasetFolder = params.get("datasetFolder");
+    var scale = params.get("scale") ?? 1;
 
     if(!datasetType && !datasetFolder) {
         // datasetType = DATASET_TYPE.LUBOS; datasetFolder = 'dataset/20201003_161015.dataset';
@@ -32,7 +33,7 @@ export function getForm() {
     var $selectDsDemo = document.querySelector("select[name=querystring]");
     $selectDsDemo.value = "?datasetType="+datasetType+"&datasetFolder="+datasetFolder;
 
-    return {datasetType, datasetFolder}
+    return {datasetType, datasetFolder, scale}
 }
 
 

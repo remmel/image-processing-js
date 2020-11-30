@@ -11,7 +11,7 @@ var camera, controls, scene, renderer, divScene,
     material = new THREE.MeshPhongMaterial({color: 0xffffff, flatShading: true}),
     materialRed = new THREE.MeshPhongMaterial({color: 0xff0000, flatShading: true});
 
-var {datasetType, datasetFolder} = getForm();
+var {datasetType, datasetFolder, scale} = getForm();
 
 
 console.log(datasetType, datasetFolder);
@@ -39,7 +39,7 @@ async function main() {
 
     var poses = await loadPoses(datasetType, datasetFolder);
 
-    var geometry = createCylinder();
+    var geometry = createCylinder(scale);
     poses.forEach(pose => {
         var mesh = new THREE.Mesh(geometry, material);
         mesh.position.copy(pose.position);
@@ -56,7 +56,7 @@ async function main() {
 
 //1st position is landscape. on the x,y plan looking in z direction.
 function createCylinder(scale) {
-    var scale = 1; //default is 10cm base (0.1)
+    //when scale is 1 (default) base is 10cm (0.1)
     var geometry = new THREE.CylinderBufferGeometry(0, 0.1/scale, 0.1/scale, 4);
     geometry.rotateX(-Math.PI / 2) //PI <=> 180°
     geometry.rotateZ(Math.PI / 4);
