@@ -13,12 +13,6 @@ export const DATASET_TYPE = {
     AGISOFT: 'AGISOFT', //Agilesoft Metashape format (File > Export > Export Cameras)
 };
 
-var i=1;
-var $select = document.querySelector("select[name=datasetType]");
-for(var key in DATASET_TYPE) {
-    $select.options[i++] = new Option(key, key);
-}
-
 export async function loadPoses(type, folder) {
     var isUrl = folder.startsWith('http://') || folder.startsWith('https://');
 

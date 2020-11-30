@@ -4,29 +4,17 @@
 import * as THREE from './copypaste/three.module.js';
 import {OrbitControls} from './copypaste/OrbitControls.js';
 import {DATASET_TYPE, loadPoses} from "./datasetsloader.js";
+import {getForm} from './form.js'
 
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
     material = new THREE.MeshPhongMaterial({color: 0xffffff, flatShading: true}),
-    materialRed = new THREE.MeshPhongMaterial({color: 0xff0000, flatShading: true}),
-    datasetType, datasetFolder;
+    materialRed = new THREE.MeshPhongMaterial({color: 0xff0000, flatShading: true});
 
-// datasetType = DATASET_TYPE.LUBOS; datasetFolder = 'dataset/20201003_161015.dataset';
-// datasetType = DATASET_TYPE.AR3DPLAN; datasetFolder = 'dataset/unityarf3dplanphoto';
-// datasetType = DATASET_TYPE.RGBDTUM; datasetFolder = 'dataset/rgbd_dataset_freiburg1_desk2';
-// datasetType = DATASET_TYPE.ARENGINERECORDER; datasetFolder = 'dataset/2020-11-26_121940';
-// datasetType = DATASET_TYPE.ALICEVISION_SFM; datasetFolder = 'dataset/2020-11-26_121940';
-// datasetType = DATASET_TYPE.AGILESOFT; datasetFolder = 'dataset/2020-11-26_121940';
-datasetType = DATASET_TYPE.ARENGINERECORDER; datasetFolder = 'https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940'
+var {datasetType, datasetFolder} = getForm();
 
-var params = new URLSearchParams(window.location.search);
-var pdatasetType = params.get("datasetType");
-var pdatasetFolder = params.get("datasetFolder");
 
-if(pdatasetType && pdatasetFolder) {
-    datasetType = pdatasetType;
-    datasetFolder = pdatasetFolder;
-}
+console.log(datasetType, datasetFolder);
 
 async function main() {
     divScene = document.getElementById("scene3d");
@@ -67,8 +55,9 @@ async function main() {
 }
 
 //1st position is landscape. on the x,y plan looking in z direction.
-function createCylinder() {
-    var geometry = new THREE.CylinderBufferGeometry(0, 0.1, 0.1, 4);
+function createCylinder(scale) {
+    var scale = 1; //default is 10cm base (0.1)
+    var geometry = new THREE.CylinderBufferGeometry(0, 0.1/scale, 0.1/scale, 4);
     geometry.rotateX(-Math.PI / 2) //PI <=> 180°
     geometry.rotateZ(Math.PI / 4);
     geometry.applyMatrix(new THREE.Matrix4().makeScale(1, 0.75, 1)); //rectangular base
