@@ -2,8 +2,10 @@ export function csv2arrays(text, separator = ',') {
     var lines = text.split(/\r\n|\n/);
     var arrays = [];
     lines.forEach(line => {
-        arrays.push(line.split(separator));
+        if(!!line) //ignore empty line, usually last row
+            arrays.push(line.split(separator));
     });
+
     return arrays;
 }
 
@@ -13,18 +15,15 @@ export function csv2objects(text, separator = ',') {
 
     var header = lines.shift();
 
-    //console.log(header);
     var objects = [];
 
     lines.forEach(line => {
         var row = {};
         for(var i=0; i<header.length; i++) {
             var colName = header[i];
-            //console.log(colName)
             row[colName] = line[i];
         }
         objects.push(row);
-        //console.log(row)
     })
     return objects;
 }
