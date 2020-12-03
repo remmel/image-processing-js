@@ -3,6 +3,7 @@ import {OrbitControls} from './copypaste/OrbitControls.js';
 import {csv2objects, rgbdtum2objects} from "./csv.js";
 import {closest} from "./utils.js";
 import {Euler, Matrix4, Quaternion, Vector3} from "./copypaste/three.module.js";
+import {csv2arrays} from "./csv.js";
 
 export const DATASET_TYPE = {
     RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
@@ -29,19 +30,42 @@ export async function loadPoses(type, folder) {
     throw "Wrong dataset type:"+type;
 }
 
+//TODO avoid using thoses .mat files to avoid http calls
 async function loadLubos(url) {
     var poses = [];
-    var text = await(await fetch(url + '/posesOBJ.csv')).text();
+    var $loading = document.getElementById('loading');
+
+    var text = await(await fetch(url + '/posesPLY.csv')).text();
     var items = csv2objects(text);
+
+    var i=0, nb = items.length;
+    for(var item of items) {
+        $loading.textContent = "loading "+ ++i + "/"+nb;
+        item.mat4 = await fetchLubosMat(url, item.frame_id);
+    }
+
     items.forEach(item => {
         poses.push({
-            'position': new Vector3(item.x, item.y, item.z),
-            'rotation': new Euler(THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.roll)),
+            'mat4': item.mat4, //TODO transform matrix to postition and rotation here
+            // 'position': new Vector3(item.mat4.elements[12], item.mat4.elements[13], item.mat4.elements[14]),
+            // 'position': new Vector3(item.x, item.y, item.z),
+            // 'rotation': new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'),
             'path': url + "/" + item.frame_id.padStart(8, "0") + ".jpg", //set image path
             'data': item
         })
     })
     return poses;
+}
+
+async function fetchLubosMat(url, frameId) {
+    var fn = frameId.padStart(8, "0") + '.mat';//?t'+ (new Date().toISOString());
+    var text = await(await fetch(url + "/" + fn)).text();
+    var arrays = csv2arrays(text, ' ', true);
+    var array0_3 = [...arrays[0], ...arrays[1], ...arrays[2], ...arrays[3]]
+
+    var mat4 = new Matrix4();
+    mat4.fromArray(array0_3);
+    return mat4;
 }
 
 async function loadAr3dplan(url) {
@@ -76,8 +100,7 @@ async function loadAREngineRecorder(url) {
         var euler = new Euler();
         euler.setFromQuaternion(quaternion);
         
-        // var euler2 = new Euler(THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.roll)); //not good?
-        // console.log(euler, euler2);
+        // euler = new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'); //right order
 
         poses.push({
             'position': new Vector3(item.tx, item.ty, item.tz),

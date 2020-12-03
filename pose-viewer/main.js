@@ -28,40 +28,64 @@ async function main() {
     camera = new THREE.PerspectiveCamera(60, divScene.clientWidth / divScene.clientHeight, 0.1, 100);
     camera.position.set(400, 200, 0);
 
-    if(datasetType === DATASET_TYPE.RGBDTUM) //inverted axis for tum
-        camera.up = new THREE.Vector3( 0, 0, 1 ); //rgbdtum
+    switch (datasetType) {
+        case DATASET_TYPE.RGBDTUM:
+            camera.up = new THREE.Vector3( 0, 0, 1 ); //up is z not y
+
+    }
 
     createOrbitControl(camera, renderer);
     scene.add(new THREE.AxesHelper(1));
     scene.add(createFloor(datasetType));
     scene.add(createLights());
+    // scene.add(createDebugCamera());
     window.addEventListener('resize', onWindowResize, false);
+
+    animate();
+
+    // document.getElementById('loading').innerText = "loading...";
 
     var poses = await loadPoses(datasetType, datasetFolder);
 
-    var geometry = createCylinder(scale);
+    var geometry = createCamera(scale, datasetType);
     poses.forEach(pose => {
         var mesh = new THREE.Mesh(geometry, material);
-        mesh.position.copy(pose.position);
-        mesh.rotation.copy(pose.rotation);
+        if(pose.position && pose.rotation) {
+            mesh.position.copy(pose.position);
+            mesh.rotation.copy(pose.rotation);
+        } else if(pose.mat4) {
+            mesh.applyMatrix4(pose.mat4);
+        } else {
+            console.error("missing pose info", pose);
+        }
         mesh.updateMatrix();
         mesh.matrixAutoUpdate = false;
         mesh.data = pose;
         scene.add(mesh);
     });
 
-    animate();
+    // animate();
     //render(); // remove when using next line for animation loop (requestAnimationFrame)
 }
 
-//1st position is landscape. on the x,y plan looking in z direction.
-function createCylinder(scale) {
+//1st position is landscape. on the x,y plan looking in z direction. uncomment createDebugCamera() to check that
+function createCamera(scale, datasetType) {
     //when scale is 1 (default) base is 10cm (0.1)
     var geometry = new THREE.CylinderBufferGeometry(0, 0.1/scale, 0.1/scale, 4);
-    geometry.rotateX(-Math.PI / 2) //PI <=> 180°
-    geometry.rotateZ(Math.PI / 4);
-    geometry.applyMatrix(new THREE.Matrix4().makeScale(1, 0.75, 1)); //rectangular base
+    geometry.rotateX(THREE.Math.degToRad(-90)); //=-PI/2 _ //PI <=> 180°
+    geometry.rotateZ(THREE.Math.degToRad(45)); //=PI/4
+    geometry.applyMatrix4(new THREE.Matrix4().makeScale(1, 0.75, 1)); //rectangular base
+
+    if(datasetType === DATASET_TYPE.LUBOS) {
+        geometry.rotateZ(THREE.Math.degToRad(90)); //pictures are in portrait not landscape
+    }
     return geometry;
+}
+
+function createDebugCamera(){
+    var mesh = new THREE.Mesh( createCamera(1, datasetType), material);
+    mesh.position.copy(new THREE.Vector3(1, 1, 1));
+    return mesh;
 }
 
 function onWindowResize() {
@@ -114,9 +138,9 @@ function createFloor(datasetType) {
     switch (datasetType) {
         case DATASET_TYPE.AR3DPLAN:
         case DATASET_TYPE.ARENGINERECORDER:
-        case DATASET_TYPE.LUBOS:
         case DATASET_TYPE.ALICEVISION_SFM:
         case DATASET_TYPE.AGISOFT:
+        case DATASET_TYPE.LUBOS:
             //place floor like that as y is height
             plane.rotation.x = THREE.Math.degToRad(90); //plane.rotateX( - Math.PI / 2);
             plane.position.y = -1; //as I usally took the first image 1m

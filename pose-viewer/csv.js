@@ -1,12 +1,24 @@
-export function csv2arrays(text, separator = ',') {
+export function csv2arrays(text, separator = ',',parseNumber = false) {
     var lines = text.split(/\r\n|\n/);
     var arrays = [];
     lines.forEach(line => {
-        if(!!line) //ignore empty line, usually last row
-            arrays.push(line.split(separator));
-    });
+        if(!line) return;//ignore empty line, usually last row
 
+        var row = line.split(separator);
+        if(parseNumber)
+            row = row.map(tryParseNumber);
+        arrays.push(row);
+    });
     return arrays;
+}
+
+function tryParseNumber(str) {
+    var floatRegex = /^-?\d+(?:[.,]\d*?)?$/;
+    if (!floatRegex.test(str)) return str;
+
+    var val = parseFloat(str);
+    if (isNaN(val)) return str;
+    return val;
 }
 
 //first line with me header
