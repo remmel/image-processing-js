@@ -5,6 +5,7 @@ import * as THREE from './copypaste/three.module.js';
 import {OrbitControls} from './copypaste/OrbitControls.js';
 import {DATASET_TYPE, loadPoses} from "./datasetsloader.js";
 import {getForm} from './form.js'
+import {Euler, Quaternion, Vector3} from "./copypaste/three.module.js";
 
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
@@ -50,11 +51,12 @@ async function main() {
     var geometry = createCamera(scale, datasetType);
     poses.forEach(pose => {
         var mesh = new THREE.Mesh(geometry, material);
-        if(pose.position && pose.rotation) {
-            mesh.position.copy(pose.position);
+        mesh.position.copy(pose.position);
+
+        if(pose.rotation instanceof Euler) {
             mesh.rotation.copy(pose.rotation);
-        } else if(pose.mat4) {
-            mesh.applyMatrix4(pose.mat4);
+        } else if(pose.rotation instanceof Quaternion) {
+            mesh.quaternion.copy(pose.rotation);
         } else {
             console.error("missing pose info", pose);
         }
@@ -120,9 +122,13 @@ function onMouseClick(event) {
     intersects.some(intersect => {
         let data = intersect.object.data;
         if (!data) return false; //continue
+
+        var euler = intersect.object.rotation;
+        data.eulerDeg = {x: THREE.Math.radToDeg(euler.x), y: THREE.Math.radToDeg(euler.y), z: THREE.Math.radToDeg(euler.z)}
         intersect.object.material = materialRed;
         document.getElementById('photo').src = data.path;
         document.getElementById('info-text').textContent = JSON.stringify(data);
+        console.log(data);
 
         setTimeout(function () {
             intersect.object.material = material;

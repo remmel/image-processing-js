@@ -35,25 +35,29 @@ async function loadLubos(url) {
     var poses = [];
     var $loading = document.getElementById('loading');
 
-    var text = await(await fetch(url + '/posesPLY.csv')).text();
+    var text = await(await fetch(url + '/posesPLY.csv')).text(); //PLY: position(x,z,-y)
     var items = csv2objects(text);
 
     var i=0, nb = items.length;
     for(var item of items) {
         $loading.textContent = "loading "+ ++i + "/"+nb;
         item.mat4 = await fetchLubosMat(url, item.frame_id);
-    }
 
-    items.forEach(item => {
         poses.push({
-            'mat4': item.mat4, //TODO transform matrix to postition and rotation here
-            // 'position': new Vector3(item.mat4.elements[12], item.mat4.elements[13], item.mat4.elements[14]),
-            // 'position': new Vector3(item.x, item.y, item.z),
+            //MAT
+            // 'rotation': (new Quaternion()).setFromRotationMatrix(item.mat4),
+            'rotation': (new Euler().setFromQuaternion((new Quaternion()).setFromRotationMatrix(item.mat4))),
+            'position': (new Vector3()).setFromMatrixPosition(item.mat4), //(e[12], e[13], e[14]),
+
+            //PLY - doesn't work has wrong rotation
+            // 'position': new Vector3(item.x, item.z, -item.y),
             // 'rotation': new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'),
+
             'path': url + "/" + item.frame_id.padStart(8, "0") + ".jpg", //set image path
             'data': item
         })
-    })
+    }
+
     return poses;
 }
 
