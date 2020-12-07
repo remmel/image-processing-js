@@ -49,7 +49,7 @@ async function loadLubos(url) {
             'rotation': (new Euler().setFromQuaternion((new Quaternion()).setFromRotationMatrix(item.mat4))),
             'position': (new Vector3()).setFromMatrixPosition(item.mat4), //(e[12], e[13], e[14]),
 
-            //PLY - doesn't work has wrong rotation
+            // //PLY - doesn't work has wrong rotation
             // 'position': new Vector3(item.x, item.z, -item.y),
             // 'rotation': new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'),
 

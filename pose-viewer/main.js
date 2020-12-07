@@ -107,12 +107,14 @@ function render() {
 }
 
 // When clicking on pose, display images and info
-function onMouseClick(event) {
+function onClick(xpx, ypx) {
+   // alert(event.touches[0].pageX) //.event.touches[0].pageX
     // calculate mouse position in normalized device coordinates
     // (-1 to +1) for both components
     var mouse = new THREE.Vector2();
-    mouse.x = (event.clientX / divScene.clientWidth) * 2 - 1;
-    mouse.y = -(event.clientY / divScene.clientHeight) * 2 + 1;
+
+    mouse.x = (xpx / divScene.clientWidth) * 2 - 1;
+    mouse.y = -(ypx / divScene.clientHeight) * 2 + 1;
 
     // update the picking ray with the camera and mouse position
     raycaster.setFromCamera(mouse, camera);
@@ -184,7 +186,14 @@ function createOrbitControl(camera, renderer) {
     // controls.maxPolarAngle = Math.PI / 2;
 }
 
-window.addEventListener('click', onMouseClick, false);
+window.addEventListener('click', event => {
+    return onClick(event.clientX, event.clientY);
+}, false);
+
+window.addEventListener('touchstart', event => {
+    if(!event.touches.length) return;
+    return onClick(event.touches[0].pageX, event.touches[0].pageY);
+});
 
 main();
 
