@@ -18,7 +18,7 @@
 <!--    </form>-->
     <form>
         <select name="querystring" onchange="document.location = this.form.querystring.value">
-            <option>- Load demo dataset -</option>
+            <option value="?">- Load demo dataset -</option>
             <option value="?datasetType=RGBDTUM&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk">RGBDTUM / rgbd_dataset_freiburg1_desk</option>
             <option value="?datasetType=ARENGINERECORDER&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940">ARENGINERECORDER / 2020-11-26_121940</option>
             <option value="?datasetType=ALICEVISION_SFM&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940">ALICEVISION_SFM / 2020-11-26_121940</option>
@@ -44,6 +44,9 @@
     </div>
     <div id="photo-container">
         <img id="photo" src=""/>
+
+        __<span id="info-num-pose"></span>
+        <button id="btn-previous">⏮️</button> <button id="btn-playpause">⏯️</button> <button id="btn-next">⏭️</button>
     </div>
 </div>
 <!--https://github.com/abdolence/x2js-->

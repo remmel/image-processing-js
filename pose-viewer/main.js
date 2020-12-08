@@ -10,7 +10,8 @@ import {Euler, Quaternion, Vector3} from "./copypaste/three.module.js";
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
     material = new THREE.MeshPhongMaterial({color: 0xffffff, flatShading: true}),
-    materialRed = new THREE.MeshPhongMaterial({color: 0xff0000, flatShading: true});
+    materialRed = new THREE.MeshPhongMaterial({color: 0xff0000, flatShading: true}),
+    poses = [], curPose = null, playpauseInterval = null;
 
 var {datasetType, datasetFolder, scale} = getForm();
 
@@ -46,10 +47,17 @@ async function main() {
 
     // document.getElementById('loading').innerText = "loading...";
 
-    var poses = await loadPoses(datasetType, datasetFolder);
+    poses = await loadPoses(datasetType, datasetFolder);
+
+    // console.log(poses);
 
     var geometry = createCamera(scale, datasetType);
-    poses.forEach(pose => {
+
+    // console.log(Object.entries(poses));
+
+    for(var numPose in poses) {
+        var pose = poses[numPose];
+
         var mesh = new THREE.Mesh(geometry, material);
         mesh.position.copy(pose.position);
 
@@ -63,8 +71,10 @@ async function main() {
         mesh.updateMatrix();
         mesh.matrixAutoUpdate = false;
         mesh.data = pose;
+        mesh.numPose = numPose;
+        pose.mesh = mesh;
         scene.add(mesh);
-    });
+    }
 
     // animate();
     //render(); // remove when using next line for animation loop (requestAnimationFrame)
@@ -108,7 +118,6 @@ function render() {
 
 // When clicking on pose, display images and info
 function onClick(xpx, ypx) {
-   // alert(event.touches[0].pageX) //.event.touches[0].pageX
     // calculate mouse position in normalized device coordinates
     // (-1 to +1) for both components
     var mouse = new THREE.Vector2();
@@ -122,21 +131,32 @@ function onClick(xpx, ypx) {
     // calculate objects intersecting the picking ray
     var intersects = raycaster.intersectObjects(scene.children);
     intersects.some(intersect => {
-        let data = intersect.object.data;
-        if (!data) return false; //continue
-
-        var euler = intersect.object.rotation;
-        data.eulerDeg = {x: THREE.Math.radToDeg(euler.x), y: THREE.Math.radToDeg(euler.y), z: THREE.Math.radToDeg(euler.z)}
-        intersect.object.material = materialRed;
-        document.getElementById('photo').src = data.path;
-        document.getElementById('info-text').textContent = JSON.stringify(data);
-        console.log(data);
-
-        setTimeout(function () {
-            intersect.object.material = material;
-        }, 500)
+        let numPose = intersect.object.numPose;
+        if (!numPose) return false; //continue
+        selectPose(parseInt(numPose));
         return true;
     })
+}
+
+function selectPose(numPose) {
+    if(numPose < 0 || numPose >= poses.length) return;
+    curPose = numPose;
+    var pose = poses[numPose];
+    // console.log('selectPose', numPose, pose);
+    document.getElementById('info-num-pose').textContent = (numPose+1)+"/"+poses.length;
+
+    var mesh = pose.mesh;
+    var euler = mesh.rotation;
+    var eulerDeg = {x: THREE.Math.radToDeg(euler.x), y: THREE.Math.radToDeg(euler.y), z: THREE.Math.radToDeg(euler.z)}
+    mesh.material = materialRed;
+    document.getElementById('photo').src = pose.path;
+
+    var {mesh, ...poseWithoutMesh} = pose;
+    document.getElementById('info-text').textContent = JSON.stringify(poseWithoutMesh);
+
+    setTimeout(function () {
+        mesh.material = material;
+    }, 500)
 }
 
 function createFloor(datasetType) {
@@ -197,6 +217,35 @@ window.addEventListener('touchstart', event => {
 
 main();
 
+document.getElementById('btn-previous').addEventListener('click', e => {
+    selectPose(curPose-1);
+})
+
+document.getElementById('btn-next').addEventListener('click', e => {
+    selectPose(curPose+1);
+})
+
+document.getElementById('btn-playpause').addEventListener('click', e => {
+    if(playpauseInterval){
+        playpauseInterval = clearInterval(playpauseInterval);
+    } else {
+        preloadImagesOnce();
+        playpauseInterval = setInterval(() => {
+            if(curPose === poses.length-1)
+                playpauseInterval = clearInterval(playpauseInterval);
+            else
+                selectPose(curPose+1);
+        }, 200);
+    }
+})
+
+var preloadImagesOnce = () => {
+    poses.forEach(pose => {
+        var img=new Image();
+        img.src=pose.path;
+    })
+    preloadImagesOnce = () => {}; //as that fct is called once
+}
 
 // var openFile = function(event) {
 //     var input = event.target;
