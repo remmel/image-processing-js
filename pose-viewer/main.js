@@ -76,6 +76,8 @@ async function main() {
         scene.add(mesh);
     }
 
+    selectPose(null);
+
     // animate();
     //render(); // remove when using next line for animation loop (requestAnimationFrame)
 }
@@ -138,12 +140,14 @@ function onClick(xpx, ypx) {
     })
 }
 
-function selectPose(numPose) {
-    if(numPose < 0 || numPose >= poses.length) return;
-    curPose = numPose;
-    var pose = poses[numPose];
-    // console.log('selectPose', numPose, pose);
-    document.getElementById('info-num-pose').textContent = (numPose+1)+"/"+poses.length;
+function selectPose(idxPose) {
+    if(idxPose < 0 || idxPose >= poses.length) return;
+    document.getElementById('info-num-pose').textContent = (idxPose === null ? '-' : idxPose+1)+"/"+poses.length;
+    if(idxPose === null) return;
+
+    curPose = idxPose;
+    var pose = poses[idxPose];
+    // console.log('selectPose', idxPose, pose);
 
     var mesh = pose.mesh;
     var euler = mesh.rotation;
@@ -230,12 +234,14 @@ document.getElementById('btn-playpause').addEventListener('click', e => {
         playpauseInterval = clearInterval(playpauseInterval);
     } else {
         preloadImagesOnce();
+        if(curPose === poses.length-1 || curPose === null) curPose = -1; //if pressing btn when no pose selected or last one selected
+
         playpauseInterval = setInterval(() => {
             if(curPose === poses.length-1)
                 playpauseInterval = clearInterval(playpauseInterval);
             else
                 selectPose(curPose+1);
-        }, 200);
+        }, 500);
     }
 })
 
