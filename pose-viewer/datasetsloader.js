@@ -2,7 +2,7 @@ import * as THREE from './copypaste/three.module.js';
 import {OrbitControls} from './copypaste/OrbitControls.js';
 import {csv2objects, rgbdtum2objects} from "./csv.js";
 import {closest} from "./utils.js";
-import {Euler, Matrix4, Quaternion, Vector3} from "./copypaste/three.module.js";
+import {Euler, Matrix3, Matrix4, Quaternion, Vector3} from "./copypaste/three.module.js";
 import {csv2arrays} from "./csv.js";
 
 export const DATASET_TYPE = {
@@ -234,40 +234,76 @@ async function loadAliceVisionSfm(url) {
     return poses;
 }
 
+//TODO not sure about that, specially the scale as I do later "position.x *= scale;"
+function convertM3ToM4(m3, translation, scale) {
+    var m4 = new Matrix4();
+    var m3arr = m3.elements;
+    m4.fromArray([
+        m3arr[0], m3arr[1], m3arr[2], translation.x/scale,
+        m3arr[3], m3arr[4], m3arr[5], translation.y/scale,
+        m3arr[6], m3arr[7], m3arr[8], translation.z/scale,
+        0,0,0,1
+    ]);
+    return m4;
+}
+
 async function loadAgisoft(url) {
     var poses = [];
-    var xml = await (await fetch(url + '/cameras.xml')).text();
 
+    var fn = "cameras.xml"; //no default name for agisoft
+    var response = await fetch(url + '/' + fn);
+    if(!response.ok) {
+        alert("missing poses file "+fn);
+        return [];
+    }
+    var xml = await (response).text();
     var document = (new X2JS()).xml_str2json(xml);
 
+    var scale = 0.01; //default scale
+    var transformWorld = null;
+    if(document.document.chunk.transform) {
+        var transform = document.document.chunk.transform;
+        if (transform.scale)
+            scale = parseFloat(transform.scale.__text);
+
+        if (transform.rotation && transform.scale && transform.translation) {
+            var rotationWorld = new Matrix3().fromArray(transform.rotation.__text.split(' ').map(parseFloat));
+            var translationWorld = new Vector3().fromArray(transform.translation.__text.split(' ').map(parseFloat));
+            transformWorld = convertM3ToM4(rotationWorld, translationWorld, scale);
+        }
+    }
+
+    //TODO add 1st expected pose, to place calculated pose according to the expected one, in order to have right world position and world rotation
+
     document.document.chunk.cameras.camera.forEach(item => {
-        var transform = item.transform.split(" ").map(parseFloat);
+        if(!item.transform) return; //agisoft was not able to align that camera
+        var transform = item.transform.split(' ').map(parseFloat);
 
         var m = new Matrix4();
         m.fromArray(transform);
-        m.transpose(); //or position.x = m.elements[3]; position.y = m.elements[7]; position.z = m.elements[11];
+        if(transformWorld)
+            m = m.multiply(transformWorld);
+        m.transpose();
 
         var position = new Vector3();
         position.setFromMatrixPosition(m);
-        position.x /= 10; //is not scale like reality, I assume it changes all the time
-        position.y /= 10;
-        position.z /= 10;
 
-        var euler = (new Euler()).setFromRotationMatrix(m);
+        position.x *= scale;
+        position.y *= scale;
+        position.z *= scale;
 
         var quaternion = new Quaternion();
         quaternion.setFromRotationMatrix(m);
 
         poses.push({
             'position': position,
-            'rotation': euler, //Euler rotation
-            'quaternion': quaternion, //Quaternion rotation
+            'rotation': quaternion,
             'path': url + "/" + item._label + ".jpg",
             'data' : item
         })
     });
 
-    // console.log("csv", exportPosesRemmelAndroid(poses));
+    //console.log("csv", exportPosesRemmelAndroid(poses));
 
     return poses;
 }

@@ -12,10 +12,15 @@ To use your own dataset, 3 solutions :
 ## Start a server
 
 Many ways to start a http server :
-- [Web Server for Chrome extension](https://chrome.google.com/webstore/detail/web-server-for-chrome/ofhbbkphhbklhfoeikjpcbhemlocgigb) (I havn't tried)
 - Node Server: `sudo npm install --global http-server` and `npm start`
 - Php server: `php -S localhost:8000`
 
 ## Create a symlink
 - Linux: `pose-viewer$ ln -s ~/workspace/photogrammetry/dataset dataset`
-- Windows (cmd as admin): `pose-viewer> mklink dataset "C:\Users\remme\workspace\dataset"`
+- Windows: `pose-viewer> mklink dataset "C:\Users\remme\workspace\dataset"` (cmd as admin or Developer mode on)
+
+
+# Troubleshooting
+
+# Npm http-server error
+Error `Error: EPERM: operation not permitted, stat` is produced on Windows 10 when using symlink; don't know how to fix that, expect not using symlink, using php webserver instead or using a second webserver for dataset.

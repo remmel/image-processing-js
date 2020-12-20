@@ -5,7 +5,7 @@ import * as THREE from './copypaste/three.module.js';
 import {OrbitControls} from './copypaste/OrbitControls.js';
 import {DATASET_TYPE, loadPoses} from "./datasetsloader.js";
 import {getForm} from './form.js'
-import {Euler, Quaternion, Vector3} from "./copypaste/three.module.js";
+import {Euler, Matrix3, Quaternion, Vector3} from "./copypaste/three.module.js";
 
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
@@ -85,7 +85,7 @@ async function main() {
 //1st position is landscape. on the x,y plan looking in z direction. uncomment createDebugCamera() to check that
 function createCamera(scale, datasetType) {
     //when scale is 1 (default) base is 10cm (0.1)
-    var geometry = new THREE.CylinderBufferGeometry(0, 0.1/scale, 0.1/scale, 4);
+    var geometry = new THREE.CylinderBufferGeometry(0, 0.1/scale, 0.05/scale, 4);
     geometry.rotateX(THREE.Math.degToRad(-90)); //=-PI/2 _ //PI <=> 180°
     geometry.rotateZ(THREE.Math.degToRad(45)); //=PI/4
     geometry.applyMatrix4(new THREE.Matrix4().makeScale(1, 0.75, 1)); //rectangular base
