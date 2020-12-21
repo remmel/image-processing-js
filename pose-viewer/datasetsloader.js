@@ -45,8 +45,7 @@ async function loadLubos(url) {
 
         poses.push({
             //MAT
-            // 'rotation': (new Quaternion()).setFromRotationMatrix(item.mat4),
-            'rotation': (new Euler().setFromQuaternion((new Quaternion()).setFromRotationMatrix(item.mat4))),
+            'rotation': (new Quaternion()).setFromRotationMatrix(item.mat4),
             'position': (new Vector3()).setFromMatrixPosition(item.mat4), //(e[12], e[13], e[14]),
 
             // //PLY - doesn't work has wrong rotation
@@ -94,21 +93,23 @@ async function loadAr3dplan(url) {
     return poses;
 }
 
+//TODO sometimes the order is inverted (, depending of AREngine version or phone orientation?
 async function loadAREngineRecorder(url) {
     var poses = [];
-    var text = await(await fetch(url + '/poses.csv')).text();
+    var fn = 'poses.csv';
+    var response = await fetch(url + '/'+fn);
+    if(!response.ok) {
+        alert("missing poses file "+fn);
+        return [];
+    }
+    var text = await(response).text();
 
     var items = csv2objects(text);
     items.forEach(item => {
-        var quaternion = new THREE.Quaternion(parseFloat(item.qx), parseFloat(item.qy), parseFloat(item.qz), parseFloat(item.qw));
-        var euler = new Euler();
-        euler.setFromQuaternion(quaternion);
-        
-        // euler = new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'); //right order
-
         poses.push({
             'position': new Vector3(item.tx, item.ty, item.tz),
-            'rotation': euler,
+            'rotation': new THREE.Quaternion(parseFloat(item.qx), parseFloat(item.qy), parseFloat(item.qz), parseFloat(item.qw)),
+            // 'rotation': new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'), //right order
             'path': url + "/" + item.frame + "_image.jpg",
             'data' : item,
         })
@@ -124,7 +125,7 @@ async function loadTum(url) {
     var i = 0;
 
     var modulo = 1;
-    var maximagesdisplayed = 100;
+    var maximagesdisplayed = 100; //TODO move that outside to use that feature for all dataset type
     if(images.length > maximagesdisplayed) {
         var modulo = Math.floor(images.length / maximagesdisplayed); //limit display to maximagesdisplayed images
         console.warn("Has "+ images.length + " images to display, display only ~"+maximagesdisplayed + ", thus 1 image every "+modulo);
@@ -132,13 +133,10 @@ async function loadTum(url) {
 
     images.forEach(image => {
         if(i++%modulo!==0) return;
-        var quaternion = new THREE.Quaternion(parseFloat(image.qx), parseFloat(image.qy), parseFloat(image.qz), parseFloat(image.qw));
-        var rotation = new Euler();
-        rotation.setFromQuaternion(quaternion);
 
         poses.push({
             'position': new Vector3(image.tx, image.ty, image.tz),
-            'rotation': rotation,
+            'rotation': new THREE.Quaternion(parseFloat(image.qx), parseFloat(image.qy), parseFloat(image.qz), parseFloat(image.qw)),
             'path': url + "/" + image.rgb_fn,
             'data' : image,
         });
@@ -201,35 +199,20 @@ async function loadAliceVisionSfm(url) {
     });
 
     data.poses.forEach(item => {
-        var r = item.pose.transform.rotation.map(parseFloat);
-        var center = item.pose.transform.center;
-
-        // var m = new Matrix3(); m.fromArray(r);
-        // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
-        var qw = Math.sqrt(1+r[0]+r[4]+r[8])/2;
-        var w4 = 4*qw;
-        var qx = (r[7] - r[5]) / w4;
-        var qy = (r[2] - r[6]) / w4;
-        var qz = (r[3] - r[1]) / w4;
-
-        var quaternion = new THREE.Quaternion(qx, qy, qz, qw);
-        var rotation = new Euler();
-        rotation.setFromQuaternion(quaternion);
+        var m3 = new THREE.Matrix3().fromArray(item.pose.transform.rotation.map(parseFloat));
+        var m4 = convertM3ToM4(m3,  new Vector3());
+        m4.transpose();
 
         var view = viewsByPoseId[item.poseId];
-
         var fn = view.path.split("/").pop();
 
         poses.push({
-            'position': new Vector3(center[0], center[1], center[2]),
-            'rotation': rotation, //Euler rotation
-            'quaternion': quaternion, //Quaternion rotation
+            'position': new Vector3().fromArray(item.pose.transform.center.map(parseFloat)),
+            'rotation': new THREE.Quaternion().setFromRotationMatrix(m4), //ThreeJs should let us use directly m3! and why is that transposed?
             'path': url + "/" + fn,
             'data' : item
         })
     });
-
-    // console.log("csv", exportPosesRemmelAndroid(poses));
 
     return poses;
 }
@@ -259,7 +242,7 @@ async function loadAgisoft(url) {
     var xml = await (response).text();
     var document = (new X2JS()).xml_str2json(xml);
 
-    var scale = 0.01; //default scale
+    var scale = 0.1; //TODO estimate default scale
     var transformWorld = null;
     if(document.document.chunk.transform) {
         var transform = document.document.chunk.transform;
@@ -274,7 +257,6 @@ async function loadAgisoft(url) {
     }
 
     //TODO add 1st expected pose, to place calculated pose according to the expected one, in order to have right world position and world rotation
-
     document.document.chunk.cameras.camera.forEach(item => {
         if(!item.transform) return; //agisoft was not able to align that camera
         var transform = item.transform.split(' ').map(parseFloat);
@@ -285,15 +267,12 @@ async function loadAgisoft(url) {
             m = m.multiply(transformWorld);
         m.transpose();
 
-        var position = new Vector3();
-        position.setFromMatrixPosition(m);
-
+        var position = new Vector3().setFromMatrixPosition(m);
         position.x *= scale;
         position.y *= scale;
         position.z *= scale;
 
-        var quaternion = new Quaternion();
-        quaternion.setFromRotationMatrix(m);
+        var quaternion = new Quaternion().setFromRotationMatrix(m);
 
         poses.push({
             'position': position,
@@ -303,22 +282,30 @@ async function loadAgisoft(url) {
         })
     });
 
-    //console.log("csv", exportPosesRemmelAndroid(poses));
-
     return poses;
 }
 
-//poses.csv to be compatible with https://github.com/remmel/hms-AREngine-demo
-function exportPosesRemmelAndroid(poses) {
-    var csv = "frame,tx,ty,tz,qx,qy,qz,qw,yaw,pitch,roll\n";
-    poses.forEach(item => { //item.rotation.x, item.rotation.y, item.rotation.z
-        var q = item.quaternion;
-        if(!q) { //no quaternion set, calculate it from euler rotation
-            q = new THREE.Quaternion();
-            q.setFromEuler(item.rotation);
-        }
+/**
+ * Export poses in csv format, in order to be compatible with https://github.com/remmel/hms-AREngine-demo
+ * Only quaternion, not Euler, as we use here the default ThreeJS (XYZ) whereas AREngine is YZX
+ */
+export function exportPosesRemmelAndroid(poses) {
+    var csv = "frame,tx,ty,tz,qx,qy,qz,qw,pitch,yaw,roll\n";
 
-        csv += [item.path, item.position.x, item.position.y, item.position.z, q.x, q.y, q.z, q.w].join(',') + "\n";
+    poses.forEach(pose => { //item.rotation.x, item.rotation.y, item.rotation.z
+        if(!pose.rotation instanceof Euler && !pose.rotation instanceof Quaternion)
+            console.error("rotation must be Quaternion or Euler");
+        // default euler order is different depending of the system, for ThreeJS it's XYZ and for AREngine it's YZX
+        // to use that order: (new Euler(0,0,0,'YZX')).setFromQu...
+        var euler = pose.rotation instanceof Euler ? pose.rotation : new Euler().setFromQuaternion(pose.rotation);
+        var q = pose.rotation instanceof Quaternion ? pose.rotation : new Quaternion().setFromEuler(pose.rotation);
+
+        csv += [
+            pose.path.split("/").pop(),
+            pose.position.x, pose.position.y, pose.position.z,
+            q.x, q.y, q.z, q.w,
+            THREE.Math.radToDeg(euler.x), THREE.Math.radToDeg(euler.y), THREE.Math.radToDeg(euler.z)
+        ].join(',') + "\n";
     });
     return csv;
 }
