@@ -106,9 +106,13 @@ async function loadAREngineRecorder(url) {
 
     var items = csv2objects(text);
     items.forEach(item => {
+        var q = new Quaternion(parseFloat(item.qx), parseFloat(item.qy), parseFloat(item.qz), parseFloat(item.qw));
+        //rot x 180 - don't understand why the rotation provided by AREngine must be rotated by X_180° - in one of my AREngine dataset, no need to rotate it, strange..
+        q.multiply(new Quaternion(1,0,0,0));
+
         poses.push({
             'position': new Vector3(item.tx, item.ty, item.tz),
-            'rotation': new THREE.Quaternion(parseFloat(item.qx), parseFloat(item.qy), parseFloat(item.qz), parseFloat(item.qw)),
+            'rotation': q,
             // 'rotation': new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'), //right order
             'path': url + "/" + item.frame + "_image.jpg",
             'data' : item,
@@ -301,7 +305,7 @@ export function exportPosesRemmelAndroid(poses) {
         var q = pose.rotation instanceof Quaternion ? pose.rotation : new Quaternion().setFromEuler(pose.rotation);
 
         csv += [
-            pose.path.split("/").pop(),
+            pose.path.split("/").pop(), //.split('_')[0],
             pose.position.x, pose.position.y, pose.position.z,
             q.x, q.y, q.z, q.w,
             THREE.Math.radToDeg(euler.x), THREE.Math.radToDeg(euler.y), THREE.Math.radToDeg(euler.z)

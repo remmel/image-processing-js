@@ -9,7 +9,7 @@ import {Euler, Matrix3, Quaternion, Vector3} from "./copypaste/three.module.js";
 
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
-    material = new THREE.MeshPhongMaterial({color: 0xffffff, flatShading: true}),
+    material = new THREE.MeshPhongMaterial( { color:0x999999, vertexColors: THREE.FaceColors, flatShading: true }, ),
     materialRed = new THREE.MeshPhongMaterial({color: 0xff0000, flatShading: true}),
     poses = [], curPose = null, playpauseInterval = null;
 
@@ -51,15 +51,12 @@ async function main() {
 
     // console.log(poses);
 
-    var geometry = createCamera(scale, datasetType);
-
     // console.log(Object.entries(poses));
 
     for(var numPose in poses) {
         var pose = poses[numPose];
 
-        var mesh = new THREE.Mesh(geometry, material);
-
+        var mesh = createCamera(scale, datasetType);
         mesh.position.copy(pose.position);
 
         if(pose.rotation instanceof Euler) {
@@ -86,19 +83,23 @@ async function main() {
 //1st position is landscape. on the x,y plan looking in z direction. uncomment createDebugCamera() to check that
 function createCamera(scale, datasetType) {
     //when scale is 1 (default) base is 10cm (0.1)
-    var geometry = new THREE.CylinderBufferGeometry(0, 0.1/scale, 0.05/scale, 4);
+    var geometry = new THREE.CylinderGeometry(0, 0.1/scale, 0.05/scale, 4);
     geometry.rotateX(THREE.Math.degToRad(-90)); //=-PI/2 _ //PI <=> 180°
     geometry.rotateZ(THREE.Math.degToRad(45)); //=PI/4
     geometry.applyMatrix4(new THREE.Matrix4().makeScale(1, 0.75, 1)); //rectangular base
 
     if(datasetType === DATASET_TYPE.LUBOS) {
         geometry.rotateZ(THREE.Math.degToRad(90)); //pictures are in portrait not landscape
+        geometry.faces[3].color.setHex( 0xffff00 );
+    } else {
+        geometry.faces[2].color.setHex( 0xffff00 );
     }
-    return geometry;
+
+    return new THREE.Mesh(geometry, material);
 }
 
 function createDebugCamera(){
-    var mesh = new THREE.Mesh( createCamera(1, datasetType), material);
+    var mesh = createCamera(1);
     mesh.position.copy(new THREE.Vector3(1, 1, 1));
     return mesh;
 }
@@ -188,14 +189,13 @@ function createFloor(datasetType) {
 
 function createLights() {
     var group = new THREE.Group();
-    // lights
     var light1 = new THREE.DirectionalLight(0xffffff);
     light1.position.set(1, 1, 1);
     group.add(light1);
-    var light2 = new THREE.DirectionalLight(0x002288);
+    var light2 = new THREE.DirectionalLight(0xffffff);
     light2.position.set(-1, -1, -1);
     group.add(light2);
-    var light3 = new THREE.AmbientLight(0x222222);
+    var light3 = new THREE.AmbientLight(0x999999);
     group.add(light3);
     return group;
 }
