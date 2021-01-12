@@ -3,7 +3,7 @@
 
 import * as THREE from './copypaste/three.module.js';
 import {OrbitControls} from './copypaste/OrbitControls.js';
-import {DATASET_TYPE, exportPosesRemmelAndroid, loadPoses} from "./datasetsloader.js";
+import {DATASET_TYPE, exportPosesRemmelAndroid, exportPosesTumAssociate, loadPoses} from "./datasetsloader.js";
 import {getForm} from './form.js'
 import {Euler, Matrix3, Quaternion, Vector3} from "./copypaste/three.module.js";
 
@@ -255,13 +255,7 @@ var preloadImagesOnce = () => {
 }
 
 document.getElementsByName('export-csv')[0].addEventListener('click', e => {
-    var csv = exportPosesRemmelAndroid(poses);
-    var encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
-    var link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "poses.csv");
-    document.body.appendChild(link); // Required for FF
-    link.click()
+    exportPosesTumAssociate(poses);
 })
 
 

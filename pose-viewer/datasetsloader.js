@@ -129,7 +129,7 @@ async function loadTum(url) {
     var i = 0;
 
     var modulo = 1;
-    var maximagesdisplayed = 100; //TODO move that outside to use that feature for all dataset type
+    var maximagesdisplayed = 1000; //TODO move that outside to use that feature for all dataset type
     if(images.length > maximagesdisplayed) {
         var modulo = Math.floor(images.length / maximagesdisplayed); //limit display to maximagesdisplayed images
         console.warn("Has "+ images.length + " images to display, display only ~"+maximagesdisplayed + ", thus 1 image every "+modulo);
@@ -311,5 +311,45 @@ export function exportPosesRemmelAndroid(poses) {
             THREE.Math.radToDeg(euler.x), THREE.Math.radToDeg(euler.y), THREE.Math.radToDeg(euler.z)
         ].join(',') + "\n";
     });
-    return csv;
+    downloadCsv(csv, "poses.csv");
+}
+
+/**
+ * Export poses in csv format, in order to be compatible with https://github.com/remmel/hms-AREngine-demo
+ * Only quaternion, not Euler, as we use here the default ThreeJS (XYZ) whereas AREngine is YZX
+ */
+export function exportPosesTumAssociate(poses) {
+    var csv = "";
+
+    poses.forEach(pose => { //item.rotation.x, item.rotation.y, item.rotation.z
+        if(!pose.rotation instanceof Euler && !pose.rotation instanceof Quaternion)
+            console.error("rotation must be Quaternion or Euler");
+        // default euler order is different depending of the system, for ThreeJS it's XYZ and for AREngine it's YZX
+        // to use that order: (new Euler(0,0,0,'YZX')).setFromQu...
+        var euler = pose.rotation instanceof Euler ? pose.rotation : new Euler().setFromQuaternion(pose.rotation);
+        var q = pose.rotation instanceof Quaternion ? pose.rotation : new Quaternion().setFromEuler(pose.rotation);
+
+        q.multiply(new Quaternion(0,0,1,0));
+
+        //TODO make that more general as expected to come from AREngine
+        csv += [
+            pose.data.frame, //pose_ts
+            pose.position.x, pose.position.y, pose.position.z, //tx ty tz
+            q.x, q.y, q.z, q.w, //qx qy qz qw
+            pose.data.frame, //depth_ts //dumb
+            pose.data.frame + "_depth16.bin.png", //depth_fn
+            pose.data.frame, //rgb_ts //dumb
+            pose.data.frame + "_image.jpg", //rgb_fn
+        ].join(' ') + "\n";
+    });
+    downloadCsv(csv, "associate.txt");
+}
+
+function downloadCsv(csv, fn) {
+    var encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", fn);
+    document.body.appendChild(link); // Required for FF
+    link.click()
 }
