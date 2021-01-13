@@ -16,7 +16,7 @@ Many ways to start a http server :
 - Php server: `php -S localhost:8000`
 
 ## Create a symlink
-- Linux: `pose-viewer$ ln -s ~/workspace/photogrammetry/dataset dataset`
+- Linux: `pose-viewer$ ln -s ~/workspace/dataset dataset`
 - Windows: `pose-viewer> mklink dataset "C:\Users\remme\workspace\dataset"` (cmd as admin or Developer mode on)
 
 

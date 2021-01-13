@@ -329,17 +329,19 @@ export function exportPosesTumAssociate(poses) {
         var euler = pose.rotation instanceof Euler ? pose.rotation : new Euler().setFromQuaternion(pose.rotation);
         var q = pose.rotation instanceof Quaternion ? pose.rotation : new Quaternion().setFromEuler(pose.rotation);
 
-        q.multiply(new Quaternion(0,0,1,0));
+        //q.multiply(new Quaternion(0,0,1,0));
+
+        var frameId = pose.data.frame ?? pose.data.frame_id;
 
         //TODO make that more general as expected to come from AREngine
         csv += [
-            pose.data.frame, //pose_ts
+            frameId, //pose_ts
             pose.position.x, pose.position.y, pose.position.z, //tx ty tz
             q.x, q.y, q.z, q.w, //qx qy qz qw
-            pose.data.frame, //depth_ts //dumb
-            pose.data.frame + "_depth16.bin.png", //depth_fn
-            pose.data.frame, //rgb_ts //dumb
-            pose.data.frame + "_image.jpg", //rgb_fn
+            frameId, //depth_ts //dumb
+            frameId + ".png", //"_depth16.bin.png" //depth_fn 
+            frameId, //rgb_ts //dumb
+            "resized180/" + frameId + ".jpg", //"_image.jpg" //rgb_fn
         ].join(' ') + "\n";
     });
     downloadCsv(csv, "associate.txt");
