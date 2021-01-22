@@ -7,8 +7,6 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link type="text/css" rel="stylesheet" href="https://threejs.org/examples/main.css">
     <link type="text/css" rel="stylesheet" href="main.css">
-
-    <script src="main.js"></script>
 </head>
 
 <body>
@@ -32,8 +30,18 @@
             <option value="">- Select datasetType -</option>
         </select>
         <input type="text" name="datasetFolder" placeholder="datasetFolder url eg: https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk" />
-        <input type="submit" value="OK" />
-        <input type="button" value="Export CSV" name="export-csv"/>
+        <input type="submit" value="Load"/>
+    </form>
+    <input type="file" name="files-import" multiple />
+<!--    webkitdirectory directory-->
+    <form>
+        <select name="exportType">
+            <option value="ALICEVISION_SFM">Alicevision - .sfm</option>
+            <option value="AGISOFT">Agisoft - .csv</option>
+            <option value="FAST_FUSION">FastFusion - associate.txt</option>
+        </select>
+        <input type="file" value="file-general" name="file" style="display: none"/>
+        <input type="button" value="Export" name="export"/>
     </form>
     <span id="info-text">Click on Tetrahedron to display pose & image details. <br />x:red; y:green; z:blue</span>
     <br />
@@ -54,7 +62,7 @@
 <!--https://github.com/abdolence/x2js-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/x2js/1.2.0/xml2json.js"></script>
 <!--<script src="https://cdn.jsdelivr.net/npm/xml2js@0.4.23/lib/xml2js.js"></script>-->
-<script type="module" src="main.js"></script>
+<script type="module" src="global.js"></script>
 
 </body>
 

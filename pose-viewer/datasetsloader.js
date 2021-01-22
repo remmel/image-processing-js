@@ -1,9 +1,9 @@
 import * as THREE from './copypaste/three.module.js';
-import {OrbitControls} from './copypaste/OrbitControls.js';
 import {csv2objects, rgbdtum2objects} from "./csv.js";
 import {closest} from "./utils.js";
 import {Euler, Matrix3, Matrix4, Quaternion, Vector3} from "./copypaste/three.module.js";
 import {csv2arrays} from "./csv.js";
+import {browseFile, readAsDataURL, readAsText} from "./form.js";
 
 export const DATASET_TYPE = {
     RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
@@ -14,45 +14,62 @@ export const DATASET_TYPE = {
     AGISOFT: 'AGISOFT', //Agilesoft Metashape format (File > Export > Export Cameras)
 };
 
-export async function loadPoses(type, folder) {
+/**
+ * if "dataset/monstree" => "./dataset/monstree"
+ * if "http://website.com/dataset/monstree" => http://website.com/dataset/monstree"
+ */
+function folderNameToUrl(folder) {
+    if (!folder) return null;
     var isUrl = folder.startsWith('http://') || folder.startsWith('https://');
+    return isUrl ? folder : './' + folder;
+}
 
-    var url = isUrl ? folder : './' + folder;
+// folder or file
+export async function loadPoses(type, folder, files) {
+    var url = folderNameToUrl(folder);
 
     switch (type) {
-        case DATASET_TYPE.RGBDTUM: return await loadTum(url);
-        case DATASET_TYPE.AR3DPLAN: return await loadAr3dplan(url);
-        case DATASET_TYPE.LUBOS: return await loadLubos(url);
-        case DATASET_TYPE.ARENGINERECORDER: return await loadAREngineRecorder(url);
-        case DATASET_TYPE.ALICEVISION_SFM: return await loadAliceVisionSfm(url);
-        case DATASET_TYPE.AGISOFT: return await loadAgisoft(url);
+        case DATASET_TYPE.RGBDTUM: return await loadTum(url, files);
+        case DATASET_TYPE.AR3DPLAN: return await loadAr3dplan(url, files);
+        case DATASET_TYPE.LUBOS: return await loadLubos(url, files);
+        case DATASET_TYPE.ARENGINERECORDER: return await loadAREngineRecorder(url, files);
+        case DATASET_TYPE.ALICEVISION_SFM: return await loadAliceVisionSfm(url, files);
+        case DATASET_TYPE.AGISOFT: return await loadAgisoft(url, files);
     }
     throw "Wrong dataset type:"+type;
 }
 
-//TODO avoid using thoses .mat files to avoid http calls
-async function loadLubos(url) {
+async function readOrFetchText(url, files, name) {
+    if(url) return await(await fetch(url + '/' + name)).text();
+    if(!files) return console.log("no url, no files");
+    var f = Array.from(files).find(f => f.name === name);
+    if(!f) return console.log("file "+name+"not found. Did you selected it?");
+    return await readAsText(f);
+}
+
+//TODO avoid using thoses .mat files to avoid http calls, see git for my trials to use ply file for pose
+async function loadLubos(url, files) {
     var poses = [];
     var $loading = document.getElementById('loading');
+    var text = await readOrFetchText(url, files, 'posesPLY.csv'); //PLY: position(x,z,-y)
 
-    var text = await(await fetch(url + '/posesPLY.csv')).text(); //PLY: position(x,z,-y)
     var items = csv2objects(text);
 
     var i=0, nb = items.length;
     for(var item of items) {
-        $loading.textContent = "loading "+ ++i + "/"+nb;
-        item.mat4 = await fetchLubosMat(url, item.frame_id);
+        if(url) $loading.textContent = "loading "+ ++i + "/"+nb;
+
+        var frameId = item.frame_id;
+        item.mat4 = await fetchLubosMat(url, files, frameId + '.mat');
+        var fn = frameId + '.jpg';
 
         poses.push({
             //MAT
             'rotation': (new Quaternion()).setFromRotationMatrix(item.mat4),
             'position': (new Vector3()).setFromMatrixPosition(item.mat4), //(e[12], e[13], e[14]),
-
-            // //PLY - doesn't work has wrong rotation
-            // 'position': new Vector3(item.x, item.z, -item.y),
-            // 'rotation': new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'),
-
-            'path': url + "/" + item.frame_id.padStart(8, "0") + ".jpg", //set image path
+            'rgbFn' : fn,
+            'path': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn), //set image path or reference to image file
+            'id' : frameId,
             'data': item
         })
     }
@@ -60,9 +77,8 @@ async function loadLubos(url) {
     return poses;
 }
 
-async function fetchLubosMat(url, frameId) {
-    var fn = frameId.padStart(8, "0") + '.mat';//?t'+ (new Date().toISOString());
-    var text = await(await fetch(url + "/" + fn)).text();
+async function fetchLubosMat(url, files, matFn) {
+    var text = await readOrFetchText(url, files, matFn);
     var arrays = csv2arrays(text, ' ', true);
     var array0_3 = [...arrays[0], ...arrays[1], ...arrays[2], ...arrays[3]]
 
@@ -289,6 +305,19 @@ async function loadAgisoft(url) {
     return poses;
 }
 
+export function exportPoses(poses, exportType){
+    switch (exportType) {
+        case 'FAST_FUSION':
+            exportPosesTumAssociate(poses); break;
+        case 'ALICEVISION_SFM':
+            exportPosesCamerasSfmAlicevision(poses); break;
+        case 'AGISOFT': //more or less same than default (to check)
+        default:
+            exportPosesRemmelAndroid(poses);
+    }
+}
+
+
 /**
  * Export poses in csv format, in order to be compatible with https://github.com/remmel/hms-AREngine-demo
  * Only quaternion, not Euler, as we use here the default ThreeJS (XYZ) whereas AREngine is YZX
@@ -305,10 +334,10 @@ export function exportPosesRemmelAndroid(poses) {
         var q = pose.rotation instanceof Quaternion ? pose.rotation : new Quaternion().setFromEuler(pose.rotation);
 
         csv += [
-            pose.path.split("/").pop(), //.split('_')[0],
-            pose.position.x, pose.position.y, pose.position.z,
-            q.x, q.y, q.z, q.w,
-            THREE.Math.radToDeg(euler.x), THREE.Math.radToDeg(euler.y), THREE.Math.radToDeg(euler.z)
+            pose.path.split("/").pop(), //.split('_')[0], //frame
+            pose.position.x, pose.position.y, pose.position.z, //tx ty tz
+            q.x, q.y, q.z, q.w,//qx qy qz qw
+            THREE.Math.radToDeg(euler.x), THREE.Math.radToDeg(euler.y), THREE.Math.radToDeg(euler.z) //pitch yaw roll
         ].join(',') + "\n";
     });
     downloadCsv(csv, "poses.csv");
@@ -347,8 +376,63 @@ export function exportPosesTumAssociate(poses) {
     downloadCsv(csv, "associate.txt");
 }
 
+export async function exportPosesCamerasSfmAlicevision(poses) {
+    alert("Load cameraInit.sfm (to have same viewId and poseId)"); //or cameras.sfm?
+    // var url = "dataset/20210113_182314.dataset/mr2020/MeshroomCache/StructureFromMotion/90d8f247280881f623f416a361924d03f4fbaf71/cameras.sfm";
+    // var camerasSfm = await(await fetch(url)).json();
+
+    var txt  = await browseFile();
+    var camerasSfm = JSON.parse(txt);
+
+    var fn2PoseId = [];
+    camerasSfm.views.forEach(view => {
+        var path = view.path;
+        var fn = path.substring(path.lastIndexOf('/') + 1);
+        fn2PoseId[fn] = view.poseId;
+    });
+
+    var newalicevisionposes = [];
+
+    poses.forEach(pose => {
+        var rgbFn = pose.rgbFn;
+        var poseId = fn2PoseId[rgbFn];
+
+        var m3 = new Matrix3(); //TODO use quaternion instead
+        m3.setFromMatrix4(pose.data.mat4);
+
+        newalicevisionposes.push({
+            'poseId': poseId,
+            'pose' : {
+                'transform' : {
+                    'rotation' : m3.elements,
+                    'center' : pose.mesh.position.toArray(),
+                },
+                'locked' : '1'
+            }
+        })
+    });
+
+    camerasSfm.poses = newalicevisionposes;
+    // delete camerasSfm['featuresFolders'];
+    // delete camerasSfm['matchesFolders'];
+
+    downloadJson(camerasSfm, 'camerasWithPoses.sfm');
+    //https://github.com/alicevision/meshroom/wiki/Using-known-camera-positions
+
+    console.log(camerasSfm);
+}
+
 function downloadCsv(csv, fn) {
     var encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", fn);
+    document.body.appendChild(link); // Required for FF
+    link.click()
+}
+
+function downloadJson(obj, fn) {
+    var encodedUri = encodeURI("data:text/json;charset=utf-8," + JSON.stringify(obj, null, 4));
     var link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", fn);

@@ -1,25 +1,19 @@
 // import * as THREE from 'https://threejs.org/build/three.module.js';
 // import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
-
 import * as THREE from './copypaste/three.module.js';
 import {OrbitControls} from './copypaste/OrbitControls.js';
-import {DATASET_TYPE, exportPosesRemmelAndroid, exportPosesTumAssociate, loadPoses} from "./datasetsloader.js";
-import {getForm} from './form.js'
-import {Euler, Matrix3, Quaternion, Vector3} from "./copypaste/three.module.js";
+import {DATASET_TYPE} from './datasetsloader.js';
+import {Euler, Quaternion} from './copypaste/three.module.js';
+import {selectPose} from './imagepanel.js';
 
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
     material = new THREE.MeshPhongMaterial( { color:0x999999, vertexColors: THREE.FaceColors, flatShading: true }, ),
     materialRed = new THREE.MeshPhongMaterial({color: 0xff0000, flatShading: true}),
-    poses = [], curPose = null, playpauseInterval = null;
+    groupPoses = new THREE.Group();
 
-var {datasetType, datasetFolder, scale} = getForm();
-
-
-console.log(datasetType, datasetFolder);
-
-async function main() {
-    divScene = document.getElementById("scene3d");
+export async function init3dscene(datasetType) {
+    divScene = document.getElementById('scene3d');
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xcccccc);
     scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
@@ -33,7 +27,6 @@ async function main() {
     switch (datasetType) {
         case DATASET_TYPE.RGBDTUM:
             camera.up = new THREE.Vector3( 0, 0, 1 ); //up is z not y
-
     }
 
     createOrbitControl(camera, renderer);
@@ -44,14 +37,10 @@ async function main() {
     window.addEventListener('resize', onWindowResize, false);
 
     animate();
+}
 
-    // document.getElementById('loading').innerText = "loading...";
-
-    poses = await loadPoses(datasetType, datasetFolder);
-
-    // console.log(poses);
-
-    // console.log(Object.entries(poses));
+export async function renderPoses(poses, datasetType, scale) {
+    removeCameras();
 
     for(var numPose in poses) {
         var pose = poses[numPose];
@@ -71,13 +60,21 @@ async function main() {
         mesh.data = pose;
         mesh.numPose = numPose;
         pose.mesh = mesh;
-        scene.add(mesh);
+        groupPoses.add(mesh);
     }
+    scene.add(groupPoses);
 
     selectPose(null);
+}
 
-    // animate();
-    //render(); // remove when using next line for animation loop (requestAnimationFrame)
+function removeCameras() {
+    // scene.remove(groupPoses); //why it doesn't work?
+    //FIXME: filter(true), otherwise not all the item is removed. Why scene.remove(groupPoses) doesnot work?
+    groupPoses.children.filter(() => true).forEach(child => {
+        groupPoses.remove(child); // need to .dispose also geometry
+        child.geometry.dispose();
+        // child.material.dispose(); //is
+    })
 }
 
 //1st position is landscape. on the x,y plan looking in z direction. uncomment createDebugCamera() to check that
@@ -121,45 +118,27 @@ function render() {
 }
 
 // When clicking on pose, display images and info
-function onClick(xpx, ypx) {
+function onClick3dScene(xpx, ypx) {
     // calculate mouse position in normalized device coordinates
     // (-1 to +1) for both components
     var mouse = new THREE.Vector2();
 
     mouse.x = (xpx / divScene.clientWidth) * 2 - 1;
     mouse.y = -(ypx / divScene.clientHeight) * 2 + 1;
-
     // update the picking ray with the camera and mouse position
     raycaster.setFromCamera(mouse, camera);
 
     // calculate objects intersecting the picking ray
-    var intersects = raycaster.intersectObjects(scene.children);
+    var intersects = raycaster.intersectObjects(groupPoses.children); //scene.children
     intersects.some(intersect => {
         let numPose = intersect.object.numPose;
-        if (!numPose) return false; //continue
         selectPose(parseInt(numPose));
         return true;
     })
 }
 
-function selectPose(idxPose) {
-    if(idxPose < 0 || idxPose >= poses.length) return;
-    document.getElementById('info-num-pose').textContent = (idxPose === null ? '-' : idxPose+1)+"/"+poses.length;
-    if(idxPose === null) return;
-
-    curPose = idxPose;
-    var pose = poses[idxPose];
-    // console.log('selectPose', idxPose, pose);
-
-    var mesh = pose.mesh;
-    var euler = mesh.rotation;
-    var eulerDeg = {x: THREE.Math.radToDeg(euler.x), y: THREE.Math.radToDeg(euler.y), z: THREE.Math.radToDeg(euler.z)}
+export function selectPoseScene(mesh) {
     mesh.material = materialRed;
-    document.getElementById('photo').src = pose.path;
-
-    var {mesh, ...poseWithoutMesh} = pose;
-    document.getElementById('info-text').textContent = JSON.stringify(poseWithoutMesh);
-
     setTimeout(function () {
         mesh.material = material;
     }, 500)
@@ -212,61 +191,11 @@ function createOrbitControl(camera, renderer) {
 }
 
 window.addEventListener('click', event => {
-    return onClick(event.clientX, event.clientY);
+    return onClick3dScene(event.clientX, event.clientY);
 }, false);
 
 window.addEventListener('touchstart', event => {
     if(!event.touches.length) return;
-    return onClick(event.touches[0].pageX, event.touches[0].pageY);
+    return onClick3dScene(event.touches[0].pageX, event.touches[0].pageY);
 });
 
-main();
-
-document.getElementById('btn-previous').addEventListener('click', e => {
-    selectPose(curPose-1);
-})
-
-document.getElementById('btn-next').addEventListener('click', e => {
-    selectPose(curPose+1);
-})
-
-document.getElementById('btn-playpause').addEventListener('click', e => {
-    if(playpauseInterval){
-        playpauseInterval = clearInterval(playpauseInterval);
-    } else {
-        preloadImagesOnce();
-        if(curPose === poses.length-1 || curPose === null) curPose = -1; //if pressing btn when no pose selected or last one selected
-
-        playpauseInterval = setInterval(() => {
-            if(curPose === poses.length-1)
-                playpauseInterval = clearInterval(playpauseInterval);
-            else
-                selectPose(curPose+1);
-        }, 500);
-    }
-})
-
-var preloadImagesOnce = () => {
-    poses.forEach(pose => {
-        var img=new Image();
-        img.src=pose.path;
-    })
-    preloadImagesOnce = () => {}; //as that fct is called once
-}
-
-document.getElementsByName('export-csv')[0].addEventListener('click', e => {
-    exportPosesTumAssociate(poses);
-})
-
-
-// var openFile = function(event) {
-//     var input = event.target;
-//
-//     var reader = new FileReader();
-//     reader.onload = function(){
-//         var dataURL = reader.result;
-//         var output = document.getElementById('output');
-//         output.src = dataURL;
-//     };
-//     reader.readAsDataURL(input.files[0]);
-// };
