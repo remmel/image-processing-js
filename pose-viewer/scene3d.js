@@ -2,7 +2,7 @@
 // import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
 import * as THREE from './copypaste/three.module.js';
 import {OrbitControls} from './copypaste/OrbitControls.js';
-import {DATASET_TYPE} from './datasetsloader.js';
+import {DATASET_TYPE} from './datasetsloader/datasetsloader.js';
 import {Euler, Quaternion} from './copypaste/three.module.js';
 import {selectPose} from './imagepanel.js';
 

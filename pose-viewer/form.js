@@ -1,4 +1,4 @@
-import {DATASET_TYPE} from "./datasetsloader.js";
+import {DATASET_TYPE} from "./datasetsloader/datasetsloader.js";
 
 
 function decodeUrl() {

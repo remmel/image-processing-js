@@ -1,4 +1,4 @@
-import {exportPoses, loadPoses} from "./datasetsloader.js";
+import {exportPoses, loadPoses} from "./datasetsloader/datasetsloader.js";
 import {getFormExportType, getFormImportType, getImportForm} from "./form.js";
 import {init3dscene, renderPoses} from './scene3d.js';
 import {} from './imagepanel.js'
