@@ -1,10 +1,10 @@
 import * as THREE from "../copypaste/three.module.js";
-import {browseFile} from "../form.js";
-import {convertM3ToM4, downloadJson} from "./datasetsloader.js";
+import {browseFile, readAsText} from "../form/formUtils.js";
+import {convertM3ToM4, downloadJson, readOrFetchText} from "./datasetsloader.js";
 
-export async function loadAlicevision(url) {
+export async function loadAlicevision(url, files) {
     var poses = [];
-    var data = await(await fetch(url + '/sfm.json')).json();
+    var data = JSON.parse(await readOrFetchText(url, files, 'cameras.sfm', true));
 
     var viewsByPoseId = {};
 
@@ -21,9 +21,11 @@ export async function loadAlicevision(url) {
         var fn = view.path.split("/").pop();
 
         poses.push({
+            'id' : item.poseId,
             'position': new THREE.Vector3().fromArray(item.pose.transform.center.map(parseFloat)),
             'rotation': new THREE.Quaternion().setFromRotationMatrix(m4), //ThreeJs should let us use directly m3! and why is that transposed?
-            'path': url + "/" + fn,
+            'rgbFn' : fn,
+            'rgb': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn),
             'data' : item
         })
     });
@@ -33,11 +35,7 @@ export async function loadAlicevision(url) {
 
 export async function exportAlicevision(poses) {
     alert("Load cameraInit.sfm (to have same viewId and poseId)"); //or cameras.sfm?
-    // var url = "dataset/20210113_182314.dataset/mr2020/MeshroomCache/StructureFromMotion/90d8f247280881f623f416a361924d03f4fbaf71/cameras.sfm";
-    // var camerasSfm = await(await fetch(url)).json();
-
-    var txt  = await browseFile();
-    var camerasSfm = JSON.parse(txt);
+    var camerasSfm = JSON.parse(await browseFile());
 
     var fn2PoseId = [];
     camerasSfm.views.forEach(view => {
@@ -68,8 +66,8 @@ export async function exportAlicevision(poses) {
     });
 
     camerasSfm.poses = newalicevisionposes;
-    // delete camerasSfm['featuresFolders'];
-    // delete camerasSfm['matchesFolders'];
+    delete camerasSfm['featuresFolders'];
+    delete camerasSfm['matchesFolders'];
 
     downloadJson(camerasSfm, 'camerasWithPoses.sfm');
     //https://github.com/alicevision/meshroom/wiki/Using-known-camera-positions

@@ -13,9 +13,11 @@ export async function loadAr3dplan(url) {
         euler.setFromQuaternion(quaternion);
 
         poses.push({
+            'id' : null,
             'position': new THREE.Vector3(item.position.x, item.position.y, item.position.z),
             'rotation': euler, //new Euler(THREE.Math.degToRad(item.eulerAngles.x), THREE.Math.degToRad(item.eulerAngles.y), THREE.Math.degToRad(item.eulerAngles.z)),
-            'path': url + "/" + item.name,
+            'rgbFn': item.name,
+            'rgb': url + "/" + item.name,
             'data' : item,
         })
     });

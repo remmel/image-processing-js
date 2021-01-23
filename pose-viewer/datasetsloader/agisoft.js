@@ -45,9 +45,11 @@ export async function loadAgisoft(url) {
         var quaternion = new Quaternion().setFromRotationMatrix(m);
 
         poses.push({
+            'id': item._id,
             'position': position,
             'rotation': quaternion,
-            'path': url + "/" + item._label + ".jpg",
+            'rgbFn' : item._label + ".jpg",
+            'rgb': url + "/" + item._label + ".jpg",
             'data' : item
         })
     });

@@ -11,10 +11,12 @@
 
 <body>
 <div id="info">
-<!--    <form>-->
-<!--        <input type="file" onchange='openFile(event)' />-->
-<!--    </form>-->
-    <form>
+    Import source:
+    <label><input type="radio" name="datasetSrc" value="demo">Demo</label>
+    <label><input type="radio" name="datasetSrc" value="local">Local</label>
+    <label><input type="radio" name="datasetSrc" value="remote">Remote</label>
+<!--    Demo:-->
+    <form class="tab-src tab-src-demo">
         <select name="querystring" onchange="document.location = this.form.querystring.value">
             <option value="?">- Load demo dataset -</option>
             <option value="?datasetType=RGBDTUM&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk">RGBDTUM / rgbd_dataset_freiburg1_desk</option>
@@ -25,17 +27,27 @@
             <option value="?datasetType=LUBOS&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/20201130_195000.dataset">LUBOS / 20201130_195000.dataset</option>
         </select>
     </form>
-    <form>
+<!--    Local:-->
+    <form class="tab-src tab-src-local">
+        <select name="datasetTypeLocal">
+            <option value="">- Select datasetType -</option>
+        </select>
+        <label>Choose folder: <input type="file" name="files-import" webkitdirectory mozdirectory msdirectory odirectory directory value="Choose Folder" /></label> (or
+        <label>Choose files: <input type="file" name="files-import" multiple/></label>)
+    </form>
+<!--    Remote:-->
+    <form class="tab-src tab-src-remote">
         <select name="datasetType">
             <option value="">- Select datasetType -</option>
         </select>
         <input type="text" name="datasetFolder" placeholder="datasetFolder url eg: https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk" />
         <input type="submit" value="Load"/>
     </form>
-    <input type="file" name="files-import" multiple />
-<!--    webkitdirectory directory-->
+<!--    Export:-->
+    <hr width="25%"/>
     <form>
         <select name="exportType">
+            <option value="">- Select Export type -</option>
             <option value="ALICEVISION_SFM">Alicevision - .sfm</option>
             <option value="AGISOFT">Agisoft - .csv</option>
             <option value="FAST_FUSION">FastFusion - associate.txt</option>
@@ -43,6 +55,7 @@
         <input type="file" value="file-general" name="file" style="display: none"/>
         <input type="button" value="Export" name="export"/>
     </form>
+    <hr width="25%"/>
     <span id="info-text">Click on Tetrahedron to display pose & image details. <br />x:red; y:green; z:blue</span>
     <br />
     <span id="loading"></span>
@@ -62,8 +75,7 @@
 <!--https://github.com/abdolence/x2js-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/x2js/1.2.0/xml2json.js"></script>
 <!--<script src="https://cdn.jsdelivr.net/npm/xml2js@0.4.23/lib/xml2js.js"></script>-->
-<script type="module" src="global.js"></script>
+<script type="module" src="main.js"></script>
 
 </body>
-
 </html>

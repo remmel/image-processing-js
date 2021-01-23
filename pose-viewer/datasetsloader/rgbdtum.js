@@ -22,9 +22,11 @@ export async function loadTum(url) {
         if(i++%modulo!==0) return;
 
         poses.push({
+            'id' : image.pose_ts,
             'position': new THREE.Vector3(image.tx, image.ty, image.tz),
             'rotation': new THREE.Quaternion(parseFloat(image.qx), parseFloat(image.qy), parseFloat(image.qz), parseFloat(image.qw)),
-            'path': url + "/" + image.rgb_fn,
+            'rgbFn' : image.rgb_fn,
+            'rgb': url + "/" + image.rgb_fn,
             'data' : image,
         });
 
@@ -92,17 +94,17 @@ export function exportTumAssociate(poses) {
 
         //q.multiply(new Quaternion(0,0,1,0));
 
-        var frameId = pose.data.frame ?? pose.data.frame_id;
+        var id = pose.id;
 
         //TODO make that more general as expected to come from AREngine
         csv += [
-            frameId, //pose_ts
+            id, //pose_ts
             pose.position.x, pose.position.y, pose.position.z, //tx ty tz
             q.x, q.y, q.z, q.w, //qx qy qz qw
-            frameId, //depth_ts //dumb
-            frameId + ".png", //"_depth16.bin.png" //depth_fn
-            frameId, //rgb_ts //dumb
-            "resized180/" + frameId + ".jpg", //"_image.jpg" //rgb_fn
+            id, //depth_ts //dumb
+            id + ".png", //"_depth16.bin.png" //depth_fn
+            id, //rgb_ts //dumb
+            id + ".jpg", //"_image.jpg" //rgb_fn //pose.rgbFn
         ].join(' ') + "\n";
     });
     downloadCsv(csv, "associate.txt");

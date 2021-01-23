@@ -1,6 +1,5 @@
 import * as THREE from '../copypaste/three.module.js';
-import {Matrix4} from "../copypaste/three.module.js";
-import {readAsText} from "../form.js";
+import {readAsText} from "../form/formUtils.js";
 import {loadTum, exportTumAssociate} from "./rgbdtum.js";
 import {exportAlicevision, loadAlicevision} from "./alicevision.js";
 import {exportAREngineRecorder, loadAREngineRecorder} from "./arenginerecorder.js";
@@ -15,6 +14,11 @@ export const DATASET_TYPE = {
     ARENGINERECORDER: 'ARENGINERECORDER', //https://github.com/remmel/hms-AREngine-demo
     ALICEVISION_SFM: 'ALICEVISION_SFM', //https://meshroom-manual.readthedocs.io/en/latest/node-reference/nodes/ConvertSfMFormat.html
     AGISOFT: 'AGISOFT', //Agilesoft Metashape format (File > Export > Export Cameras)
+};
+
+export const DATASET_TYPE_EXPORT = {
+    LUBOS: DATASET_TYPE.LUBOS,
+    ALICEVISION_SFM: DATASET_TYPE.ALICEVISION_SFM
 };
 
 /**
@@ -42,17 +46,24 @@ export async function loadPoses(type, folder, files) {
     throw "Wrong dataset type:"+type;
 }
 
-export async function readOrFetchText(url, files, name, displayError) {
-    if(url) return await(await fetch(url + '/' + name)).text();
-    if(!files) return console.log("no url, no files");
-    var f = Array.from(files).find(f => f.name === name);
-    if(!f) {
-        var error = "File "+name+" not found. Did you selected it?";
-        console.log(error);
-        if(displayError) alert(error); //catch instead?
-        return
+//read a file from an url or in Files API
+export async function readOrFetchText(url, files, fn, displayError) {
+    var text = null;
+    if(url) {
+        var response = await fetch(url + '/' + fn);
+        text = response.ok ? await(response).text() : null;
+    } else if(files) {
+        var f = Array.from(files).find(f => f.name === fn);
+        text = f ? await readAsText(f) : null;
+    } else
+        console.error('no url and no files, should not happen');
+
+    if(text === null) {
+        var error = "File "+fn+" not found. Did you selected it?";
+        console.warn(error);
+        if(displayError) { alert(error); throw error;} //catch instead?
     }
-    return await readAsText(f);
+    return text;
 }
 
 //TODO not sure about that, specially the scale as I do later "position.x *= scale;"
@@ -80,7 +91,7 @@ export function exportPoses(poses, exportType){
     }
 }
 
-function downloadCsv(csv, fn) {
+export function downloadCsv(csv, fn) {
     var encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
     var link = document.createElement("a");
     link.setAttribute("href", encodedUri);

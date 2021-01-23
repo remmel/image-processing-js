@@ -1,7 +1,6 @@
 import {selectPoseScene} from "./scene3d.js";
-import * as THREE from "./copypaste/three.module.js";
-import {poses} from "./global.js";
-import {readAsDataURL} from "./form.js"; //do not like that, getPoses instead or move action in main.js?
+import {poses} from "./main.js"; //do not like that, getPoses instead or move action in main.js?
+import {readAsDataURL} from "./form/formUtils.js";
 
 var playpauseInterval = null, curPose = null
 
@@ -31,6 +30,7 @@ document.getElementById('btn-playpause').addEventListener('click', e => {
 
 var preloadImagesOnce = () => {
     poses.forEach(pose => {
+        if(typeof pose.path !== 'string') return;
         var img=new Image();
         img.src=pose.path;
     })
@@ -46,11 +46,13 @@ export function selectPose(idxPose) {
     curPose = idxPose;
     var pose = poses[idxPose];
 
+    console.log('pose selected:', pose);
+
     var $photo = document.getElementById('photo');
-    if(typeof pose.path === 'string')
-        $photo.src = pose.path
-    else if(pose.path instanceof File)
-        readAsDataURL(pose.path).then(dataurl => $photo.src = dataurl);
+    if(typeof pose.rgb === 'string')
+        $photo.src = pose.rgb
+    else if(pose.rgb instanceof File)
+        readAsDataURL(pose.rgb).then(dataurl => $photo.src = dataurl);
 
     document.getElementById('info-text').textContent = JSON.stringify(pose.data);
     selectPoseScene(pose.mesh);

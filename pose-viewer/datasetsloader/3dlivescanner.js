@@ -19,12 +19,12 @@ export async function loadLubos(url, files) {
         var fn = frameId + '.jpg';
 
         poses.push({
+            'id' : frameId,
             //MAT
             'rotation': (new Quaternion()).setFromRotationMatrix(item.mat4),
             'position': (new Vector3()).setFromMatrixPosition(item.mat4), //(e[12], e[13], e[14]),
             'rgbFn' : fn,
-            'path': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn), //set image path or reference to image file
-            'id' : frameId,
+            'rgb': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn), //set image path or reference to image file
             'data': item
         })
     }

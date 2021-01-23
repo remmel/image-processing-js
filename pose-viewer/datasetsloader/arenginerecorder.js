@@ -19,11 +19,15 @@ export async function loadAREngineRecorder(url) {
         //rot x 180 - don't understand why the rotation provided by AREngine must be rotated by X_180° - in one of my AREngine dataset, no need to rotate it, strange..
         q.multiply(new Quaternion(1,0,0,0));
 
+        var fn = item.frame + "_image.jpg";
+
         poses.push({
+            'id' : item.frame,
             'position': new Vector3(item.tx, item.ty, item.tz),
             'rotation': q,
             // 'rotation': new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'), //right order
-            'path': url + "/" + item.frame + "_image.jpg",
+            'rgbFn' : fn,
+            'rgb': url + "/" + fn,
             'data' : item,
         })
     });
