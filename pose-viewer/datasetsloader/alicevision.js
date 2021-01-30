@@ -1,5 +1,5 @@
-import * as THREE from "../copypaste/three.module.js";
-import {browseFile, readAsText} from "../form/formUtils.js";
+import {Matrix3, Vector3, Quaternion} from "../../modules/three.js";
+import {browseFile} from "../form/formUtils.js";
 import {convertM3ToM4, downloadJson, readOrFetchText} from "./datasetsloader.js";
 
 export async function loadAlicevision(url, files) {
@@ -13,8 +13,8 @@ export async function loadAlicevision(url, files) {
     });
 
     data.poses.forEach(item => {
-        var m3 = new THREE.Matrix3().fromArray(item.pose.transform.rotation.map(parseFloat));
-        var m4 = convertM3ToM4(m3,  new THREE.Vector3());
+        var m3 = new Matrix3().fromArray(item.pose.transform.rotation.map(parseFloat));
+        var m4 = convertM3ToM4(m3,  new Vector3());
         m4.transpose();
 
         var view = viewsByPoseId[item.poseId];
@@ -22,8 +22,8 @@ export async function loadAlicevision(url, files) {
 
         poses.push({
             'id' : item.poseId,
-            'position': new THREE.Vector3().fromArray(item.pose.transform.center.map(parseFloat)),
-            'rotation': new THREE.Quaternion().setFromRotationMatrix(m4), //ThreeJs should let us use directly m3! and why is that transposed?
+            'position': new Vector3().fromArray(item.pose.transform.center.map(parseFloat)),
+            'rotation': new Quaternion().setFromRotationMatrix(m4), //ThreeJs should let us use directly m3! and why is that transposed?
             'rgbFn' : fn,
             'rgb': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn),
             'data' : item
@@ -50,7 +50,7 @@ export async function exportAlicevision(poses) {
         var rgbFn = pose.rgbFn;
         var poseId = fn2PoseId[rgbFn];
 
-        var m3 = new THREE.Matrix3(); //TODO use quaternion instead
+        var m3 = new Matrix3(); //TODO use quaternion instead
         m3.setFromMatrix4(pose.data.mat4);
 
         newalicevisionposes.push({

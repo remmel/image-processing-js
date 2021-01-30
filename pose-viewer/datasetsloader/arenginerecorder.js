@@ -1,6 +1,5 @@
 import {csv2objects} from "../csv.js";
-import {Euler, Quaternion, Vector3} from "../copypaste/three.module.js";
-import * as THREE from "../copypaste/three.module.js";
+import {Math, Euler, Quaternion, Vector3} from "../../modules/three.js";
 
 //TODO sometimes the order is inverted (, depending of AREngine version or phone orientation?
 export async function loadAREngineRecorder(url) {
@@ -25,7 +24,7 @@ export async function loadAREngineRecorder(url) {
             'id' : item.frame,
             'position': new Vector3(item.tx, item.ty, item.tz),
             'rotation': q,
-            // 'rotation': new Euler(THREE.Math.degToRad(item.pitch), THREE.Math.degToRad(item.yaw), THREE.Math.degToRad(item.roll), 'YZX'), //right order
+            // 'rotation': new Euler(Math.degToRad(item.pitch), Math.degToRad(item.yaw), Math.degToRad(item.roll), 'YZX'), //right order
             'rgbFn' : fn,
             'rgb': url + "/" + fn,
             'data' : item,
@@ -53,7 +52,7 @@ export function exportAREngineRecorder(poses) {
             pose.path.split("/").pop(), //.split('_')[0], //frame
             pose.position.x, pose.position.y, pose.position.z, //tx ty tz
             q.x, q.y, q.z, q.w,//qx qy qz qw
-            THREE.Math.radToDeg(euler.x), THREE.Math.radToDeg(euler.y), THREE.Math.radToDeg(euler.z) //pitch yaw roll
+            Math.radToDeg(euler.x), Math.radToDeg(euler.y), Math.radToDeg(euler.z) //pitch yaw roll
         ].join(',') + "\n";
     });
     downloadCsv(csv, "poses.csv");

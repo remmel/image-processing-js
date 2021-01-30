@@ -1,9 +1,6 @@
-// import * as THREE from 'https://threejs.org/build/three.module.js';
-// import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
-import * as THREE from './copypaste/three.module.js';
-import {OrbitControls} from './copypaste/OrbitControls.js';
+import * as THREE from "../modules/three.js";
+import {OrbitControls} from "../modules/three.js";
 import {DATASET_TYPE} from './datasetsloader/datasetsloader.js';
-import {Euler, Quaternion} from './copypaste/three.module.js';
 import {selectPose} from './imagepanel.js';
 
 var camera, controls, scene, renderer, divScene,
@@ -48,9 +45,9 @@ export async function renderPoses(poses, datasetType, scale) {
         var mesh = createCamera(scale, datasetType);
         mesh.position.copy(pose.position);
 
-        if(pose.rotation instanceof Euler) {
+        if(pose.rotation instanceof THREE.Euler) {
             mesh.rotation.copy(pose.rotation);
-        } else if(pose.rotation instanceof Quaternion) {
+        } else if(pose.rotation instanceof THREE.Quaternion) {
             mesh.quaternion.copy(pose.rotation);
         } else {
             console.error("missing pose info", pose);

@@ -1,4 +1,4 @@
-import * as THREE from "../copypaste/three.module.js";
+import {Quaternion,Euler, Vector3} from "../../modules/three.js";
 
 export async function loadAr3dplan(url) {
     var poses = [];
@@ -7,15 +7,15 @@ export async function loadAr3dplan(url) {
     data.list.forEach(item => {
         if (item.type !== "Photo") return;
 
-        var quaternion = new THREE.Quaternion(item.rotation.x, item.rotation.y, item.rotation.z, item.rotation.w);
+        var quaternion = new Quaternion(item.rotation.x, item.rotation.y, item.rotation.z, item.rotation.w);
         quaternion.inverse();   //why?
-        var euler = new THREE.Euler();
+        var euler = new Euler();
         euler.setFromQuaternion(quaternion);
 
         poses.push({
             'id' : null,
-            'position': new THREE.Vector3(item.position.x, item.position.y, item.position.z),
-            'rotation': euler, //new Euler(THREE.Math.degToRad(item.eulerAngles.x), THREE.Math.degToRad(item.eulerAngles.y), THREE.Math.degToRad(item.eulerAngles.z)),
+            'position': new Vector3(item.position.x, item.position.y, item.position.z),
+            'rotation': euler, //new Euler(Math.degToRad(item.eulerAngles.x), Math.degToRad(item.eulerAngles.y), Math.degToRad(item.eulerAngles.z)),
             'rgbFn': item.name,
             'rgb': url + "/" + item.name,
             'data' : item,

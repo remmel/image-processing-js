@@ -8,5 +8,8 @@
     "start": "http-server -c-1 -p 8081"
   },
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.121.1"
+  }
 }

@@ -1,7 +1,6 @@
-import * as THREE from "../copypaste/three.module.js";
 import {csv2objects, rgbdtum2objects} from "../csv.js";
 import {closest} from "../utils.js";
-import {Euler, Quaternion} from "../copypaste/three.module.js";
+import {Vector3, Euler, Quaternion} from "../../modules/three.js";
 
 
 export async function loadTum(url) {
@@ -23,8 +22,8 @@ export async function loadTum(url) {
 
         poses.push({
             'id' : image.pose_ts,
-            'position': new THREE.Vector3(image.tx, image.ty, image.tz),
-            'rotation': new THREE.Quaternion(parseFloat(image.qx), parseFloat(image.qy), parseFloat(image.qz), parseFloat(image.qw)),
+            'position': new Vector3(image.tx, image.ty, image.tz),
+            'rotation': new Quaternion(parseFloat(image.qx), parseFloat(image.qy), parseFloat(image.qz), parseFloat(image.qw)),
             'rgbFn' : image.rgb_fn,
             'rgb': url + "/" + image.rgb_fn,
             'data' : image,

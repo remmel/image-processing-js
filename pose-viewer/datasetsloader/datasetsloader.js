@@ -1,4 +1,4 @@
-import * as THREE from '../copypaste/three.module.js';
+import {Matrix4} from "../../modules/three.js";
 import {readAsText} from "../form/formUtils.js";
 import {loadTum, exportTumAssociate} from "./rgbdtum.js";
 import {exportAlicevision, loadAlicevision} from "./alicevision.js";
@@ -68,7 +68,7 @@ export async function readOrFetchText(url, files, fn, displayError) {
 
 //TODO not sure about that, specially the scale as I do later "position.x *= scale;"
 export function convertM3ToM4(m3, translation, scale) {
-    var m4 = new THREE.Matrix4();
+    var m4 = new Matrix4();
     var m3arr = m3.elements;
     m4.fromArray([
         m3arr[0], m3arr[1], m3arr[2], translation.x/scale,
