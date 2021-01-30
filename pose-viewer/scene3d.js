@@ -2,6 +2,8 @@ import * as THREE from "../modules/three.js";
 import {OrbitControls} from "../modules/three.js";
 import {DATASET_TYPE} from './datasetsloader/datasetsloader.js';
 import {selectPose} from './imagepanel.js';
+import {addPly} from "./utils3d.js";
+//https://codesandbox.io/s/project-camera-gby2i
 
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
@@ -34,6 +36,9 @@ export async function init3dscene(datasetType) {
     window.addEventListener('resize', onWindowResize, false);
 
     animate();
+
+    var mesh = await addPly('https://threejs.org/examples/models/ply/ascii/dolphins.ply', new THREE.Vector3( 0, - 0.2, 0.3) , new THREE.Euler(- Math.PI / 2, 0, 0), 0.001);
+    scene.add(mesh);
 }
 
 export async function renderPoses(poses, datasetType, scale) {
