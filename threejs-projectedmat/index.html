@@ -6,9 +6,30 @@
   <title>Cube - three-projected-material</title>
 </head>
 <body>
+<style>
+  #scene3d{
+      width: 100%;
+      height: 100vh;
+  }
+
+  #gui{
+      color: #ffffff;
+      background-color: rgba(0,0,0,0.4);
+      position: absolute;
+      top: 0;
+      left: 33%;
+  }
+
+  body{
+      margin: 0;
+  }
+</style>
+<div id='gui'></div>
+<div id="scene3d">
+</div>
 <script type="module">
-  import { CubeApp } from './src/prjctdCube.js'
-  CubeApp();
+  import { ProjectedCubeApp } from './src/ProjectedCubeApp.js'
+  ProjectedCubeApp(document.getElementById('scene3d'), document.getElementById('gui'));
 </script>
 </body>
 </html>

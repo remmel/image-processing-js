@@ -24,14 +24,16 @@ THREE.PerspectiveCamera.prototype.getHeight = function() {
   return this.getHalfHeight() * 2
 }
 
-THREE.Mesh.prototype.setRotationFromAngle = function(xangle, yangle, zangle) {
-  this.setRotationFromEuler(
-    new THREE.Euler(
+export function angles2euler(xangle, yangle, zangle) {
+  return new THREE.Euler(
       THREE.Math.degToRad(xangle),
       THREE.Math.degToRad(yangle),
       THREE.Math.degToRad(zangle)
     )
-  )
+}
+
+export function focal2fov(focal, center) {
+  return Math.atan2(center,focal)*180/Math.PI*2;
 }
 
 export const Color = {
