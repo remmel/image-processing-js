@@ -24,7 +24,9 @@ export async function ProjectedCubeApp(div, divGui) {
   scene.add(new THREE.AxesHelper(1))
 
   const pose = new Pose('./images/IMG_20210201_142032_0.jpg')
-  pose.camera.position.set(0.38, 5.49, 5.29) //dm //5.49, 4.86
+
+  var pos = calculate();
+  pose.camera.position.set(0.18, pos.y, pos.z) //dm //5.49, 4.86
   pose.camera.setRotationFromEuler(angles2euler(-54.53591590779914, 0, 0))//, -2.418191253067505, 345.27533));
   scene.add(pose)
 
@@ -58,14 +60,18 @@ function createProjectedFloor(pose) {
   return mesh
 }
 
+//Create a projected box, with bottom corner the origin
 function createProjectedBox(pose) {
   var s = .68 //dm
   var mesh = new ProjectedMesh(new THREE.BoxBufferGeometry(s, s, s), pose)
-  mesh.position.set(0, s / 2, 0)
-  mesh.setRotationFromEuler(angles2euler(0, -20, 0))
-  mesh.project()
-  return mesh
-}
+  mesh.position.set(-s/2, s / 2, -s/2)
 
-calculate()
+  var g = new THREE.Group(); //have to create group in order to have rotation origin in corner
+  g.add(mesh);
+  g.setRotationFromEuler(angles2euler(0, -21, 0))
+  g.project = () => mesh.project()
+  // mesh.project();
+  setTimeout(() =>g.project()) //I don't know why after making the group, that timeout is needed
+  return g
+}
 

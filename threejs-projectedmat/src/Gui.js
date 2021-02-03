@@ -41,7 +41,6 @@ export class Gui {
     this.fovPose()
   }
 
-
   fovPose() {
     this.el.querySelector('span').innerHTML = this.pose.fovInfo()
   }

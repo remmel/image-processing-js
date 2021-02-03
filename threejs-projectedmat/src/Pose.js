@@ -10,7 +10,7 @@ export class Pose extends THREE.Group {
 
   constructor(imgUrl) {
     super()
-    this.camera = new THREE.PerspectiveCamera(53.4, 4 / 3, 1, 10) //wrong fov
+    this.camera = new THREE.PerspectiveCamera(53.4, 4 / 3, 1, 10)
     this.texture = new THREE.TextureLoader().load(imgUrl)
 
     this.add(new THREE.CameraHelper(this.camera)) //must be 0 origin

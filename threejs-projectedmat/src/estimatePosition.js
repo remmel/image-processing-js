@@ -45,5 +45,9 @@ export function calculate() {
 
   console.log('A', A, 'B', B, 'f', f, 'Â', Â, 'B̂', B̂, 'APB', APB, 'PBA', PBA, 'AA1', AA1, 'PB', PB, 'BB1', BB1, 'PB1', PB1)
 
-  // if B it the 3D origin pose(0, BB1, PB1) but B is not the 3D origin it's the center of the base of the cube... and yaw and roll of camera not 0
+  //need to calculate x. And take into account yaw and roll
+  return {
+    y: BB1 / 10,
+    z: PB1 / 10
+  }
 }
