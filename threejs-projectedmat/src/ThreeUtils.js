@@ -8,7 +8,7 @@ THREE.PerspectiveCamera.prototype.getHorizontalFov = function() {
 
 THREE.PerspectiveCamera.prototype.getHalfWidth = function() {
   var hFovDeg = this.getHorizontalFov()
-  return this.far * Math.tan(THREE.Math.degToRad(hFovDeg / 2))
+  return Math.tan(THREE.Math.degToRad(hFovDeg / 2)) //this.far = 1
 }
 
 THREE.PerspectiveCamera.prototype.getWidth = function() {
@@ -17,7 +17,7 @@ THREE.PerspectiveCamera.prototype.getWidth = function() {
 
 THREE.PerspectiveCamera.prototype.getHalfHeight = function() {
   var vFovDeg = this.getEffectiveFOV()
-  return this.far * Math.tan(THREE.Math.degToRad(vFovDeg / 2))
+  return Math.tan(THREE.Math.degToRad(vFovDeg / 2)) // this.far = 1
 }
 
 THREE.PerspectiveCamera.prototype.getHeight = function() {
@@ -26,14 +26,14 @@ THREE.PerspectiveCamera.prototype.getHeight = function() {
 
 export function angles2euler(xangle, yangle, zangle) {
   return new THREE.Euler(
-      THREE.Math.degToRad(xangle),
-      THREE.Math.degToRad(yangle),
-      THREE.Math.degToRad(zangle)
-    )
+    THREE.Math.degToRad(xangle),
+    THREE.Math.degToRad(yangle),
+    THREE.Math.degToRad(zangle),
+  )
 }
 
 export function focal2fov(focal, center) {
-  return Math.atan2(center,focal)*180/Math.PI*2;
+  return Math.atan2(center, focal) * 180 / Math.PI * 2
 }
 
 export const Color = {
@@ -59,13 +59,13 @@ export function createLine(ax, ay, az, bx, by, bz, color) {
 export function createPlane(w, h, color) {
   return new THREE.Mesh(
     new THREE.PlaneGeometry(w, h),
-    new THREE.MeshBasicMaterial({ color: color })
+    new THREE.MeshBasicMaterial({ color: color }),
   )
 }
 
 export function createSphere(radius, color) {
   return new THREE.Mesh(
     new THREE.SphereGeometry(radius),
-    new THREE.MeshBasicMaterial({ color: color })
+    new THREE.MeshBasicMaterial({ color: color }),
   )
 }

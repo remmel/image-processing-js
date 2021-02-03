@@ -24,7 +24,20 @@
       margin: 0;
   }
 </style>
-<div id='gui'></div>
+<div id='gui'>
+  <form>
+    Pose:
+    <label>Img:<input type='checkbox' checked></label> •
+    <label>x:<input class='pose-position' type='number' name='pose-x' step='0.01'/></label>
+    <label>y:<input class='pose-position' type='number' name='pose-y' step='0.01'/></label>
+    <label>z:<input class='pose-position' type='number' name='pose-z' step='0.01'/></label> <br />
+    <label>Y-angle cube:<input type='number' min="-360" max="360" name='cube-rot-y'/></label> •
+
+    <label><input type='button' value='Align camera with pose1'/></label>
+    <br />
+    <span></span>
+  </form>
+</div>
 <div id="scene3d">
 </div>
 <script type="module">
