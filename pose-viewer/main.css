@@ -1,6 +1,7 @@
 body {
     background-color: #ccc;
     color: #000;
+    margin: 0;
 }
 
 a {
@@ -8,6 +9,13 @@ a {
 }
 
 #info{
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    user-select: none;
     overflow-wrap: break-word;
 }
 

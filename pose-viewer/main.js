@@ -3,7 +3,7 @@ import {getFormImportTypeLocal, getImportForm} from "./form/formImport.js";
 import {init3dscene, renderPoses} from './scene3d.js';
 import {} from './imagepanel.js'
 import {getFormExportType} from "./form/formExport.js";
-// import css from './main.css'
+import css from './main.css'
 
 export var poses = [];
 

@@ -1,4 +1,4 @@
-Multiples project : `pose-viewer` (webpack) and experimentations (es6 modules)
+Multiples project : `pose-viewer` (webpack) and [experimentations](http://remmel.github.com/image-processing-js/experiments/) (es6 modules)
 
 # Pose Viewer
 
@@ -11,7 +11,7 @@ To use your own dataset, 3 solutions :
 4. If you cloned the repo and start a server, put the dataset folder or create a symlink in pose-viewer folder and set subfolder [eg](http://localhost:8081/pose-viewer/?datasetType=ARENGINERECORDER&datasetFolder=dataset/2020-11-26_121940)
 
 
-## Run the project on your computer
+## Run the project on your computer (4)
 ```shell
 git clone git@github.com:remmel/image-processing-js.git
 cd image-processing-js
@@ -39,3 +39,7 @@ It doesn't work neither on my smartphone. Because of OS file picker according to
 
 ## Npm http-server error
 Error `Error: EPERM: operation not permitted, stat` is produced on Windows 10 when using symlink; don't know how to fix that, expect not using symlink, using php webserver instead or using a second webserver for dataset.
+
+
+# TODOs
+- use react https://blog.bitsrc.io/starting-with-react-16-and-three-js-in-5-minutes-3079b8829817
