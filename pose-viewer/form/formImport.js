@@ -6,7 +6,7 @@ function decodeUrl() {
     var params = new URLSearchParams(window.location.search);
     var datasetType = params.get("datasetType");
     var datasetFolder = params.get("datasetFolder");
-    var scale = params.get("scale") ?? 1;
+    var scale = params.get("scale") ? params.get("scale") : 1;
     return {datasetType, datasetFolder, scale};
 }
 

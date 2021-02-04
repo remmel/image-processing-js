@@ -1,6 +1,6 @@
 // Using 640x480 resolution from Boofcv
 import { focal2fov } from './ThreeUtils.js'
-import * as THREE from '../../modules/three.js'
+import * as THREE from '../../web-modules/three.js'
 
 console.log(focal2fov(486, 318).toFixed(1) + '°x' + focal2fov(487, 245).toFixed(1)) + '°'
 

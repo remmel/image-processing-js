@@ -1,5 +1,5 @@
 import {csv2objects} from "../csv.js";
-import {Math, Euler, Quaternion, Vector3} from "../../modules/three.js";
+import {Math, Euler, Quaternion, Vector3} from "three";
 
 //TODO sometimes the order is inverted (, depending of AREngine version or phone orientation?
 export async function loadAREngineRecorder(url) {

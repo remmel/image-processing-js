@@ -1,5 +1,5 @@
-import {PLYLoader} from "../modules/three.js";
-import * as THREE from "../modules/three.js";
+import * as THREE from "three";
+import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader'
 
 async function loadPly(url) {
     return new Promise((resolve, reject) => {

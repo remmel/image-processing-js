@@ -1,5 +1,5 @@
-import * as THREE from '../../modules/three.js'
-import { OrbitControls } from '../../modules/three.js'
+import * as THREE from '../../web-modules/three.js'
+import { OrbitControls } from '../../web-modules/three.js'
 import { angles2euler } from './ThreeUtils.js'
 import { calculate } from './estimatePosition.js'
 import { Gui } from './Gui.js'

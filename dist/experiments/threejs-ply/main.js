@@ -1,8 +1,8 @@
 // import * as  THREE from '../node_modules/three/build/three.module.js';
 // import {PLYLoader} from '../node_modules/three/examples/jsm/loaders/PLYLoader.js';
 
-import * as THREE from '../modules/three.js';
-import {PLYLoader} from "../modules/three.js";
+import * as THREE from '../web-modules/three.js';
+import {PLYLoader} from "../web-modules/three.js";
 
 let container;
 

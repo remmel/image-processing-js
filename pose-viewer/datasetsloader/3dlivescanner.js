@@ -1,6 +1,6 @@
 import {csv2arrays, csv2objects} from "../csv.js";
-import {Matrix4, Quaternion, Vector3} from "../../modules/three.js";
 import {readOrFetchText} from "./datasetsloader.js";
+import { Matrix4, Quaternion, Vector3 } from 'three'
 
 //TODO avoid using thoses .mat files to avoid http calls, see git for my trials to use ply file for pose
 export async function loadLubos(url, files) {

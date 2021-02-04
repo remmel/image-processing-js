@@ -1,16 +1,27 @@
 {
-  "name": "image-processing",
+  "name": "poses-viewer",
   "version": "1.0.0",
   "description": "",
   "main": "script.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "http-server -c-1 -p 8081"
+    "build": "webpack --config webpack.config.js",
+    "start": "webpack-dev-server --mode development",
+    "format": "prettier --write '**/*.js'",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "three": "^0.121.1",
     "three-projected-material": "^2.0.1"
+  },
+  "devDependencies": {
+    "css-loader": "^5.0.1",
+    "gh-pages": "^3.1.0",
+    "prettier": "^2.0.4",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.11.0"
   }
 }

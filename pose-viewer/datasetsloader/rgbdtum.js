@@ -1,6 +1,6 @@
 import {csv2objects, rgbdtum2objects} from "../csv.js";
 import {closest} from "../utils.js";
-import {Vector3, Euler, Quaternion} from "../../modules/three.js";
+import {Vector3, Euler, Quaternion} from "three";
 
 
 export async function loadTum(url) {

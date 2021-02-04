@@ -1,4 +1,4 @@
-import {Matrix4} from "../../modules/three.js";
+import {Matrix4} from "three";
 import {readAsText} from "../form/formUtils.js";
 import {loadTum, exportTumAssociate} from "./rgbdtum.js";
 import {exportAlicevision, loadAlicevision} from "./alicevision.js";

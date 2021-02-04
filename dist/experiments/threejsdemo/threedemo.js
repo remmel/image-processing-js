@@ -1,5 +1,5 @@
-import * as THREE from '../modules/three.js';
-import {Matrix3, OrbitControls} from "../modules/three.js";
+import * as THREE from '../web-modules/three.js';
+import {Matrix3, OrbitControls} from "../web-modules/three.js";
 
 var camera, scene, renderer;
 var geometry, material, mesh;

@@ -14,7 +14,7 @@ exiftool IMG_20210201_142032_0.jpg | grep "User Comment"
 
 Ideas:
 - Calculate distance using openCV [solvePnp](https://docs.opencv.org/master/d9/d0c/group__calib3d.html#ga549c2075fac14829ff4a58bc931c033d)
-- Add QRCore or whaterver code to printed cube to detect faces
+- Add QRCode or whaterver code to printed cube to detect faces
 - Update the texture projection when position changes to be able to adjust the postions without reloading the webpage
 
 Huawei P20 Pro instrinsics:

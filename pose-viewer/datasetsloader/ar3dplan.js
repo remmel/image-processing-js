@@ -1,4 +1,4 @@
-import {Quaternion,Euler, Vector3} from "../../modules/three.js";
+import {Quaternion,Euler, Vector3} from "three";
 
 export async function loadAr3dplan(url) {
     var poses = [];

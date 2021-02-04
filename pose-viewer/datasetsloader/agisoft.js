@@ -1,4 +1,4 @@
-import {Matrix3, Matrix4, Quaternion, Vector3} from "../../modules/three.js";
+import {Matrix3, Matrix4, Quaternion, Vector3} from "three";
 
 export async function loadAgisoft(url) {
     var poses = [];

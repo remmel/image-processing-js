@@ -1,4 +1,4 @@
-import * as THREE from '../../modules/three.js'
+import * as THREE from '../../web-modules/three.js'
 import { ProjectedMesh } from './ProjectedMesh.js'
 
 /**

@@ -1,16 +1,26 @@
-# image-processing-js
+Multiples project : `pose-viewer` (webpack) and experimentations (es6 modules)
 
-Try right now a demo dataset : [pose-viewer](https://raw.githack.com/remmel/image-processing-js/master/pose-viewer/index.html)
- 
+# Pose Viewer
+
+Try right now a demo dataset : [pose-viewer](http://remmel.github.com/image-processing-js/pose-viewer.html)
 
 To use your own dataset, 3 solutions :
 1. Easier way, Select the folder containing all the data.
-2. Your dataset is accessible online, set the `datasetFolder` param with the right url. [eg](https://raw.githack.com/remmel/image-processing-js/master/pose-viewer/index.html?datasetType=ARENGINERECORDER&datasetFolder=https://mywebsite.me/dataset/scan123)
-3. Start a http server in the folder where is located your dataset, and set `datasetFolder` with the server url: [eg](https://raw.githack.com/remmel/image-processing-js/master/pose-viewer/index.html?datasetType=ARENGINERECORDER&datasetFolder=http://localhost:8081)
+2. Your dataset is accessible online, set the `datasetFolder` param with the right url. [eg](http://remmel.github.com/image-processing-js/pose-viewer.html?datasetType=ARENGINERECORDER&datasetFolder=https://mywebsite.me/dataset/scan123)
+3. Start a http server in the folder where is located your dataset, and set `datasetFolder` with the server url: [eg](http://remmel.github.com/image-processing-js/pose-viewer.html?datasetType=ARENGINERECORDER&datasetFolder=http://localhost:8081)
 4. If you cloned the repo and start a server, put the dataset folder or create a symlink in pose-viewer folder and set subfolder [eg](http://localhost:8081/pose-viewer/?datasetType=ARENGINERECORDER&datasetFolder=dataset/2020-11-26_121940)
 
 
-## Start a server
+## Run the project on your computer
+```shell
+git clone git@github.com:remmel/image-processing-js.git
+cd image-processing-js
+npm install
+npm run start
+```
+Then open http://localhost:9000/pose-viewer.html
+
+## Start a server, to access your dataset via http (3)
 
 Many ways to start a http server :
 - Node Server: `sudo npm install --global http-server` and `npm start`
@@ -19,7 +29,6 @@ Many ways to start a http server :
 ## Create a symlink
 - Linux: `pose-viewer$ ln -s ~/workspace/dataset dataset`
 - Windows: `pose-viewer> mklink dataset "C:\Users\remme\workspace\dataset"` (cmd as admin or Developer mode on)
-
 
 # Troubleshooting
 ## Cannot import multiple files on Android

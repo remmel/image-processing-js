@@ -1,4 +1,4 @@
-import {Matrix3, Vector3, Quaternion} from "../../modules/three.js";
+import {Matrix3, Vector3, Quaternion} from "three";
 import {browseFile} from "../form/formUtils.js";
 import {convertM3ToM4, downloadJson, readOrFetchText} from "./datasetsloader.js";
 

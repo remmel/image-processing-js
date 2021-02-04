@@ -1,5 +1,5 @@
-import ProjectedMaterial from '../../modules/three-projected-material.js'
-import * as THREE from '../../modules/three.js'
+import ProjectedMaterial from '../../web-modules/three-projected-material.js'
+import * as THREE from '../../web-modules/three.js'
 
 export class ProjectedMesh extends THREE.Mesh {
   mat
