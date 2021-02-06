@@ -42,6 +42,8 @@ export function getImportForm() {
 
     updateSrcTab();
 
+    if(datasetFolder.endsWith('/')) console.warn(datasetFolder + " must not end with slash (/)")
+
     //document.querySelector("input[name=datasetSrc]:checked").value
     return {datasetType, datasetFolder, scale}
 }

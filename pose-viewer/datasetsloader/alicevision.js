@@ -26,7 +26,7 @@ export async function loadAlicevision(url, files) {
             'rotation': new Quaternion().setFromRotationMatrix(m4), //ThreeJs should let us use directly m3! and why is that transposed?
             'rgbFn' : fn,
             'rgb': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn),
-            'data' : item
+            'raw' : item
         })
     });
 
@@ -51,14 +51,14 @@ export async function exportAlicevision(poses) {
         var poseId = fn2PoseId[rgbFn];
 
         var m3 = new Matrix3(); //TODO use quaternion instead
-        m3.setFromMatrix4(pose.data.mat4);
+        m3.setFromMatrix4(pose.raw.mat4);
 
         newalicevisionposes.push({
             'poseId': poseId,
             'pose' : {
                 'transform' : {
                     'rotation' : m3.elements,
-                    'center' : pose.mesh.position.toArray(),
+                    'center' : pose.position.toArray(),
                 },
                 'locked' : '1'
             }

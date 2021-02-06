@@ -1,6 +1,7 @@
-import {csv2objects, rgbdtum2objects} from "../csv.js";
+import {csv2objects} from "../csv.js";
 import {closest} from "../utils.js";
 import {Vector3, Euler, Quaternion} from "three";
+import { downloadCsv } from './datasetsloader'
 
 
 export async function loadTum(url) {
@@ -8,25 +9,16 @@ export async function loadTum(url) {
 
     var images = await fetchAndAssociateRgbdTum(url);
 
-    var i = 0;
-
-    var modulo = 1;
-    var maximagesdisplayed = 1000; //TODO move that outside to use that feature for all dataset type
-    if(images.length > maximagesdisplayed) {
-        var modulo = Math.floor(images.length / maximagesdisplayed); //limit display to maximagesdisplayed images
-        console.warn("Has "+ images.length + " images to display, display only ~"+maximagesdisplayed + ", thus 1 image every "+modulo);
-    }
-
     images.forEach(image => {
-        if(i++%modulo!==0) return;
-
         poses.push({
             'id' : image.pose_ts,
             'position': new Vector3(image.tx, image.ty, image.tz),
             'rotation': new Quaternion(parseFloat(image.qx), parseFloat(image.qy), parseFloat(image.qz), parseFloat(image.qw)),
             'rgbFn' : image.rgb_fn,
             'rgb': url + "/" + image.rgb_fn,
-            'data' : image,
+            'depthFn' : image.depth_fn,
+            'depth' : url + "/" + image.depth_fn,
+            'raw' : image,
         });
 
     })
@@ -44,36 +36,62 @@ async function fetchAndAssociateRgbdTum(url) {
     } else {
         console.warn("Missing associate.txt, will try to associate rgb.txt and groundtruth.txt");
         var rgbText = await fetch(url + '/rgb.txt').then(response => response.text());
+        var depthText = await fetch(url + '/depth.txt').then(response => response.text());
         var groundtruthText = await fetch(url + '/groundtruth.txt').then(response => response.text());
-
         var rgbs = rgbdtum2objects(rgbText);
+        var depths = rgbdtum2objects(depthText);
         var poses = rgbdtum2objects(groundtruthText);
-        var posesAssoc = [];
-        poses.forEach(item => { //array to assoc with ts as key
-            var key = Math.floor(parseFloat(item.timestamp)*1000);
-            item.timestamp_ms = key;
-            posesAssoc[key] = item;
-        });
 
         var images = [];
 
-        var posesTimestamps = Object.keys(posesAssoc);
-        rgbs.forEach(rgb => {
-            var rgbTs = Math.floor(parseFloat(rgb.timestamp)*1000);
-            var poseTs = closest(posesTimestamps, rgbTs);
-            var pose = posesAssoc[poseTs];
+        var posesTs = Object.keys(poses);
+        var depthsTs = Object.keys(depths);
 
-            images.push({
-                ...rgb,
-                ...pose,
-                pose_ts: pose.timestamp,
-                rgb_ts: rgb.timestamp,
-                rgb_fn: rgb.filename,
-                debug_ts: poseTs
-            })
+        //for each rgb find the closest pose and depth
+        Object.entries(rgbs).forEach(([rgbTs,rgb]) => {
+            var poseTs = closest(posesTs, rgbTs);
+            var pose = poses[poseTs];
+            var depthTs = closest(depthsTs, rgbTs);
+            var depth = depths[depthTs];
+            // console.log('diff', Math.abs(rgbTs-poseTs), Math.abs(rgbTs-depthTs))
+            if(Math.abs(rgbTs-poseTs) < 20 && Math.abs(rgbTs-depthTs) < 20) { //only keep if <20ms
+                images.push({
+                    ...pose,
+                    pose_ts: pose.timestamp,
+                    rgb_ts: rgb.timestamp,
+                    rgb_fn: rgb.filename,
+                    depth_ts: depth.timestamp,
+                    depth_fn: depth.filename,
+                    debug_ts: poseTs
+                })
+            }
         });
         return images;
     }
+}
+
+//
+/**
+ * Convert TUM rgbd dataset format (https://vision.in.tum.de/data/datasets/rgbd-dataset/download) to objects
+ * Remove the 2 first lines + "# " of 3rd line to get a csv with space delimiter
+ * Then add timestamp as key
+ */
+function rgbdtum2objects(text) {
+    var lines = text.split(/\r\n|\n/);
+    lines.shift();
+    lines.shift();
+    lines[0] = lines[0].substring(2);
+
+    var objs = csv2objects(lines.join("\n"), ' ');
+
+    //use timestamp as key
+    var assoc = [];
+    objs.forEach(item => { //array to assoc with ts as key
+        var key = Math.floor(parseFloat(item.timestamp)*1000); //cannot have a float as key
+        item.timestamp_ms = key;
+        assoc[key] = item;
+    });
+    return assoc
 }
 
 /**
@@ -100,10 +118,10 @@ export function exportTumAssociate(poses) {
             id, //pose_ts
             pose.position.x, pose.position.y, pose.position.z, //tx ty tz
             q.x, q.y, q.z, q.w, //qx qy qz qw
-            id, //depth_ts //dumb
-            id + ".png", //"_depth16.bin.png" //depth_fn
-            id, //rgb_ts //dumb
-            id + ".jpg", //"_image.jpg" //rgb_fn //pose.rgbFn
+            pose.raw.depth_ts ? pose.raw.depth_ts : id, //depth_ts //dumb
+            pose.depthFn, //"_depth16.bin.png" //depth_fn
+            pose.raw.rgb_ts ? pose.raw.rgb_ts : id, //rgb_ts //dumb
+            pose.rgbFn, //"_image.jpg" //rgb_fn //pose.rgbFn
         ].join(' ') + "\n";
     });
     downloadCsv(csv, "associate.txt");

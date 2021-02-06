@@ -25,7 +25,7 @@ export async function loadLubos(url, files) {
             'position': (new Vector3()).setFromMatrixPosition(item.mat4), //(e[12], e[13], e[14]),
             'rgbFn' : fn,
             'rgb': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn), //set image path or reference to image file
-            'data': item
+            'raw': item
         })
     }
 

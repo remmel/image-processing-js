@@ -35,15 +35,39 @@ function folderNameToUrl(folder) {
 export async function loadPoses(type, folder, files) {
     var url = folderNameToUrl(folder);
 
+    var poses = [];
+
     switch (type) {
-        case DATASET_TYPE.RGBDTUM: return await loadTum(url, files);
-        case DATASET_TYPE.AR3DPLAN: return await loadAr3dplan(url, files);
-        case DATASET_TYPE.LUBOS: return await loadLubos(url, files);
-        case DATASET_TYPE.ARENGINERECORDER: return await loadAREngineRecorder(url, files);
-        case DATASET_TYPE.ALICEVISION_SFM: return await loadAlicevision(url, files);
-        case DATASET_TYPE.AGISOFT: return await loadAgisoft(url, files);
+        case DATASET_TYPE.RGBDTUM: poses = await loadTum(url, files); break;
+        case DATASET_TYPE.AR3DPLAN: poses = await loadAr3dplan(url, files); break;
+        case DATASET_TYPE.LUBOS: poses = await loadLubos(url, files); break;
+        case DATASET_TYPE.ARENGINERECORDER: poses = await loadAREngineRecorder(url, files); break;
+        case DATASET_TYPE.ALICEVISION_SFM: poses = await loadAlicevision(url, files); break;
+        case DATASET_TYPE.AGISOFT: poses = await loadAgisoft(url, files); break;
+        default: throw "Wrong dataset type:"+type;
     }
-    throw "Wrong dataset type:"+type;
+
+    poses = limitDisplayedPoses(poses, 100);
+    return poses;
+}
+
+function limitDisplayedPoses(poses, maximagesdisplayed) {
+//limit the number of poses displayed
+    var i = 0;
+    var modulo = 1;
+    if(poses.length > maximagesdisplayed) {
+        modulo = Math.floor(poses.length / maximagesdisplayed); //limit display to maximagesdisplayed images
+        console.warn("Has "+ poses.length + " images to display, display only ~"+maximagesdisplayed + ", thus 1 image every "+modulo);
+    }
+
+    var posesFiltered = [];
+
+    for(var numPose in poses) {
+        if(i++%modulo!==0) continue;
+        var p = poses[numPose];
+        posesFiltered.push(p);
+    }
+    return posesFiltered;
 }
 
 //read a file from an url or in Files API

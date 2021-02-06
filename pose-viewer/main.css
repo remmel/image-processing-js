@@ -60,9 +60,12 @@ body{
     max-height: 100%;
 }
 
-#photo-container #photo-info{
+#info-num-pose{
+    color: white;
     background-color: rgba(0,0,0,0.4);
+}
 
+#photo-container #photo-info{
     position: absolute;
     top: 0;
     left: 33%;

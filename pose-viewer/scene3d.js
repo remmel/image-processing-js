@@ -1,15 +1,15 @@
 import * as THREE from "three";
 import {DATASET_TYPE} from './datasetsloader/datasetsloader.js';
-import {selectPose} from './imagepanel.js';
-import {addPly} from "./utils3d.js";
+import { addPly } from './utils3d.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import {PoseCylinder} from './PoseCylinder'
+import { selectPoseObj } from './main'
 //https://codesandbox.io/s/project-camera-gby2i
 
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
-    material = new THREE.MeshPhongMaterial( { color:0x999999, vertexColors: THREE.FaceColors, flatShading: true }, ),
-    materialRed = new THREE.MeshPhongMaterial({color: 0xff0000, flatShading: true}),
-    groupPoses = new THREE.Group();
+    groupPoses = new THREE.Group(),
+    model = null
 
 export async function init3dscene(datasetType) {
     divScene = document.getElementById('scene3d');
@@ -36,37 +36,26 @@ export async function init3dscene(datasetType) {
     window.addEventListener('resize', onWindowResize, false);
 
     animate();
-
-    // var mesh = await addPly('https://threejs.org/examples/models/ply/ascii/dolphins.ply', new THREE.Vector3( 0, - 0.2, 0.3) , new THREE.Euler(- Math.PI / 2, 0, 0), 0.001);
-    // scene.add(mesh);
 }
 
-export async function renderPoses(poses, datasetType, scale) {
+export async function renderPoses(poses, model, datasetType, scale, ) {
     removeCameras();
 
-    for(var numPose in poses) {
-        var pose = poses[numPose];
+    for (var idxPose in poses) {
+        var pose = poses[idxPose];
+        // var poseDisplayed = new PoseCamera(pose)
+        pose.object = new PoseCylinder(pose, idxPose, scale, datasetType)
+        groupPoses.add(pose.object)
 
-        var mesh = createCamera(scale, datasetType);
-        mesh.position.copy(pose.position);
-
-        if(pose.rotation instanceof THREE.Euler) {
-            mesh.rotation.copy(pose.rotation);
-        } else if(pose.rotation instanceof THREE.Quaternion) {
-            mesh.quaternion.copy(pose.rotation);
-        } else {
-            console.error("missing pose info", pose);
-        }
-        mesh.updateMatrix();
-        mesh.matrixAutoUpdate = false;
-        mesh.data = pose;
-        mesh.numPose = numPose;
-        pose.mesh = mesh;
-        groupPoses.add(mesh);
     }
+    if(model) {
+        var ply = await addPly(model);
+        if(ply) groupPoses.add(ply);
+    }
+
     scene.add(groupPoses);
 
-    selectPose(null);
+    // console.log(groupPoses.children[0].select())
 }
 
 function removeCameras() {
@@ -77,24 +66,6 @@ function removeCameras() {
         child.geometry.dispose();
         // child.material.dispose(); //is
     })
-}
-
-//1st position is landscape. on the x,y plan looking in z direction. uncomment createDebugCamera() to check that
-function createCamera(scale, datasetType) {
-    //when scale is 1 (default) base is 10cm (0.1)
-    var geometry = new THREE.CylinderGeometry(0, 0.1/scale, 0.05/scale, 4);
-    geometry.rotateX(THREE.Math.degToRad(-90)); //=-PI/2 _ //PI <=> 180°
-    geometry.rotateZ(THREE.Math.degToRad(45)); //=PI/4
-    geometry.applyMatrix4(new THREE.Matrix4().makeScale(1, 0.75, 1)); //rectangular base
-
-    if(datasetType === DATASET_TYPE.LUBOS) {
-        geometry.rotateZ(THREE.Math.degToRad(90)); //pictures are in portrait not landscape
-        geometry.faces[3].color.setHex( 0xffff00 );
-    } else {
-        geometry.faces[2].color.setHex( 0xffff00 );
-    }
-
-    return new THREE.Mesh(geometry, material);
 }
 
 function createDebugCamera(){
@@ -112,11 +83,7 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
     controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
-    render();
-}
-
-function render() {
-    renderer.render(scene, camera);
+    renderer.render(scene, camera)
 }
 
 // When clicking on pose, display images and info
@@ -133,17 +100,10 @@ function onClick3dScene(xpx, ypx) {
     // calculate objects intersecting the picking ray
     var intersects = raycaster.intersectObjects(groupPoses.children); //scene.children
     intersects.some(intersect => {
-        let numPose = intersect.object.numPose;
-        selectPose(parseInt(numPose));
+        if(!(intersect.object instanceof PoseCylinder)) return false;
+        selectPoseObj(intersect.object);
         return true;
     })
-}
-
-export function selectPoseScene(mesh) {
-    mesh.material = materialRed;
-    setTimeout(function () {
-        mesh.material = material;
-    }, 500)
 }
 
 function createFloor(datasetType) {

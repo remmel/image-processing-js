@@ -18,7 +18,7 @@ export async function loadAr3dplan(url) {
             'rotation': euler, //new Euler(Math.degToRad(item.eulerAngles.x), Math.degToRad(item.eulerAngles.y), Math.degToRad(item.eulerAngles.z)),
             'rgbFn': item.name,
             'rgb': url + "/" + item.name,
-            'data' : item,
+            'raw' : item,
         })
     });
     return poses;

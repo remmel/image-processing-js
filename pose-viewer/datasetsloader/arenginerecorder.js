@@ -27,7 +27,7 @@ export async function loadAREngineRecorder(url) {
             // 'rotation': new Euler(Math.degToRad(item.pitch), Math.degToRad(item.yaw), Math.degToRad(item.roll), 'YZX'), //right order
             'rgbFn' : fn,
             'rgb': url + "/" + fn,
-            'data' : item,
+            'raw' : item,
         })
     });
     return poses;

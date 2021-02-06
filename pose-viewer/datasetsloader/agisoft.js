@@ -50,7 +50,7 @@ export async function loadAgisoft(url) {
             'rotation': quaternion,
             'rgbFn' : item._label + ".jpg",
             'rgb': url + "/" + item._label + ".jpg",
-            'data' : item
+            'raw' : item
         })
     });
 
