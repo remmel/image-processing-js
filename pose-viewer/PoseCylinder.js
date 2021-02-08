@@ -48,23 +48,24 @@ export class PoseCylinder extends THREE.Mesh {
 
   select() {
     this.material = cylinderRedMat
-    setTimeout(() => this.material = cylinderDefaultMat, 500)
+    setTimeout(() => this.material = cylinderDefaultMat, 1000)
 
-    this.camera = PerspectiveCamera.create(this.data.raw.intrinsics, 0.01, 0.1)
-    // console.log(this.camera.getFovs())
-    this.camera.rotation.copy(this.rotation)
-    this.camera.position.copy(this.position)
-    this.camera.rotateX(180/RAD2DEG) //hum, cylinder based rotation is different from camera
-
-    //FIXME image projection should be stopped by 1st face https://github.com/marcofugaro/three-projected-material/issues
-    this.texture = new THREE.TextureLoader().load(this.data.rgb)
-    const pmaterial = new ProjectedMaterial({
-      camera: this.camera,
-      texture: this.texture,
-      color: '#37E140',
-    })
     var meshPly = getMeshPly()
     if(meshPly) {
+      this.camera = PerspectiveCamera.create(this.data.raw.intrinsics, 0.01, 0.1)
+      // console.log(this.camera.getFovs())
+      this.camera.rotation.copy(this.rotation)
+      this.camera.position.copy(this.position)
+      this.camera.rotateX(180/RAD2DEG) //hum, cylinder based rotation is different from camera
+
+      //FIXME image projection should be stopped by 1st face https://github.com/marcofugaro/three-projected-material/issues
+      this.texture = new THREE.TextureLoader().load(this.data.rgb)
+      const pmaterial = new ProjectedMaterial({
+        camera: this.camera,
+        texture: this.texture,
+        color: '#37E140',
+      })
+
       meshPly.material = pmaterial
       pmaterial.project(meshPly)
     }

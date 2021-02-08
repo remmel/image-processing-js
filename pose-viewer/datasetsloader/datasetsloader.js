@@ -51,6 +51,13 @@ export async function loadPoses(type, folder, files) {
     return poses;
 }
 
+export async function loadModel(folder, files) {
+    var fn = 'model_low.ply';
+    if(folder) return folder + '/' + fn;
+    if(files) return Array.from(files).find(f => f.name === fn)
+    throw new Error("should have folder or files")
+}
+
 function limitDisplayedPoses(poses, maximagesdisplayed) {
 //limit the number of poses displayed
     var i = 0;

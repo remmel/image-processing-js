@@ -18,6 +18,7 @@ export function browseFile() {
     });
 }
 
+// TODO maybe readAsFnGeneric(file, readAsFn)
 export function readAsDataURL(file){
     return new Promise((resolve, reject) => {
         var fr = new FileReader();
@@ -31,5 +32,13 @@ export function readAsText(file) {
         var fr = new FileReader();
         fr.onload = pe => resolve(pe.target.result);
         fr.readAsText(file);
+    });
+}
+
+export function readAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        var fr = new FileReader();
+        fr.onload = pe => resolve(pe.target.result);
+        fr.readAsArrayBuffer(file);
     });
 }

@@ -1,17 +1,23 @@
 import * as THREE from "three";
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader'
+import { readAsArrayBuffer } from './form/formUtils'
 
 export const RAD2DEG = 180 / Math.PI
 
-async function loadPly(url) {
-    return new Promise((resolve, reject) => {
+async function loadPlyGeometry(urlOrFile) {
+    return new Promise(async (resolve, reject) => {
         const loader = new PLYLoader();
-        loader.load(url, resolve, () => {}, () => resolve(null));
+        if(typeof urlOrFile === 'string')
+            loader.load(urlOrFile, resolve, () => {}, () => resolve(null));
+        else if(urlOrFile instanceof File) {
+            var data = await readAsArrayBuffer(urlOrFile)
+            resolve(loader.parse(data))
+        }
     });
 }
 
-export async function addPly(url, pos, rot, scale){
-    var geometry = await loadPly(url);
+export async function createMeshPly(urlOrFile, pos, rot, scale){
+    var geometry = await loadPlyGeometry(urlOrFile);
     if(!geometry) return null
     geometry.computeVertexNormals();
 

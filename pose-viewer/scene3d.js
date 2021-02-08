@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import {DATASET_TYPE} from './datasetsloader/datasetsloader.js';
-import { addPly } from './utils3d.js'
+import { createMeshPly } from './utils3d.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import {PoseCylinder} from './PoseCylinder'
 import { selectPoseObj } from './main'
@@ -39,7 +39,7 @@ export async function init3dscene(datasetType) {
     animate();
 }
 
-export async function renderPoses(poses, model, datasetType, scale, ) {
+export async function renderPoses(poses, modelUrlOrFile, datasetType, scale, ) {
     removeCameras();
 
     for (var idxPose in poses) {
@@ -49,16 +49,12 @@ export async function renderPoses(poses, model, datasetType, scale, ) {
         groupPoses.add(pose.object)
 
     }
-    if(model) {
-        meshPly = await addPly(model);
+    if(modelUrlOrFile) {
+        meshPly = await createMeshPly(modelUrlOrFile);
         if(meshPly) groupPoses.add(meshPly);
     }
 
     scene.add(groupPoses);
-
-    setTimeout(() => {
-        groupPoses.children[0].select()
-    }, 1000)
 }
 
 //FIXME better way to access the mesh

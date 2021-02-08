@@ -1,5 +1,7 @@
 import {readAsDataURL} from "./form/formUtils.js";
 import { getPoses, selectPoseIdx } from './main'
+import { getImageUrl, URLDATAPIXEL } from './utils'
+import { PoseCylinder } from './PoseCylinder'
 
 export class ImagePanel{
     constructor(posesLength) {
@@ -38,19 +40,18 @@ export class ImagePanel{
         document.getElementById('info-num-pose').textContent = (this.curPoseIdx === null ? '-' : this.curPoseIdx+1)+"/"+this.posesLength;
     }
 
-    select(poseObj) {
+    async select(poseObj) {
         var $photoRgb = document.getElementById('photo-rgb');
-        if(typeof poseObj.data.rgb === 'string')
-            $photoRgb.src = poseObj.data.rgb
-        else if(poseObj.data.rgb instanceof File)
-            readAsDataURL(poseObj.data.rgb).then(dataurl => $photoRgb.src = dataurl);
-
+        poseObj.data.rgb = await getImageUrl(poseObj.data.rgb)
+        $photoRgb.src = poseObj.data.rgb
 
         var $photoDepth = document.getElementById('photo-depth');
-        if(typeof poseObj.data.depth === 'string')
+        if(poseObj.data.depth) {
+            poseObj.data.depth = await getImageUrl(poseObj.data.depth)
             $photoDepth.src = poseObj.data.depth
-        else if(poseObj.data.depth instanceof File)
-            readAsDataURL(poseObj.data.depth).then(dataurl => $photoDepth.src = dataurl);
+        } else {
+            $photoDepth.src = URLDATAPIXEL
+        }
 
         document.getElementById('info-text').textContent = JSON.stringify(poseObj.data.raw);
         this.curPoseIdx = poseObj.idxPose;
