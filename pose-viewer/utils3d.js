@@ -20,7 +20,6 @@ export async function addPly(url, pos, rot, scale){
     if(pos) mesh.position.copy(pos);
     if(rot) mesh.rotation.copy(rot)
     if(scale) mesh.scale.multiplyScalar( scale );
-    // material.project(mesh)
     return mesh;
 }
 

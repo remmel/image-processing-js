@@ -4,12 +4,13 @@ import { addPly } from './utils3d.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import {PoseCylinder} from './PoseCylinder'
 import { selectPoseObj } from './main'
+import { PoseCamera } from './PoseCamera'
 //https://codesandbox.io/s/project-camera-gby2i
 
 var camera, controls, scene, renderer, divScene,
     raycaster = new THREE.Raycaster(),
     groupPoses = new THREE.Group(),
-    model = null
+    meshPly = null
 
 export async function init3dscene(datasetType) {
     divScene = document.getElementById('scene3d');
@@ -43,19 +44,26 @@ export async function renderPoses(poses, model, datasetType, scale, ) {
 
     for (var idxPose in poses) {
         var pose = poses[idxPose];
-        // var poseDisplayed = new PoseCamera(pose)
         pose.object = new PoseCylinder(pose, idxPose, scale, datasetType)
+        // pose.object = new PoseCamera(pose, idxPose, scale, datasetType)
         groupPoses.add(pose.object)
 
     }
     if(model) {
-        var ply = await addPly(model);
-        if(ply) groupPoses.add(ply);
+        meshPly = await addPly(model);
+        if(meshPly) groupPoses.add(meshPly);
     }
 
     scene.add(groupPoses);
 
-    // console.log(groupPoses.children[0].select())
+    setTimeout(() => {
+        groupPoses.children[0].select()
+    }, 1000)
+}
+
+//FIXME better way to access the mesh
+export function getMeshPly(){
+    return meshPly;
 }
 
 function removeCameras() {
@@ -118,7 +126,7 @@ function createFloor(datasetType) {
         case DATASET_TYPE.LUBOS:
             //place floor like that as y is height
             plane.rotation.x = THREE.Math.degToRad(90); //plane.rotateX( - Math.PI / 2);
-            plane.position.y = -1; //as I usally took the first image 1m
+            plane.position.y = -1.6; //as we usually took the first image at that height
             break;
         case DATASET_TYPE.RGBDTUM:
             break;

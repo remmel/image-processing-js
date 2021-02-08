@@ -3,6 +3,14 @@ import {closest} from "../utils.js";
 import {Vector3, Euler, Quaternion} from "three";
 import { downloadCsv } from './datasetsloader'
 
+const KINECT_INTRINSICS = {
+    w: 640, //x
+    h: 480, //y
+    fx : 525,
+    fy: 525,
+    cx : 319.5,
+    cy: 239.5
+}
 
 export async function loadTum(url) {
     var poses = [];
@@ -10,6 +18,7 @@ export async function loadTum(url) {
     var images = await fetchAndAssociateRgbdTum(url);
 
     images.forEach(image => {
+        image.intrinsics = KINECT_INTRINSICS //main tum dataset are using kinect v1, probably have to store some intrinsics.txt
         poses.push({
             'id' : image.pose_ts,
             'position': new Vector3(image.tx, image.ty, image.tz),
