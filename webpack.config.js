@@ -4,7 +4,8 @@ module.exports = {
   mode: 'production',
   entry: {
     'pose-viewer': './src/pose-viewer/main.js',
-    'rgbd-viewer': './src/rgbd-viewer/main.js'
+    'rgbd-viewer': './src/rgbd-viewer/main.js',
+    'rgbds-viewer': './src/rgbds-viewer/main.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -19,6 +20,7 @@ module.exports = {
     compress: true,
     port: 9000,
     hot: true,
+    host: '0.0.0.0'
   },
   devtool: 'source-map',
   module: {

@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 export default class WebGlApp {
   /** @param {HTMLElement|null} el*/
   constructor(el) {
-    el = el || document.body
+    this.el = el = el || document.body
     this.scene = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 0.1, 1000)
 

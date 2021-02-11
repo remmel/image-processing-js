@@ -13,7 +13,7 @@ export async function loadPLYs(onProgess) {
   var geometries = [];
   var count = 50;
   for(var i = 0; i<count; i++){
-    geometries[i] = await loadPLYGeo('/dataset/format/plys/'+(i+'').padStart(8, '0')+'.ply')
+    geometries[i] = await loadPLYGeo('https://raw.githubusercontent.com/remmel/rgbd-dataset/main/20210113_182200.dataset/'+(i+'').padStart(8, '0')+'.ply')
     if(onProgess) onProgess((i+1)/count)
   }
   return geometries
