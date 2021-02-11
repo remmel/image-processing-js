@@ -14,7 +14,7 @@ var cylinderRedMat = new THREE.MeshPhongMaterial({ color: 0xff0000, flatShading:
  * Represent the camera pose.
  * I'll try to replace that class with PoseCamera as I prefer to use PerspectiveCamera with CameraHelper
  */
-export class PoseCylinder extends THREE.Mesh {
+export default class PoseCylinder extends THREE.Mesh {
   constructor(pose, idxPose, scale, datasetType) {
     var geometry = new THREE.CylinderGeometry(0, 0.1 / scale, 0.05 / scale, 4)
     geometry.rotateX(-90/RAD2DEG) //=-PI/2 _ //PI <=> 180°

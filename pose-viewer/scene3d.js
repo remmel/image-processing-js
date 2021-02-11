@@ -1,45 +1,37 @@
 import * as THREE from "three";
 import {DATASET_TYPE} from './datasetsloader/datasetsloader.js';
-import { createMeshPly } from './utils3d.js'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import {PoseCylinder} from './PoseCylinder'
+import { createMeshPly, RAD2DEG } from './utils3d.js'
+import PoseCylinder from './PoseCylinder'
 import { selectPoseObj } from './main'
-import { PoseCamera } from './PoseCamera'
+import WebGlApp from './WebGlApp'
 //https://codesandbox.io/s/project-camera-gby2i
 
-var camera, controls, scene, renderer, divScene,
-    raycaster = new THREE.Raycaster(),
+var raycaster = new THREE.Raycaster(),
     groupPoses = new THREE.Group(),
-    meshPly = null
+    meshPly = null,
+    webgl = null
 
 export async function init3dscene(datasetType) {
-    divScene = document.getElementById('scene3d');
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xcccccc);
-    scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
-    renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(divScene.clientWidth, divScene.clientHeight);
-    divScene.appendChild(renderer.domElement);
-    camera = new THREE.PerspectiveCamera(60, divScene.clientWidth / divScene.clientHeight, 0.1, 100);
-    camera.position.set(400, 200, 0);
+    webgl = new WebGlApp(document.getElementById('scene3d'))
+
+    var camera = webgl.camera;
+    var scene = webgl.scene;
+
+    camera.position.set(5, 5, 5);
 
     switch (datasetType) {
         case DATASET_TYPE.RGBDTUM:
             camera.up = new THREE.Vector3( 0, 0, 1 ); //up is z not y
     }
 
-    createOrbitControl(camera, renderer);
-    scene.add(new THREE.AxesHelper(1));
+    webgl.initOrbitControl();
     scene.add(createFloor(datasetType));
     scene.add(createLights());
-    // scene.add(createDebugCamera());
-    window.addEventListener('resize', onWindowResize, false);
-
-    animate();
+    webgl.initClickEvent(onClick3dScene)
+    webgl.animate()
 }
 
-export async function renderPoses(poses, modelUrlOrFile, datasetType, scale, ) {
+export async function renderPoses(poses, modelUrlOrFile, datasetType, scale) {
     removeCameras();
 
     for (var idxPose in poses) {
@@ -54,7 +46,7 @@ export async function renderPoses(poses, modelUrlOrFile, datasetType, scale, ) {
         if(meshPly) groupPoses.add(meshPly);
     }
 
-    scene.add(groupPoses);
+    webgl.scene.add(groupPoses);
 }
 
 //FIXME better way to access the mesh
@@ -72,36 +64,9 @@ function removeCameras() {
     })
 }
 
-function createDebugCamera(){
-    var mesh = createCamera(1);
-    mesh.position.copy(new THREE.Vector3(1, 1, 1));
-    return mesh;
-}
-
-function onWindowResize() {
-    camera.aspect = divScene.clientWidth / divScene.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(divScene.clientWidth, divScene.clientHeight);
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-    controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
-    renderer.render(scene, camera)
-}
-
 // When clicking on pose, display images and info
-function onClick3dScene(xpx, ypx) {
-    // calculate mouse position in normalized device coordinates
-    // (-1 to +1) for both components
-    var mouse = new THREE.Vector2();
-
-    mouse.x = (xpx / divScene.clientWidth) * 2 - 1;
-    mouse.y = -(ypx / divScene.clientHeight) * 2 + 1;
-    // update the picking ray with the camera and mouse position
-    raycaster.setFromCamera(mouse, camera);
-
-    // calculate objects intersecting the picking ray
+function onClick3dScene(mouse) {
+    raycaster.setFromCamera(mouse, webgl.camera);
     var intersects = raycaster.intersectObjects(groupPoses.children); //scene.children
     intersects.some(intersect => {
         if(!(intersect.object instanceof PoseCylinder)) return false;
@@ -145,23 +110,8 @@ function createLights() {
     return group;
 }
 
-function createOrbitControl(camera, renderer) {
-    controls = new OrbitControls(camera, renderer.domElement);
-    //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-    controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 0.01;
-    controls.maxDistance = 5;
-    // controls.maxPolarAngle = Math.PI / 2;
-}
-
-window.addEventListener('click', event => {
-    return onClick3dScene(event.clientX, event.clientY);
-}, false);
-
-window.addEventListener('touchstart', event => {
-    if(!event.touches.length) return;
-    return onClick3dScene(event.touches[0].pageX, event.touches[0].pageY);
-});
-
+// export function cameraOnPose(pose) {
+//     webgl.camera.position.copy(pose.camera.position)
+//     webgl.camera.rotation.copy(pose.camera.rotation) //cannot be changed because of orbitcontrol
+//     webgl.controls.update();
+// }

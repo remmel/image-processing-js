@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>3D PosesViewer</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+
+<body>
+<style>
+    body {
+        margin: 0;
+        height: 100vh; /* to be able to use document.body.clientHeight */
+    }
+    .gui{
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    #info {
+        position: absolute;
+        top: 10px;
+        width: 100%;
+        text-align: center;
+        z-index: 100;
+        display:block;
+    }
+</style>
+
+<div id="info">Loading...</div>
+
+<div class='gui'>
+  <div class="block">
+    <canvas id="original"></canvas>
+    <legend>Original</legend>
+  </div>
+
+  <div class="block">
+    <canvas id="grayscale"></canvas>
+    <legend>Grayscale</legend>
+  </div>
+</div>
+
+<script src='bundle.rgbd-viewer.js'></script>
+<script type="text/javascript" >
+    var Module = {onRuntimeInitialized() { main(); }};
+</script>
+<!--<script async src="https://docs.opencv.org/4.4.0/opencv.js" type="text/javascript"></script>-->
+<script async src='experiments/ip/opencv-4.4.0.js' type="text/javascript"></script>
+
+</body>
+</html>

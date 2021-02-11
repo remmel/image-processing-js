@@ -2,10 +2,13 @@ const path = require('path')
 
 module.exports = {
   mode: 'production',
-  entry: './pose-viewer/main.js',
+  entry: {
+    'pose-viewer': './pose-viewer/main.js',
+    'rgbd-viewer': './rgbd-viewer/main.js'
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.pose-viewer.js',
+    filename: 'bundle.[name].js',
   },
   performance: {
     maxEntrypointSize: 1024000,
@@ -17,6 +20,7 @@ module.exports = {
     port: 9000,
     hot: true,
   },
+  devtool: 'source-map',
   module: {
     rules: [
       {

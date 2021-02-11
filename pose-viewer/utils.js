@@ -4,6 +4,7 @@ export function closest(arr,num){
     return arr.reduce((prev, curr) => Math.abs(curr - num) < Math.abs(prev - num) ? curr : prev);
 }
 
+//URL.createObjectURL(e.target.files[0]);
 export async function getImageUrl(urlOrFile) {
     if(typeof urlOrFile === 'string')
         return urlOrFile

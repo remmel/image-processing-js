@@ -1,10 +1,9 @@
 import { exportPoses, loadModel, loadPoses } from './datasetsloader/datasetsloader.js'
 import {getFormImportTypeLocal, getImportForm} from "./form/formImport.js";
-import {init3dscene, renderPoses} from './scene3d.js';
+import { init3dscene, renderPoses } from './scene3d.js'
 import {getFormExportType} from "./form/formExport.js";
 import css from './main.css'
-import { ImagePanel } from './ImagePanel'
-import { PoseCylinder } from './PoseCylinder'
+import ImagePanel from './ImagePanel'
 
 var poses = [];
 var imgPanel = null;
@@ -40,12 +39,14 @@ function renderPosesMain(poses, model, datasetType, scale) {
     setTimeout(() => {selectPoseObj(poses[0].object)}, 1000)
 }
 
+
 export function selectPoseIdx(idxPose) {
     if(idxPose < 0 || idxPose >= poses.length || idxPose === null) return false;
     var pose = poses[idxPose];
     selectPoseObj(pose.object);
 }
 
+/** @param {PoseCylinder} poseObj */
 export async function selectPoseObj(poseObj) {
     console.log('main.selectPoseObj', poseObj)
     await imgPanel.select(poseObj)
