@@ -3,8 +3,8 @@ const path = require('path')
 module.exports = {
   mode: 'production',
   entry: {
-    'pose-viewer': './pose-viewer/main.js',
-    'rgbd-viewer': './rgbd-viewer/main.js'
+    'pose-viewer': './src/pose-viewer/main.js',
+    'rgbd-viewer': './src/rgbd-viewer/main.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
