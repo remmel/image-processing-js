@@ -66,15 +66,3 @@ export function loadPCD(url) {
     loader.load(url,geometry=>resolve(geometry),()=>{},e=>reject(e));
   })
 }
-
-export async function loadTumPng(scene) {
-  var img = new Image();
-  img.src = '/dataset/format/tum_depth.png';
-  img.onload = function() {
-    let src = cv.imread(img); //CvType.CV_16UC1
-    //src2.data16U[640*240+320]
-    // debugger;
-
-    src.delete();
-  }
-}

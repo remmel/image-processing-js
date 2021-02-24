@@ -3,7 +3,7 @@ import {closest} from "../utils.js";
 import {Vector3, Euler, Quaternion} from "three";
 import { downloadCsv } from './datasetsloader'
 
-const KINECT_INTRINSICS = {
+export const KINECT_INTRINSICS = {
     w: 640, //x
     h: 480, //y
     fx : 525,

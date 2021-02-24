@@ -5,6 +5,22 @@
   <title>Rgbd Viewer</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<!--  <script src="https://unpkg.com/jimp@0.16.1/browser/lib/jimp.js"></script>-->
+<!--  <script src="https://unpkg.com/node-libpng/browser/lib/node-libpng.js"></script>-->
+<!--  <script src='unpkg.com/png.js/browser/zlib.js'></script>-->
+<!--  <script src='https://raw.githubusercontent.com/foliojs/png.js/master/png.js'></script>-->
+<!--  <script src='git_submodules/pngtoy/src/pngtoy.js'></script>-->
+<!--  <script src='git_submodules/pngtoy/src/pngtoy.chunks.js'></script>-->
+<!--  <script src='git_submodules/pngtoy/src/pngtoy.chunk.idat.js'></script>-->
+<!--  <script src='git_submodules/pngtoy/src/pako_inflate.js'></script>-->
+
+<!--    <script src='git_submodules/pngtoy-everbuild/src/pngtoy.js'></script>-->
+<!--    <script src='git_submodules/pngtoy-everbuild/src/pngtoy.chunks.js'></script>-->
+<!--    <script src='git_submodules/pngtoy-everbuild/src/pngtoy.chunk.idat.js'></script>-->
+<!--    <script src='git_submodules/pngtoy-everbuild/src/pako_inflate.js'></script>-->
+<!--  <script src='git_submodules/pngtoy-everbuild/src/pngtoy.decode.js'></script>-->
+
+<!--  <script src='git_submodules/pngtoy-everbuild/pngtoy.min.js'></script>-->
 </head>
 
 <body>
@@ -28,9 +44,17 @@
         z-index: 100;
         display:block;
     }
+
+    #zoom{
+        display: inline-block;
+    }
+
+    .gui canvas{
+        max-width: 320px;
+    }
 </style>
 
-<div id="info">Loading...</div>
+<div id="info">#info<div id='zoom'>x</div></div>
 
 <div class='gui'>
   <div class="block">
@@ -42,7 +66,20 @@
     <canvas id="grayscale"></canvas>
     <legend>Grayscale</legend>
   </div>
+
+  <div class="block">
+    <canvas id="depth"></canvas>
+    <legend>Depth</legend>
+  </div>
+  <div class="block">
+    <canvas id="rgb"></canvas>
+    <legend>RGB</legend>
+  </div>
 </div>
+
+<!--<img src='/rgbd-viewer/1305031464.115837.png' id='dpng' />-->
+
+
 
 <script src='bundle.rgbd-viewer.js'></script>
 <script type="text/javascript" >
@@ -50,6 +87,12 @@
 </script>
 <!--<script async src="https://docs.opencv.org/4.4.0/opencv.js" type="text/javascript"></script>-->
 <script async src='experiments/ip/opencv-4.4.0.js' type="text/javascript"></script>
+<!--<script type="module">-->
+<!--  import nodeLibpng from 'https://cdn.skypack.dev/node-libpng';-->
+
+<!--  console.log(nodeLibpng)-->
+
+<!--</script>-->
 
 </body>
 </html>

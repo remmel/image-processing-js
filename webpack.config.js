@@ -5,7 +5,8 @@ module.exports = {
   entry: {
     'pose-viewer': './src/pose-viewer/main.js',
     'rgbd-viewer': './src/rgbd-viewer/main.js',
-    'rgbds-viewer': './src/rgbds-viewer/main.js'
+    'rgbds-viewer': './src/rgbds-viewer/main.js',
+    'raymarching': './src/raymarching/main.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
