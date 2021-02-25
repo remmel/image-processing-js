@@ -31,15 +31,15 @@ async function initThreejs() {
   }
   {
     //rgbd_dataset_freiburg1_desk
-    var m = await loadTumPng('/rgbd-viewer/tum/1305031464.115837.png', '/rgbd-viewer/tum/1305031464.127681.png')
+    var m = await loadTumPng('rgbd-viewer/tum/1305031464.115837.png', 'rgbd-viewer/tum/1305031464.127681.png')
     m.setRotationFromQuaternion(new Quaternion(0.9049, -0.1485, 0.1165, -0.3816))
     m.rotateY(180 / RAD2DEG)
     webglApp.scene.add(m)
   }
   {
     //https://github.com/remmel/hms-AREngine-demo
-    var m = await loadDepth16Bin('/rgbd-viewer/arengine-recorder/00000070_depth16.bin',
-      '/rgbd-viewer/arengine-recorder/00000070_image.jpg')
+    var m = await loadDepth16Bin('rgbd-viewer/arengine-recorder/00000070_depth16.bin',
+      'rgbd-viewer/arengine-recorder/00000070_image.jpg')
     var q = new Quaternion(0.020149395, 0.99818397, 0.05096002, -0.025030866)
     q.multiply(new Quaternion(1, 0, 0, 0))
     m.setRotationFromQuaternion(q)

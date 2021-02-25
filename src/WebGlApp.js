@@ -91,11 +91,11 @@ export default class WebGlApp {
    * Enable VR if possible
    */
   enableVr() {
-    navigator.xr.isSessionSupported('immersive-vr').then(supported => {
-      if (supported) {
+    // navigator.xr && navigator.xr.isSessionSupported('immersive-vr').then(supported => {
+    //   if (supported) {
         document.body.appendChild(VRButton.createButton(this.renderer))
         this.renderer.xr.enabled = true
-      }
-    })
+      // }
+    // })
   }
 }

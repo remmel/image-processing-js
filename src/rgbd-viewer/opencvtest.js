@@ -1,6 +1,6 @@
 export function convertGrayscale(elIdFrom, elIdTo) {
   var img = new Image();
-  img.src = '/experiments/ip/rhino.jpg';
+  img.src = 'experiments/ip/rhino.jpg';
   // img.src = 'HSV_color_solid_cylinder.png';
 
   img.onload = function () {
