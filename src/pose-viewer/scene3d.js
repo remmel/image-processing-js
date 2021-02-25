@@ -17,14 +17,11 @@ export async function init3dscene(datasetType) {
     var camera = webgl.camera;
     var scene = webgl.scene;
 
-    camera.position.set(5, 5, 5);
-
     switch (datasetType) {
         case DATASET_TYPE.RGBDTUM:
             camera.up = new THREE.Vector3( 0, 0, 1 ); //up is z not y
     }
 
-    webgl.initOrbitControl();
     scene.add(createFloor(datasetType));
     scene.add(createLights());
     webgl.initClickEvent(onClick3dScene)

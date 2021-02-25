@@ -43,3 +43,8 @@ Error `Error: EPERM: operation not permitted, stat` is produced on Windows 10 wh
 
 # TODOs
 - use react https://blog.bitsrc.io/starting-with-react-16-and-three-js-in-5-minutes-3079b8829817
+
+
+# Interesting resources
+https://stemkoski.github.io/AR-Examples/
+http://www.threejsgames.com/extensions/

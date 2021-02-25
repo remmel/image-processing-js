@@ -6,7 +6,8 @@ module.exports = {
     'pose-viewer': './src/pose-viewer/main.js',
     'rgbd-viewer': './src/rgbd-viewer/main.js',
     'rgbds-viewer': './src/rgbds-viewer/main.js',
-    'raymarching': './src/raymarching/main.js'
+    'raymarching': './src/raymarching/main.js',
+    'vr' : './src/vr/main.js',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -19,6 +20,7 @@ module.exports = {
   devServer: {
     contentBase: path.join(__dirname, 'dist'),
     compress: true,
+    https: true,
     port: 9000,
     hot: true,
     host: '0.0.0.0'

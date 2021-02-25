@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 
 /**
  * ThreeJs base class with resize and click handled
@@ -9,11 +10,11 @@ export default class WebGlApp {
   constructor(el) {
     this.el = el = el || document.body
     this.scene = new THREE.Scene()
-    console.log(el.clientWidth, el.clientHeight)
     this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 0.1, 1000)
+    this.camera.position.set(2,2,2)
 
     this.scene.background = new THREE.Color(0xcccccc);
-    this.scene.frog = new THREE.FogExp2(0xcccccc, 0.002);
+
     this.renderer = new THREE.WebGLRenderer({antialias: true})
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(el.clientWidth, el.clientHeight)
@@ -21,6 +22,9 @@ export default class WebGlApp {
 
     this.scene.add(new THREE.AxesHelper(1));
     window.addEventListener('resize', () => this._onWindowResize(), false);
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+    this.enableVr()
   }
 
   _onWindowResize() {
@@ -30,21 +34,33 @@ export default class WebGlApp {
   }
 
   animate() {
-    requestAnimationFrame(this.animate.bind(this));
-    if(this.controls) this.controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
-    this.renderer.render( this.scene, this.camera );
+    if (this.renderer.xr.enabled) {
+      this.renderer.setAnimationLoop(() => this.renderer.render(this.scene, this.camera))
+    } else {
+      requestAnimationFrame(this.animate.bind(this))
+      if (this.controls) this.controls.update() // only required if controls.enableDamping = true, or if controls.autoRotate = true
+      this.animateCallback()
+      this.renderer.render(this.scene, this.camera)
+    }
   }
 
-  initOrbitControl() {
-    var controls = new OrbitControls(this.camera, this.renderer.domElement);
-    //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-    controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 0.01;
-    controls.maxDistance = 5;
-    // controls.maxPolarAngle = Math.PI / 2;
-    this.controls = controls
+  // maybe will need to add an array of fn, if finally multiple stuff must be done
+  animateCallback() {}
+
+  addDumbCubeWithLights() {
+    const geometry = new THREE.BoxGeometry()
+    const material = new THREE.MeshStandardMaterial({ color: 0xbeedca })
+    const cube = new THREE.Mesh(geometry, material)
+    cube.position.set(-1, 0.5, -1)
+    this.scene.add(cube)
+    //TODO try to create natural sun light
+    // this.scene.add(new THREE.AmbientLight(0xFFFFFF))
+    // this.scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
+    const light = new THREE.DirectionalLight(0xFFFFFF);
+    light.position.set(0, 10, 0);
+    light.target.position.set(-5, 0, 0);
+    this.scene.add(light)
+    return cube
   }
 
   initClickEvent(callback) {
@@ -68,5 +84,17 @@ export default class WebGlApp {
     mouse.x = (xpx / this.el.clientWidth) * 2 - 1;
     mouse.y = -(ypx / this.el.clientHeight) * 2 + 1;
     callback(mouse)
+  }
+
+  /**
+   * Enable VR if possible
+   */
+  enableVr() {
+    navigator.xr.isSessionSupported('immersive-vr').then(supported => {
+      if(supported) {
+        document.body.appendChild( VRButton.createButton( this.renderer ) );
+        this.renderer.xr.enabled = true;
+      }
+    })
   }
 }

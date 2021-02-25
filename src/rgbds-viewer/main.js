@@ -1,6 +1,7 @@
 import * as THREE from 'three'
-import WebGlApp from '../rgbd-viewer/WebGlApp'
-import { loadPCD, loadPLYMesh, loadPLYPoints, loadPLYs } from '../rgbd-viewer/LoadersHelper'
+import { loadPLYs } from '../rgbd-viewer/LoadersHelper'
+import WebGlApp from '../pose-viewer/WebGlApp'
+
 
 //https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/rgb/1305031468.195985.png
 //https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/depth/1305031468.188327.png

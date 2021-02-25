@@ -1,9 +1,9 @@
-import WebGlApp from './WebGlApp'
 import { loadPCD, loadPLYMesh, loadPLYPoints, loadPLYs } from './LoadersHelper'
 import { convertGrayscale } from './opencvtest'
 import { loadDepth16Bin, loadTumPng } from './LoaderRgbd'
 import { RAD2DEG } from '../pose-viewer/utils3d'
 import { Quaternion } from 'three'
+import WebGlApp from '../pose-viewer/WebGlApp'
 
 //https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/rgb/1305031468.195985.png
 //https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/depth/1305031468.188327.png
