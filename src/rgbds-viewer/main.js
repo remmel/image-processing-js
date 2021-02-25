@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { loadPLYs } from '../rgbd-viewer/LoadersHelper'
-import WebGlApp from '../pose-viewer/WebGlApp'
+import WebGlApp from '../WebGlApp'
 
 
 //https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/rgb/1305031468.195985.png
@@ -44,13 +44,14 @@ function initGui() {
   }
 
   document.getElementById('btn-speed-slower').onclick = (e) => {
-    if(speed > 1) speed--
+    if (speed > 1) speed--
     render()
   }
 
   function render() {
     document.getElementById('speed-value').innerText = speed
   }
+
   render()
 }
 

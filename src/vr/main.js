@@ -1,6 +1,6 @@
 import { loadPCD } from '../rgbd-viewer/LoadersHelper'
 import { RAD2DEG } from '../pose-viewer/utils3d'
-import WebGlApp from '../pose-viewer/WebGlApp'
+import WebGlApp from '../WebGlApp'
 
 var webglApp
 
@@ -16,7 +16,7 @@ async function init() {
   {
     // PCDFormat
     var m = await loadPCD('https://threejs.org/examples/models/pcd/binary/Zaghetto.pcd')
-    m.rotateX(180/RAD2DEG)
+    m.rotateX(180 / RAD2DEG)
     webglApp.scene.add(m)
   }
 }
