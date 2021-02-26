@@ -4,7 +4,6 @@ import * as THREE from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { OBJLoader2 } from 'three/examples/jsm/loaders/OBJLoader2'
 
 /**
  * animated ply
@@ -63,7 +62,8 @@ export function loadPCD(url) {
  * Load an obj (photogrammetry: no shading)
  * @returns {Promise<THREE.Group>}
  */
-export async function loadObj(objFn, mtlFn) {
+export async function loadObj(objFn, mtlFn, cbLoading) {
+  cbLoading = cbLoading || (() => {})
   // TODO should find itselft the mtl. If not providing manually the material, the object will be "blurry" because it use vertrex colors not jpg
   // Diff says that the blurry one has map:null; vertexColors:true
   // Material is MeshPhongMaterial, MeshBasicMaterial might be better, has we don't want shaders
@@ -72,8 +72,9 @@ export async function loadObj(objFn, mtlFn) {
   materials.preload() //load imgs
   var group = await new OBJLoader()
     .setMaterials(materials)
-    .loadAsync(objFn)
+    .loadAsync(objFn, (e) => cbLoading(e.loaded / e.total * 0.95))
   group.children[0].material.flatShading = true //hum... smooth
+  cbLoading(1)
   return group
 }
 

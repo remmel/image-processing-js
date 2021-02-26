@@ -5,6 +5,11 @@ import * as THREE from 'three'
 
 var webglApp
 
+var el = document.getElementById("info")
+function cbLoading(percentage) {
+  el.innerText = percentage === 1 ? "Loaded" : "Loading "+Math.round(percentage*100)+"%"
+}
+
 async function init() {
   webglApp = new WebGlApp(document.body)
   webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1))
@@ -17,17 +22,15 @@ async function init() {
   //   m.rotateX(180 / RAD2DEG)
   //   webglApp.scene.add(m)
   // }
-  { //TODO add loading GUI
-    var m = await loadObj(
-      'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.obj',
-      'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.mtl'
-    )
-    // window.G = m
-    m.scale.set(0.157, 0.157, 0.157)
-    m.rotation.x = 15*3.14/180
-    m.position.y = 1.69
-    webglApp.scene.add(m)
-  }
+  loadObj(
+    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.obj',
+    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.mtl', cbLoading)
+    .then(m => {
+      m.scale.set(0.157, 0.157, 0.157)
+      m.rotation.x = 15 * 3.14 / 180
+      m.position.y = 1.69
+      webglApp.scene.add(m)
+    })
   // {
   //   var m = await loadGltf('vr/depthmaps-lowlowalignhighest.glb')
   //   m.scale.set(0.2,0.2,0.2)
