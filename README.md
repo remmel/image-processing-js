@@ -48,3 +48,4 @@ Error `Error: EPERM: operation not permitted, stat` is produced on Windows 10 wh
 # Interesting resources
 https://stemkoski.github.io/AR-Examples/
 http://www.threejsgames.com/extensions/
+https://discoverthreejs.com/book/contents/

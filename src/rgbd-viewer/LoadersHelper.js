@@ -1,6 +1,10 @@
 import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader'
 import { PCDLoader } from 'three/examples/jsm/loaders/PCDLoader'
 import * as THREE from 'three'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { OBJLoader2 } from 'three/examples/jsm/loaders/OBJLoader2'
 
 /**
  * animated ply
@@ -13,11 +17,14 @@ export async function loadPLYs(onProgess) {
   var geometries = [];
   var count = 50;
   for(var i = 0; i<count; i++){
-    geometries[i] = await loadPLYGeo('https://raw.githubusercontent.com/remmel/rgbd-dataset/main/20210113_182200.dataset/'+(i+'').padStart(8, '0')+'.ply')
+    //TODO update that to create in parallel
+    geometries[i] = await new PLYLoader().loadAsync('https://raw.githubusercontent.com/remmel/rgbd-dataset/main/20210113_182200.dataset/'+(i+'').padStart(8, '0')+'.ply')
     if(onProgess) onProgess((i+1)/count)
   }
   return geometries
 }
+
+//TODO use loader.loadAsync
 
 /**
  * Returns ply Object3D as Points
@@ -25,7 +32,7 @@ export async function loadPLYs(onProgess) {
  * @returns {Promise<THREE.Points>}
  */
 export async function loadPLYPoints(url) {
-  var geometry = await loadPLYGeo(url)
+  var geometry = await new PLYLoader().loadAsync(url)
   var material = new THREE.PointsMaterial({ size: 0.005 })
   material.vertexColors = geometry.attributes.color.count > 0
   return new THREE.Points(geometry, material)
@@ -37,22 +44,10 @@ export async function loadPLYPoints(url) {
  * @returns {Promise<THREE.Points>}
  */
 export async function loadPLYMesh(url) {
-  var geometry = await loadPLYGeo(url)
+  var geometry = await new PLYLoader().loadAsync(url)
   geometry.computeVertexNormals();
   const material = new THREE.MeshBasicMaterial( { color: 0x0055ff, flatShading: true } );
   return new THREE.Mesh( geometry, material );
-}
-
-/**
- * Returns PLY geo
- * @param url {string}
- * @returns {Promise<THREE.BufferGeometry>}
- */
-export function loadPLYGeo(url) {
-  return new Promise((resolve, reject) => {
-    const loader = new PLYLoader();
-    loader.load(url,geometry=>resolve(geometry),()=>{},e=>reject(e));
-  });
 }
 
 /**
@@ -61,8 +56,28 @@ export function loadPLYGeo(url) {
  * @returns {Promise<THREE.Points>}
  */
 export function loadPCD(url) {
-  return new Promise((resolve, reject) =>{
-    const loader = new PCDLoader();
-    loader.load(url,geometry=>resolve(geometry),()=>{},e=>reject(e));
-  })
+  return new PCDLoader().loadAsync(url)
+}
+
+/**
+ * Load an obj (photogrammetry: no shading)
+ * @returns {Promise<THREE.Group>}
+ */
+export async function loadObj(objFn, mtlFn) {
+  // TODO should find itselft the mtl. If not providing manually the material, the object will be "blurry" because it use vertrex colors not jpg
+  // Diff says that the blurry one has map:null; vertexColors:true
+  // Material is MeshPhongMaterial, MeshBasicMaterial might be better, has we don't want shaders
+  var materials = await new MTLLoader()
+    .loadAsync(mtlFn)
+  materials.preload() //load imgs
+  var group = await new OBJLoader()
+    .setMaterials(materials)
+    .loadAsync(objFn)
+  group.children[0].material.flatShading = true //hum... smooth
+  return group
+}
+
+export async function loadGltf(url) {
+  const data = await new GLTFLoader().loadAsync(url)
+  return data.scene.children[0]
 }

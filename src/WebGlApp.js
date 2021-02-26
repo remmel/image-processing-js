@@ -57,10 +57,17 @@ export default class WebGlApp {
     //TODO try to create natural sun light
     // this.scene.add(new THREE.AmbientLight(0xFFFFFF))
     // this.scene.add( new THREE.HemisphereLight( 0x443333, 0x111122 ) );
-    const light = new THREE.DirectionalLight(0xFFFFFF)
-    light.position.set(0, 10, 0)
-    light.target.position.set(-5, 0, 0)
-    this.scene.add(light)
+    // const light = new THREE.DirectionalLight(0xFFFFFF)
+    // light.position.set(0, 10, 0)
+    // light.target.position.set(-5, 0, 0)
+    // this.scene.add(light)
+    const ambientLight = new THREE.AmbientLight( 0xFFFFFF, 1);
+    this.scene.add( ambientLight );
+
+    //MeshBasicMaterial no light
+
+    // const pointLight = new THREE.PointLight( 0xffffff, 0.8 );
+    // this.camera.add( pointLight );
     return cube
   }
 
@@ -91,10 +98,17 @@ export default class WebGlApp {
    * Enable VR if possible
    */
   enableVr() {
+    // console.log(this.renderer.xr, "totott")
+    // this.renderer.xr.addEventListener('sessionstart', (event) =>{
+    //   alert(1)
+    // })
+
     // navigator.xr && navigator.xr.isSessionSupported('immersive-vr').then(supported => {
     //   if (supported) {
         document.body.appendChild(VRButton.createButton(this.renderer))
         this.renderer.xr.enabled = true
+        // var cam = this.renderer.xr.getCamera()
+    // console.log(cam)
       // }
     // })
   }
