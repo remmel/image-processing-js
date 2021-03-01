@@ -1,14 +1,46 @@
-import { loadGltf, loadObj, loadPCD } from '../rgbd-viewer/LoadersHelper'
-import { RAD2DEG } from '../pose-viewer/utils3d'
+import { loadGltf, loadObj, loadObjFiles, loadPCD } from '../rgbd-viewer/LoadersHelper'
 import WebGlApp from '../WebGlApp'
 import * as THREE from 'three'
 
 var webglApp
 
-var el = document.getElementById("info")
-function cbLoading(percentage) {
-  el.innerText = percentage === 1 ? "Loaded" : "Loading "+Math.round(percentage*100)+"%"
+document.getElementById('load-cocina').onclick = e => {
+  var el = e.target
+  el.disabled = true
+  function cbLoading(percentage) {
+    el.value = percentage === 1 ? "Loaded" : "Loading "+Math.round(percentage*100)+"%"
+  }
+
+  loadObj(
+    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.obj',
+    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.mtl', cbLoading)
+    .then(m => {
+      m.scale.set(0.157, 0.157, 0.157)
+      m.rotation.x = 15 * 3.14 / 180
+      m.position.y = 1.69
+      webglApp.scene.add(m)
+    })
 }
+
+document.getElementById('browse').onchange = async e => {
+  var m = await loadObjFiles(e.target.files)
+  webglApp.scene.add(m)
+}
+
+// because Oculus doesn't handle loading multiples files at once...
+var files = []
+Array.from(document.querySelectorAll('.browse-oculus input[type=file]')).forEach(input => input.addEventListener('change', e => {
+  files.unshift(e.target.files[0]) //add at the biginning in case because I'm lazy to remove previous selection
+}))
+
+document.querySelector('.browse-oculus input[type=button]').onclick = async e => {
+  e.target.disabled = true
+  var m = await loadObjFiles(files)
+  webglApp.scene.add(m)
+}
+
+
+
 
 async function init() {
   webglApp = new WebGlApp(document.body)
@@ -22,15 +54,6 @@ async function init() {
   //   m.rotateX(180 / RAD2DEG)
   //   webglApp.scene.add(m)
   // }
-  loadObj(
-    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.obj',
-    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.mtl', cbLoading)
-    .then(m => {
-      m.scale.set(0.157, 0.157, 0.157)
-      m.rotation.x = 15 * 3.14 / 180
-      m.position.y = 1.69
-      webglApp.scene.add(m)
-    })
   // {
   //   var m = await loadGltf('vr/depthmaps-lowlowalignhighest.glb')
   //   m.scale.set(0.2,0.2,0.2)

@@ -26,9 +26,28 @@
     .gui canvas{
         max-width: 320px;
     }
+
+    .browse-oculus{
+        display: inline-block;
+    }
 </style>
 
-<div id="info">#info</div>
+<div id="info">
+  <input type='button' id='load-cocina' value='Load demo .obj'/>
+  - or -
+  <input type='file' multiple id='browse' accept='.obj, .mtl, .jpg, .jpeg, .png'/>
+  - or -
+  <div class='browse-oculus'>
+    <span title='Oculus doesnt seems to handle "multiple" attribute to load mutiples files at once. See https://caniuse.com/input-file-multiple'>
+      Old browser/Oculus : ℹ️
+    </span><br />
+    Obj:<input type='file' id='browse-obj' accept='.obj'/><br />
+    Mtl:<input type='file' id='browse-mtl' accept='.mtl'/><br />
+    Image:<input type='file' id='browse-img' accept='.jpg, .jpeg, .png'/><br />
+    <input type='button' value='OK'/>
+  </div>
+
+</div>
 <script src='bundle.vr.js'></script>
 
 </body>

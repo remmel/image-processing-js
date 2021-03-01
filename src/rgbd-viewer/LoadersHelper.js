@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { readAsDataURL, readAsText } from '../pose-viewer/form/formUtils'
 
 /**
  * animated ply
@@ -75,6 +76,46 @@ export async function loadObj(objFn, mtlFn, cbLoading) {
     .loadAsync(objFn, (e) => cbLoading(e.loaded / e.total * 0.95))
   group.children[0].material.flatShading = true //hum... smooth
   cbLoading(1)
+  return group
+}
+
+/**
+ * Load an obj with its mat and jpg
+ * TODO, do not call by http the image
+ * @param {FileList} fileList
+ * @returns {Promise<THREE.Object3D>}
+ */
+export async function loadObjFiles(fileList) {
+  var files = Array.from(fileList)
+
+  // 1. Material
+  var fMtl = files.find( f => f.name.endsWith(".mtl"))
+  var materials = null
+  if(fMtl) {
+    var txtMat = await readAsText(fMtl)
+    materials = await new MTLLoader().parse(txtMat)
+  }
+
+  // 2. Obj
+  var fobj = files.find( f => f.name.endsWith(".obj"))
+  if(!fobj) { alert(".obj not found"); return}
+  var dataObj = await readAsText(fobj)
+  var group = new OBJLoader().setMaterials(materials).parse(dataObj)
+
+  // 3. Image
+  var fImg = files.find(f => f.name.match(/\.(jpg|jpeg|png)$/i) !== null)
+  if(fImg) {
+  var dataUriImg = await readAsDataURL(fImg)
+    var texture = new THREE.TextureLoader().load(dataUriImg);
+    group.traverse(function (child) {
+      if (child instanceof THREE.Mesh) {
+        child.material.map = texture
+        child.material.flatShading = true
+      }
+    })
+  }
+
+
   return group
 }
 
