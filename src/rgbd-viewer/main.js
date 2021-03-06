@@ -1,20 +1,24 @@
-import { loadPCD, loadPLYMesh, loadPLYPoints, loadPLYs } from './LoadersHelper'
+import { loadObj, loadPCD, loadPLYMesh, loadPLYPoints, loadPLYs } from './LoadersHelper'
 import { convertGrayscale } from './opencvtest'
-import { loadDepth16Bin, loadTumPng } from './LoaderRgbd'
+import { loadDepth16BinPointsResize, loadTumPng } from './LoaderRgbd'
 import { RAD2DEG } from '../pose-viewer/utils3d'
 import { Quaternion } from 'three'
 import WebGlApp from '../WebGlApp'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 
 //https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/rgb/1305031468.195985.png
 //https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/depth/1305031468.188327.png
 var webglApp
 
-async function initThreejs() {
+async function init() {
   webglApp = new WebGlApp(document.body)
-
   webglApp.animate()
 
-
+  {
+    //OBJ
+    var g = await new OBJLoader().loadAsync('/rgbd-viewer/cube.obj')
+    webglApp.scene.add(g)
+  }
   {
     // PCDFormat
     var m = await loadPCD('https://threejs.org/examples/models/pcd/binary/Zaghetto.pcd')
@@ -38,7 +42,7 @@ async function initThreejs() {
   }
   {
     //https://github.com/remmel/hms-AREngine-demo
-    var m = await loadDepth16Bin('rgbd-viewer/arengine-recorder/00000070_depth16.bin',
+    var m = await loadDepth16BinPointsResize('rgbd-viewer/arengine-recorder/00000070_depth16.bin',
       'rgbd-viewer/arengine-recorder/00000070_image.jpg')
     var q = new Quaternion(0.020149395, 0.99818397, 0.05096002, -0.025030866)
     q.multiply(new Quaternion(1, 0, 0, 0))
@@ -68,7 +72,5 @@ async function initThreejs() {
 
 window.main = function() {
   convertGrayscale('original', 'grayscale')
-  initThreejs()
+  init()
 }
-
-

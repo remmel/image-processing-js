@@ -6,11 +6,12 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js'
  * ThreeJs base class with resize and click handled
  */
 export default class WebGlApp {
+
   /** @param {HTMLElement|null} el*/
   constructor(el) {
     this.el = el = el || document.body
     this.scene = new THREE.Scene()
-    this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 0.1, 1000)
+    this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 0.01, 1000)
     this.camera.position.set(2, 2, 2)
 
     this.scene.background = new THREE.Color(0xcccccc)
@@ -25,6 +26,8 @@ export default class WebGlApp {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.enableVr()
+
+    this.animateCallbacks = []
   }
 
   _onWindowResize() {
@@ -34,18 +37,15 @@ export default class WebGlApp {
   }
 
   animate() {
-    if (this.renderer.xr.enabled) {
-      this.renderer.setAnimationLoop(() => this.renderer.render(this.scene, this.camera))
-    } else {
-      requestAnimationFrame(this.animate.bind(this))
+    this.renderer.setAnimationLoop(() => { //before requestAnimationFrame(this.animate.bind(this))
       if (this.controls) this.controls.update() // only required if controls.enableDamping = true, or if controls.autoRotate = true
-      this.animateCallback()
+      this.animateCallbacks.forEach(animateCallback => animateCallback())
       this.renderer.render(this.scene, this.camera)
-    }
+    })
   }
 
-  // maybe will need to add an array of fn, if finally multiple stuff must be done
-  animateCallback() {
+  animateAdd(fn) {
+    this.animateCallbacks.push(fn)
   }
 
   addDumbCubeWithLights() {

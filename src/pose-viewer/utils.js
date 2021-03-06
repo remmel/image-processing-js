@@ -13,3 +13,8 @@ export async function getImageUrl(urlOrFile) {
 }
 
 export const URLDATAPIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+
+// eg 52 => '00000052' - default is 8
+export function idPad(i) {
+    return (i+'').padStart(8, '0')
+}

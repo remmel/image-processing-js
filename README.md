@@ -49,3 +49,10 @@ Error `Error: EPERM: operation not permitted, stat` is produced on Windows 10 wh
 https://stemkoski.github.io/AR-Examples/
 http://www.threejsgames.com/extensions/
 https://discoverthreejs.com/book/contents/
+VR in desktop / barrel effect
+ - https://www.creativebloq.com/how-to/get-started-with-webvr
+ - https://github.com/googlearchive/vrview
+ - https://stackoverflow.com/questions/46205117/three-js-custom-vr-cardboard-effect
+ - https://threejs.org/examples/#webgl_effects_stereo
+ - https://github.com/mrdoob/three.js/issues/8400
+ - https://www.decarpentier.nl/downloads/lensdistortion-webgl/lensdistortion-webgl.html

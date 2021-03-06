@@ -28,14 +28,13 @@
     }
 </style>
 
-<div id='gui'>
-  <span id="info">Loading...</span><br />
-  <span id='speed'>Speed <button id='btn-speed-slower'>Quicker</button><button id='btn-speed-quicker'>Slower</button> (<span id='speed-value'></span>)</span>
-</div>
-
-
+<!--<script src='https://cdn.jsdelivr.net/npm/webvr-polyfill@latest/build/webvr-polyfill.js'></script>-->
 
 <script src='bundle.rgbds-viewer.js'></script>
+<script type="text/javascript" >
+  var Module = {onRuntimeInitialized() { main(); }};
+</script>
+<script async src='experiments/ip/opencv-4.4.0.js' type="text/javascript"></script>
 
 </body>
 </html>

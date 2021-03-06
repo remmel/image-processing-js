@@ -1,5 +1,6 @@
 .idea
 dataset
+dataset2
 .DS_Store
 node_modules
 dist/bundle.*.js
