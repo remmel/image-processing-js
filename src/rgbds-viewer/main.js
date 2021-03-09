@@ -4,18 +4,20 @@ import {
   loadDepth16BinPointsResize,
   loadDepth16BinPoints,
   loadDepth16BinMesh,
-  loadImage, getImageDataViaCanvas,
+  loadImage, getImageDataViaCanvas, loadDepth16BinMeshTexture,
 } from '../rgbd-viewer/LoaderRgbd'
 import { Euler, Quaternion, Vector3 } from 'three'
 import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
 import { RAD2DEG } from '../pose-viewer/utils3d'
 import { idPad } from '../pose-viewer/utils'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { loadObj } from '../rgbd-viewer/LoadersHelper'
 
 //to add label GUI: https://threejs.org/examples/#webgl_instancing_performance
 
-// var folder = 'dataset2/2021-02-26_210438_speaking1'
+// var folder = 'dataset/2021-02-26_210438_speaking1'
 var folder = 'https://www.kustgame.com/ftp/2021-02-26_210438_speaking1'
+// var folder = 'dataset/2021-02-26_210530_speaking2'
 
 var webglApp
 var params = {}
@@ -23,26 +25,27 @@ var params = {}
 async function init() {
   webglApp = new WebGlApp(document.body)
 
-  addRemyPoints().then(({m, animeCb}) => {
+  var urlDepth = folder + '/00000601_depth16.bin', urlRgb = folder + '/00000601_image.jpg'
+
+  loadDepth16BinPoints(urlDepth, urlRgb).then(m => {
     webglApp.scene.add(m)
-    webglApp.animateAdd(animeCb)
+    webglApp.animateAdd(guiPositionAnimateCb(m, 4))
   })
 
-  addRemyMesh().then(m => {
+  loadDepth16BinPointsResize(urlDepth, urlRgb).then(m => {
     webglApp.scene.add(m)
+    webglApp.animateAdd(guiPositionAnimateCb(m, 6))
   })
 
-  // addHorse().then(({mesh, mixer}) => {
-  //   webglApp.scene.add(mesh)
-  //   let prevTime = Date.now();
-  //   webglApp.animateAdd(() => {
-  //     if (mixer) {
-  //       const time = Date.now()
-  //       mixer.update((time - prevTime) * 0.001)
-  //       prevTime = time
-  //     }
-  //   })
-  // })
+  loadDepth16BinMesh(urlDepth, urlRgb).then(m => {
+    webglApp.scene.add(m)
+    webglApp.animateAdd(guiPositionAnimateCb(m, -2))
+  })
+
+  loadDepth16BinMeshTexture(urlDepth, urlRgb).then(m => {
+    webglApp.scene.add(m)
+    webglApp.animateAdd(guiPositionAnimateCb(m, 2))
+  })
 
   addRemyAndAnimation().then(({ m, animateCb }) => {
     webglApp.scene.add(m)
@@ -56,6 +59,13 @@ async function init() {
   webglApp.animate()
 
   createGUI()
+}
+
+function guiPositionAnimateCb(m, zoffset) {
+  return () => {
+    m.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
+    m.position.set(params.tx, params.ty, params.tz + zoffset)
+  }
 }
 
 function createGUI() {
@@ -105,22 +115,9 @@ async function addRemyPointsResize() {
   return m
 }
 
-async function addRemyPoints() {
-  var m = await loadDepth16BinPoints(folder + '/00000601_depth16.bin?a', folder + '/00000601_image.jpg?a')
-
-  var animeCb = () => {
-    m.material.size = params.pointsize
-    m.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
-    m.position.set(params.tx, params.ty, params.tz + 2)
-  }
-  return { m, animeCb }
-}
-
-async function addRemyMesh() {
-  var m = await loadDepth16BinMesh(folder + '/00000601_depth16.bin',
+async function addRemyMeshTexture() {
+  var m = await loadDepth16BinMeshTexture(folder + '/00000601_depth16.bin',
     folder + '/00000601_image.jpg')
-  m.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
-  m.position.set(params.tx, params.ty, params.tz - 2)
   return m
 }
 
@@ -143,7 +140,7 @@ function generateRgbdUrls(folder, idmin, idmax) {
     var idStr = idPad(id)
     urls.push({
         depth: folder + '/' + idStr + '_depth16.bin',
-        rgb: folder + '/' + idStr + '_image.jpg'
+        rgb: folder + '/' + idStr + '_image.jpg?a'
       })
   }
   return urls
@@ -153,9 +150,41 @@ async function addRemyAndAnimation() {
   var loadingCallback = (percent) => params.plys_loading = Math.round(percent * 100)
   var urls = generateRgbdUrls(folder, 512, 601) //601
   var objs3d = await loadDepth16BinList(urls, loadingCallback)
-  let m = objs3d[0].clone()
-  var animateCb = dirtyAnimationAnimeCallback(m, objs3d)
+  let m = new THREE.Group()
+  m.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
+  m.position.set(params.tx, params.ty, params.tz)
+  var animateCb = dirtyAnimationAnimeCallbackViaGroup(m, objs3d)
   return { m, animateCb }
+}
+
+async function addCubeWithTexture() {
+  loadObj(
+    '/rgbd-viewer/cubeWithTexture/cube.obj',
+    '/rgbd-viewer/cubeWithTexture/cubetxt.mtl')
+    .then(m => {
+      webglApp.scene.add(m)
+    })
+}
+
+/**
+ * Create an animation from a list of Object3D //TODO use animation instead, possible?
+ * @param {THREE.Group} g
+ * @param {[THREE.Object3D]} objs
+ * @returns {function(): void}
+ */
+function dirtyAnimationAnimeCallbackViaGroup(g, objs) {
+  let objIdx = 0, frame = 0
+  g.add(...objs)
+  g.children.forEach(m => m.visible = false)
+  return () => {
+    frame++
+    if (frame % params.plys_speed === 0) {
+      if (objIdx === g.children.length) objIdx = 0
+      g.children.forEach(m => m.visible = false)
+      g.children[objIdx].visible = true
+      objIdx++
+    }
+  }
 }
 
 /**
@@ -175,6 +204,7 @@ function dirtyAnimationAnimeCallback(obj, objs) {
       obj.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
       obj.position.set(params.tx, params.ty, params.tz)
       obj.material.size = params.pointsize
+      // obj.material = objs[objIdx].material
     }
   }
 }
@@ -192,7 +222,7 @@ async function loadDepth16BinList(urls, onProgess) {
 
   for (let i = 0; i < urls.length; i++) {
     var { depth, rgb } = urls[i]
-    promises.push(loadDepth16BinMesh(depth, rgb).then(obj => { //loadDepth16BinPoints(
+    promises.push(loadDepth16BinMeshTexture(depth, rgb).then(obj => { //loadDepth16BinPoints(
       objs3d[i] = obj
       if (onProgess) {
         progress++

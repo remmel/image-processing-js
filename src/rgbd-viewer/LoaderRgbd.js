@@ -13,10 +13,6 @@ export const HONOR20VIEW_DEPTH_INTRINSICS = {
   cy: 89.13,
 }
 
-// // var a = new QuickHull()
-//
-// BufferGeometryUtils.mergeVertices(dd)
-
 //https://www.npmjs.com/package/pngjs#browser
 
 //handle 16bit grayscale https://docs.opencv.org/master/dc/de6/tutorial_js_nodejs.html
@@ -105,11 +101,42 @@ export async function loadDepth16BinMesh(urlDepth, urlRgb, intrinsics) {
   let rgbMat = await loadImageAsCvMat(urlRgb, 'rgb')
   var rgbImg = new DataImage(rgbMat.data, 4, rgbMat.cols, rgbMat.rows) //or resize
 
-  // var obj3d = createMeshWithColorUsingIndex(samples, w, h, fx, fnDepth, rgbImg)
+  var obj3d = createMeshWithColorUsingIndex(samples, w, h, fx, fnDepth, rgbImg)
   // var obj3d = createMeshWithColor(samples, w, h, fx, fnDepth, rgbImg)
-  var obj3d = createMeshWithTextureUsingIndex(samples, w, h, fx, fnDepth, rgbImg)
+
   if(rgbMat) rgbMat.delete()
   return obj3d
+}
+
+export async function loadDepth16BinMeshTexture(urlDepth, urlRgb, intrinsics) {
+  var response = await fetch(urlDepth)
+  var arrayBuffer = response.ok ? await (response).arrayBuffer() : null
+
+  intrinsics = intrinsics || HONOR20VIEW_DEPTH_INTRINSICS //default my Honor 20 View intrinsics
+
+  var samples = new Int16Array(arrayBuffer)
+
+  var fnDepth = (range) => (range & 0x1FFF) / 1000 // DEPTH16 format, with both distance and precision
+  var {w, h, fx} = intrinsics
+
+  // var a = {samples, w, h, fx} = dumbRangeData(); fnDepth = (v) => v
+
+  var m = await createMeshWithTexture(samples, w, h, fx, fnDepth, urlRgb)
+
+  return m
+}
+
+function dumbRangeData() {
+  var h = 6, w = 10, fx = 2
+  var samples = [
+    0.95, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, .95, 1, 1, 1, 1,
+    1, 1, 1, 1, .95, .91, .95, 1, 1, 1,
+    1, 1, 1, 1, 1, .95, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  ]
+  return { h, w, samples, fx }
 }
 
 function resize(rgbMat, w, h) {
@@ -331,19 +358,22 @@ function createMeshWithColorUsingIndex(dData, width, height, focal, fnToZMm, rgb
   return new THREE.Mesh(geometry, material)
 }
 
-/**
- * If rgb size == depth size, can use that one
- * To avoid repeating colors and xyz, use indices
- */
-function createMeshWithTextureUsingIndex(dData, width, height, focal, fnToZMm, rgbImg) {
+function correctTriangle(ra, rb, rc) {
+  if (ra > 0 && rb > 0 && rc > 0) {
+    if (Math.abs(1 - ra / rb) < THRESHOLD && Math.abs(1 - rb / rc) < THRESHOLD && Math.abs(1 - rc / ra) < THRESHOLD)
+      return true
+  }
+  return false
+}
+
+async function createMeshWithTexture(dData, width, height, focal, fnToZMm, rgbUrl) {
   var vertices = []
-  var colors = []
-  var indices = []
+  var positions = []
+  var uvs = []
 
   var idxVerticesByXY = []
-  var rgbRatio = rgbImg ? width / rgbImg.w : null
 
-  if (dData.length !== width * height) throw 'dData.length !== width*height <=> ' + dData.length + ' !== ' + width * height
+  if(dData.length !== width*height) throw "dData.length !== width*height <=> "+dData.length+" !== "+width*height
   var getZ = (x, y) => fnToZMm(dData[y * width + x])
   var getIdx = (x, y) => y * width + x
 
@@ -351,61 +381,55 @@ function createMeshWithTextureUsingIndex(dData, width, height, focal, fnToZMm, r
   for (var x = 0; x < width; x++) {
     for (var y = 0; y < height; y++) {
       var z3 = getZ(x, y)
-      if (z3 === 0) continue
+      if(z3 === 0) continue
       var x3 = (x - width / 2) * z3 / focal
       var y3 = (y - height / 2) * z3 / focal
       vertices.push(x3, y3, z3)
-      idxVerticesByXY[getIdx(x, y)] = { id: numVertice, z: z3 }  //to be able to find the 1d position of a vertices from it 2d position
+      idxVerticesByXY[getIdx(x,y)]={id: numVertice, xyz: [x3, y3, z3]}  //to be able to find the 1d position of a vertices from it 2d position
       numVertice++
 
       //faces
-      if (x > 0 && y > 0) { //skip 1st row and 1st col
-        // 1)◤ 2)◢  - anticlockwise
-        var nw = idxVerticesByXY[getIdx(x - 1, y - 1)]
-        var ne = idxVerticesByXY[getIdx(x, y - 1)]
-        var se = idxVerticesByXY[getIdx(x, y)] //current one, useless, just to check
-        var sw = idxVerticesByXY[getIdx(x - 1, y)]
+      if(x > 0 && y > 0) { // skip first row and col
+        var nw = getZ(x - 1, y - 1) //do not "recalculate" that, as this is infonw.xyz.z
+        var ne = getZ(x, y - 1)
+        var se = z3
+        var sw = getZ(x - 1, y)
 
-        if (nw && se && sw) { //◤and range not too different
-          if (Math.abs(1 - nw.z / se.z) < THRESHOLD
-            && Math.abs(1 - se.z / sw.z) < THRESHOLD
-            && Math.abs(1 - sw.z / nw.z) < THRESHOLD) {
-            indices.push(nw.id, sw.id, se.id)
-          }
+        var infonw = idxVerticesByXY[getIdx(x - 1, y - 1)]
+        var infone = idxVerticesByXY[getIdx(x, y - 1)]
+        var infose = idxVerticesByXY[getIdx(x, y)] //current one, useless, just to check
+        var infosw = idxVerticesByXY[getIdx(x - 1, y)]
+
+
+        var w = width-1 //if there are h*w range pixel, there will be (h-1)*(w-1)*2 triangles
+        var h = height-1
+        if(correctTriangle(nw, se, sw)) { //◣ anticlock
+          positions.push(...infonw.xyz, ...infosw.xyz, ...infose.xyz) //9 values
+          uvs.push((x-1)/w, 1-(y-1)/h, (x-1)/w, 1-y/h, x/w, 1-y/h) // 6 values
         }
 
-        if (nw && ne && se) { //◢ and range not too different
-          if (Math.abs(1 - nw.z / ne.z) < THRESHOLD
-            && Math.abs(1 - ne.z / se.z) < THRESHOLD
-            && Math.abs(1 - se.z / nw.z) < THRESHOLD) {
-            indices.push(nw.id, se.id, ne.id)
-          }
+        if(correctTriangle(nw, ne, se)) { //◥ anticlock
+          positions.push(...infonw.xyz, ...infose.xyz, ...infone.xyz)
+          uvs.push((x-1)/w, 1-(y-1)/h, x/w, 1-y/h, x/w, 1-(y-1)/h) // 6 values
         }
-      }
-
-      //colors
-      if (rgbImg) { //colors image has 4 channels RGBA
-        var rgb = rgbImg.getPixel(x, y, rgbRatio)
-        colors.push(...rgb)
       }
     }
   }
 
   /**
-   * mesh if index :
-   * indices contains id for vertices (grouped by 3 for a face)
-   * vertices.length/3 == colors.length/3 < w*h == 43200
-   * vertices(97263) indices(186156)
+   * Mesh : if not index
+   * Nb faces = geometry.attributes.uv.length/2/3 = geometry.attributes.position.array.length/3/3
    */
   var geometry = new THREE.BufferGeometry()
-  geometry.setIndex(indices)
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)) //values of uv
+
+  var texture = new THREE.TextureLoader().load(rgbUrl) //TODO display progress, (e) => console.log("onLoad", e)
 
   var material = new THREE.MeshPhongMaterial({
     side: THREE.DoubleSide,
-    vertexColors: true, // useless
-    flatShading: true
+    flatShading: true,
+    map: texture
   })
 
   return new THREE.Mesh(geometry, material)
@@ -426,10 +450,6 @@ function createPoints(vertices, colors) {
   var material = new THREE.PointsMaterial({ size: 0.005 })
   material.vertexColors = colors.length > 0
   return new THREE.Points(geometry, material)
-}
-
-function createMesh(vertices, colors) {
-
 }
 
 async function loadImage(url) {

@@ -1,6 +1,6 @@
 .idea
 dataset
-dataset2
+datasetgit
 .DS_Store
 node_modules
 dist/bundle.*.js
