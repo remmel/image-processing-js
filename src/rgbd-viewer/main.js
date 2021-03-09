@@ -15,11 +15,6 @@ async function init() {
   webglApp.animate()
 
   {
-    //OBJ
-    var g = await new OBJLoader().loadAsync('/rgbd-viewer/cube.obj')
-    webglApp.scene.add(g)
-  }
-  {
     // PCDFormat
     var m = await loadPCD('https://threejs.org/examples/models/pcd/binary/Zaghetto.pcd')
     m.rotateX(180 / RAD2DEG)

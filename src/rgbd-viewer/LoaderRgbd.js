@@ -82,7 +82,7 @@ export async function loadDepth16BinPoints(urlDepth, urlRgb, intrinsics) {
   var depthImg = new DataImage(samples, 1, intrinsics.w, intrinsics.h, fnDepth)
   var rgbImg = new DataImage(rgbMat.data, 4, rgbMat.cols, rgbMat.rows)
 
-  var obj3d = createObj3dPoints(depthImg, rgbImg, 240, 180, intrinsics.fx)
+  var obj3d = createObj3dPoints(depthImg, rgbImg, 1440, 1080, intrinsics.fx)
   if(rgbMat) rgbMat.delete()
   return obj3d
 }
@@ -101,8 +101,8 @@ export async function loadDepth16BinMesh(urlDepth, urlRgb, intrinsics) {
   let rgbMat = await loadImageAsCvMat(urlRgb, 'rgb')
   var rgbImg = new DataImage(rgbMat.data, 4, rgbMat.cols, rgbMat.rows) //or resize
 
-  var obj3d = createMeshWithColorUsingIndex(samples, w, h, fx, fnDepth, rgbImg)
-  // var obj3d = createMeshWithColor(samples, w, h, fx, fnDepth, rgbImg)
+  // var obj3d = createMeshWithColorUsingIndex(samples, w, h, fx, fnDepth, rgbImg)
+  var obj3d = createMeshWithColor(samples, w, h, fx, fnDepth, rgbImg)
 
   if(rgbMat) rgbMat.delete()
   return obj3d
