@@ -5,7 +5,7 @@ import {exportAlicevision, loadAlicevision} from "./alicevision.js";
 import {exportAREngineRecorder, loadAREngineRecorder} from "./arenginerecorder.js";
 import {loadAr3dplan} from "./ar3dplan.js";
 import {loadLubos} from "./3dlivescanner.js";
-import {loadAgisoft} from "./agisoft.js";
+import {exportAgisoftReference, loadAgisoft} from "./agisoft.js";
 
 export const DATASET_TYPE = {
     RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
@@ -116,7 +116,8 @@ export function exportPoses(poses, exportType){
             exportTumAssociate(poses); break;
         case 'ALICEVISION_SFM':
             exportAlicevision(poses); break;
-        case 'AGISOFT': //more or less same than default (to check)
+        case 'AGISOFT':
+            exportAgisoftReference(poses); break;
         default:
             exportAREngineRecorder(poses);
     }

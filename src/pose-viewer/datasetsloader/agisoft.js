@@ -1,5 +1,7 @@
-import {Matrix3, Matrix4, Quaternion, Vector3} from "three";
+import {Euler, Math, Matrix3, Matrix4, Quaternion, Vector3} from "three";
+import {convertM3ToM4, downloadCsv} from "./datasetsloader";
 
+//import xml, export csv
 export async function loadAgisoft(url) {
     var poses = [];
 
@@ -55,4 +57,33 @@ export async function loadAgisoft(url) {
     });
 
     return poses;
+}
+
+export function exportAgisoftReference(poses){
+    var csv = "label,tx,ty,tz,omega (x),phi (y),kappa (z)\n";
+    poses.forEach(pose => {
+        if(!pose.rotation instanceof Euler && !pose.rotation instanceof Quaternion)
+            console.error("rotation must be Quaternion or Euler");
+        // default euler order is different depending of the system, for ThreeJS it's XYZ and for AREngine it's YZX
+        // to use that order: (new Euler(0,0,0,'YZX')).setFromQu...
+        // var euler = pose.rotation instanceof Euler ? pose.rotation : new Euler().setFromQuaternion(pose.rotation);
+        var q = pose.rotation instanceof Quaternion ? pose.rotation : new Quaternion().setFromEuler(pose.rotation);
+
+        //ω,φ,κ omega,phi,kappa
+        var q2 = q.clone()
+        q2.multiply(new Quaternion(1,0,0,0)); //done also in arenginerecorder...
+        var euler = (new Euler()).setFromQuaternion(q2);
+
+        // TODO yaw,pitch,roll order compatible with Agisoft
+        // //reorder
+        // euler = (new Euler(0,0,0,'ZYX')).setFromQuaternion(q);
+        // var eulerDegXZY = [Math.radToDeg(euler.z), Math.radToDeg(euler.y), Math.radToDeg(euler.x)]
+
+        csv += [
+            pose.rgbFn,
+            pose.position.x, pose.position.y, pose.position.z, //tx ty tz
+            Math.radToDeg(euler.x), Math.radToDeg(euler.y), Math.radToDeg(euler.z)
+        ].join(',') + "\n";
+    });
+    downloadCsv(csv, "references.csv");
 }

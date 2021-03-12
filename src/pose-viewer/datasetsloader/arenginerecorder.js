@@ -1,5 +1,6 @@
 import {csv2objects} from "../csv.js";
 import {Math, Euler, Quaternion, Vector3} from "three";
+import {downloadCsv} from "./datasetsloader";
 
 //TODO sometimes the order is inverted (, depending of AREngine version or phone orientation?
 export async function loadAREngineRecorder(url) {
@@ -49,7 +50,7 @@ export function exportAREngineRecorder(poses) {
         var q = pose.rotation instanceof Quaternion ? pose.rotation : new Quaternion().setFromEuler(pose.rotation);
 
         csv += [
-            pose.path.split("/").pop(), //.split('_')[0], //frame
+            pose.rgbFn, //pose.path.split("/").pop(), //.split('_')[0], //frame
             pose.position.x, pose.position.y, pose.position.z, //tx ty tz
             q.x, q.y, q.z, q.w,//qx qy qz qw
             Math.radToDeg(euler.x), Math.radToDeg(euler.y), Math.radToDeg(euler.z) //pitch yaw roll
@@ -57,3 +58,4 @@ export function exportAREngineRecorder(poses) {
     });
     downloadCsv(csv, "poses.csv");
 }
+
