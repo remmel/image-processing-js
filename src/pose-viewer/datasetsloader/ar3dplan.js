@@ -10,7 +10,7 @@ export async function loadAr3dplan(url, files) {
         if (item.type !== "Photo") return;
 
         var quaternion = new Quaternion(item.rotation.x, item.rotation.y, item.rotation.z, item.rotation.w);
-        quaternion.inverse();   //why?
+        quaternion.inverse();   //why? (to test: instead euler.reorder('ZXY'))
         var euler = new Euler();
         euler.setFromQuaternion(quaternion);
 

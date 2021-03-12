@@ -70,10 +70,10 @@ export function exportAgisoftReference(poses){
         q2.multiply(new Quaternion(1,0,0,0)); //done also in arenginerecorder...
         var euler = (new Euler()).setFromQuaternion(q2);
 
-        // TODO yaw,pitch,roll order compatible with Agisoft
+        // TODO also output yaw,pitch,roll order compatible with Agisoft
         // //reorder
-        // euler = (new Euler(0,0,0,'ZYX')).setFromQuaternion(q);
-        // var eulerDegXZY = [Math.radToDeg(euler.z), Math.radToDeg(euler.y), Math.radToDeg(euler.x)]
+        // euler2 = (new Euler(0,0,0,'ZYX')).setFromQuaternion(q);
+        // console.log([Math.radToDeg(euler2.x), Math.radToDeg(euler2.y), Math.radToDeg(euler2.z)])
 
         csv += [
             pose.rgbFn,
