@@ -1,17 +1,11 @@
 import {Euler, Math, Matrix3, Matrix4, Quaternion, Vector3} from "three";
-import {convertM3ToM4, downloadCsv} from "./datasetsloader";
+import {convertM3ToM4, downloadCsv, readOrFetchText, urlOrFileImage} from "./datasetsloader";
 
 //import xml, export csv
-export async function loadAgisoft(url) {
+export async function loadAgisoft(url, files) {
     var poses = [];
 
-    var fn = "cameras.xml"; //no default name for agisoft
-    var response = await fetch(url + '/' + fn);
-    if(!response.ok) {
-        alert("missing poses file "+fn);
-        return [];
-    }
-    var xml = await (response).text();
+    var xml = await readOrFetchText(url, files, 'cameras.xml', true) //no default name for agisoft
     var document = (new X2JS()).xml_str2json(xml);
 
     var scale = 0.1; //TODO estimate default scale
@@ -46,12 +40,14 @@ export async function loadAgisoft(url) {
 
         var quaternion = new Quaternion().setFromRotationMatrix(m);
 
+        var fn = item._label + ".jpg"
+
         poses.push({
             'id': item._id,
             'position': position,
             'rotation': quaternion,
-            'rgbFn' : item._label + ".jpg",
-            'rgb': url + "/" + item._label + ".jpg",
+            'rgbFn' : fn,
+            'rgb': urlOrFileImage(url, files, fn),
             'raw' : item
         })
     });

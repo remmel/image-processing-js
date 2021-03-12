@@ -1,4 +1,4 @@
-import {DATASET_TYPE, DATASET_TYPE_EXPORT} from "../datasetsloader/datasetsloader.js";
+import {DATASET_TYPE, DATASET_TYPE_IMPORTLOCAL} from "../datasetsloader/datasetsloader.js";
 import {fillSelect} from "./formUtils.js";
 
 
@@ -17,7 +17,7 @@ function decodeUrl() {
 export function getImportForm() {
     var {datasetType, datasetFolder, scale} = decodeUrl();
     if(!datasetType && !datasetFolder) {
-        datasetType = DATASET_TYPE.ARENGINERECORDER; datasetFolder = 'https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940';
+        datasetType = DATASET_TYPE.RECORDER3D; datasetFolder = 'https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940';
     }
 
     //set form
@@ -25,7 +25,7 @@ export function getImportForm() {
     fillSelect($selectDsType, DATASET_TYPE);
     $selectDsType.value = datasetType;
 
-    fillSelect(document.querySelector("select[name=datasetTypeLocal]"), DATASET_TYPE_EXPORT);
+    fillSelect(document.querySelector("select[name=datasetTypeLocal]"), DATASET_TYPE_IMPORTLOCAL);
 
     var $inputDsFolder = document.querySelector("input[name=datasetFolder]");
     $inputDsFolder.value = datasetFolder;

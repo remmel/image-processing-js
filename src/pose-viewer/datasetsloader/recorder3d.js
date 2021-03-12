@@ -1,17 +1,12 @@
 import {csv2objects} from "../csv.js";
 import {Math, Euler, Quaternion, Vector3} from "three";
-import {downloadCsv} from "./datasetsloader";
+import {downloadCsv, readOrFetchText, urlOrFileImage} from "./datasetsloader";
 
 //TODO sometimes the order is inverted (, depending of AREngine version or phone orientation?
-export async function loadAREngineRecorder(url) {
+export async function loadRecorder3D(url, files) {
     var poses = [];
-    var fn = 'poses.csv';
-    var response = await fetch(url + '/'+fn);
-    if(!response.ok) {
-        alert("missing poses file "+fn);
-        return [];
-    }
-    var text = await(response).text();
+
+    var text = await readOrFetchText(url, files, 'poses.csv', true)
 
     var items = csv2objects(text);
     items.forEach(item => {
@@ -27,7 +22,7 @@ export async function loadAREngineRecorder(url) {
             'rotation': q,
             // 'rotation': new Euler(Math.degToRad(item.pitch), Math.degToRad(item.yaw), Math.degToRad(item.roll), 'YZX'), //right order
             'rgbFn' : fn,
-            'rgb': url + "/" + fn,
+            'rgb': urlOrFileImage(url, files, fn),
             'raw' : item,
         })
     });
@@ -38,7 +33,7 @@ export async function loadAREngineRecorder(url) {
  * Export poses in csv format, in order to be compatible with https://github.com/remmel/hms-AREngine-demo
  * Only quaternion, not Euler, as we use here the default ThreeJS (XYZ) whereas AREngine is YZX
  */
-export function exportAREngineRecorder(poses) {
+export function exportRecorder3D(poses) {
     var csv = "frame,tx,ty,tz,qx,qy,qz,qw,pitch,yaw,roll\n";
 
     poses.forEach(pose => { //item.rotation.x, item.rotation.y, item.rotation.z

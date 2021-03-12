@@ -1,5 +1,5 @@
 import {csv2arrays, csv2objects} from "../csv.js";
-import {readOrFetchText} from "./datasetsloader.js";
+import {readOrFetchText, urlOrFileImage} from "./datasetsloader.js";
 import { Matrix4, Quaternion, Vector3 } from 'three'
 
 const STATE_HEADER = 'nb w h cx cy fx fy' // 89 1080 1920 534.779968 961.452026 1645.181030 1430.592285
@@ -29,7 +29,7 @@ export async function loadLubos(url, files) {
             'rotation': (new Quaternion()).setFromRotationMatrix(item.mat4),
             'position': (new Vector3()).setFromMatrixPosition(item.mat4), //(e[12], e[13], e[14]),
             'rgbFn' : fn,
-            'rgb': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn), //set image path or reference to image file
+            'rgb': urlOrFileImage(url, files, fn),
             'raw': item
         })
     }

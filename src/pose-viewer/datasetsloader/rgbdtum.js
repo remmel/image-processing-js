@@ -1,7 +1,8 @@
 import {csv2objects} from "../csv.js";
 import {closest} from "../utils.js";
 import {Vector3, Euler, Quaternion} from "three";
-import { downloadCsv } from './datasetsloader'
+import {downloadCsv, readOrFetchText, urlOrFileImage} from './datasetsloader'
+import {readAsText} from "../form/formUtils";
 
 export const KINECT_INTRINSICS = {
     w: 640, //x
@@ -12,10 +13,10 @@ export const KINECT_INTRINSICS = {
     cy: 239.5
 }
 
-export async function loadTum(url) {
+export async function loadTum(url, files) {
     var poses = [];
 
-    var images = await fetchAndAssociateRgbdTum(url);
+    var images = await fetchAndAssociateRgbdTum(url, files);
 
     images.forEach(image => {
         image.intrinsics = KINECT_INTRINSICS //main tum dataset are using kinect v1, probably have to store some intrinsics.txt
@@ -24,9 +25,9 @@ export async function loadTum(url) {
             'position': new Vector3(image.tx, image.ty, image.tz),
             'rotation': new Quaternion(parseFloat(image.qx), parseFloat(image.qy), parseFloat(image.qz), parseFloat(image.qw)),
             'rgbFn' : image.rgb_fn,
-            'rgb': url + "/" + image.rgb_fn,
+            'rgb': urlOrFileImage(url, files, image.rgb_fn),
             'depthFn' : image.depth_fn,
-            'depth' : url + "/" + image.depth_fn,
+            'depth' : urlOrFileImage(url, files, image.depth_fn),
             'raw' : image,
         });
 
@@ -35,18 +36,17 @@ export async function loadTum(url) {
 }
 
 // get associated.txt data. If file missing get data from rgb.txt and groundtruth.txt
-async function fetchAndAssociateRgbdTum(url) {
-    var response = await fetch(url + '/associate.txt');
-    if(response.ok) { //already associated no need
-        var text = await response.text();
+async function fetchAndAssociateRgbdTum(url, files) {
+    var text = await readOrFetchText(url, files, 'associate.txt', false)
+    if(text) { //already associated no need
         text = "pose_ts tx ty tz qx qy qz qw depth_ts depth_fn rgb_ts rgb_fn\n" + text;
         var images = csv2objects(text, ' ');
         return images;
     } else {
         console.warn("Missing associate.txt, will try to associate rgb.txt and groundtruth.txt");
-        var rgbText = await fetch(url + '/rgb.txt').then(response => response.text());
-        var depthText = await fetch(url + '/depth.txt').then(response => response.text());
-        var groundtruthText = await fetch(url + '/groundtruth.txt').then(response => response.text());
+        var rgbText = await readOrFetchText(url, files, 'rgb.txt', true)
+        var depthText = await readOrFetchText(url, files, 'depth.txt', true)
+        var groundtruthText = await readOrFetchText(url, 'groundtruth.txt', true)
         var rgbs = rgbdtum2objects(rgbText);
         var depths = rgbdtum2objects(depthText);
         var poses = rgbdtum2objects(groundtruthText);

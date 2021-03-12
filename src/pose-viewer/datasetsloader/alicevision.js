@@ -1,6 +1,6 @@
 import {Matrix3, Vector3, Quaternion} from "three";
 import {browseFile} from "../form/formUtils.js";
-import {convertM3ToM4, downloadJson, readOrFetchText} from "./datasetsloader.js";
+import {convertM3ToM4, downloadJson, readOrFetchText, urlOrFileImage} from "./datasetsloader.js";
 
 export async function loadAlicevision(url, files) {
     var poses = [];
@@ -25,7 +25,7 @@ export async function loadAlicevision(url, files) {
             'position': new Vector3().fromArray(item.pose.transform.center.map(parseFloat)),
             'rotation': new Quaternion().setFromRotationMatrix(m4), //ThreeJs should let us use directly m3! and why is that transposed?
             'rgbFn' : fn,
-            'rgb': url ? url + '/' + fn : Array.from(files).find(f => f.name === fn),
+            'rgb': urlOrFileImage(url, files, fn),
             'raw' : item
         })
     });

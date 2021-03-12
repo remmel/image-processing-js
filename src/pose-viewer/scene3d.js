@@ -78,7 +78,7 @@ function createFloor(datasetType) {
     var plane = new THREE.Mesh(geo, mat)
     switch (datasetType) {
         case DATASET_TYPE.AR3DPLAN:
-        case DATASET_TYPE.ARENGINERECORDER:
+        case DATASET_TYPE.RECORDER3D:
         case DATASET_TYPE.ALICEVISION_SFM:
         case DATASET_TYPE.AGISOFT:
         case DATASET_TYPE.LUBOS:

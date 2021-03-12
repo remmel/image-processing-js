@@ -2,7 +2,7 @@ import {Matrix4} from "three";
 import {readAsText} from "../form/formUtils.js";
 import {loadTum, exportTumAssociate} from "./rgbdtum.js";
 import {exportAlicevision, loadAlicevision} from "./alicevision.js";
-import {exportAREngineRecorder, loadAREngineRecorder} from "./arenginerecorder.js";
+import {exportRecorder3D, loadRecorder3D} from "./recorder3d.js";
 import {loadAr3dplan} from "./ar3dplan.js";
 import {loadLubos} from "./3dlivescanner.js";
 import {exportAgisoftReference, loadAgisoft} from "./agisoft.js";
@@ -11,15 +11,12 @@ export const DATASET_TYPE = {
     RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
     LUBOS: 'LUBOS', //https://play.google.com/store/apps/details?id=com.lvonasek.arcore3dscannerpro
     AR3DPLAN: 'AR3DPLAN', //https://github.com/remmel/ar3dplanphoto
-    ARENGINERECORDER: 'ARENGINERECORDER', //https://github.com/remmel/hms-AREngine-demo
+    RECORDER3D: 'RECORDER3D', //https://github.com/remmel/hms-AREngine-demo
     ALICEVISION_SFM: 'ALICEVISION_SFM', //https://meshroom-manual.readthedocs.io/en/latest/node-reference/nodes/ConvertSfMFormat.html
     AGISOFT: 'AGISOFT', //Agilesoft Metashape format (File > Export > Export Cameras)
 };
 
-export const DATASET_TYPE_EXPORT = {
-    LUBOS: DATASET_TYPE.LUBOS,
-    ALICEVISION_SFM: DATASET_TYPE.ALICEVISION_SFM
-};
+export const DATASET_TYPE_IMPORTLOCAL = DATASET_TYPE //except AR3DPLAN
 
 /**
  * if "dataset/monstree" => "./dataset/monstree"
@@ -41,7 +38,7 @@ export async function loadPoses(type, folder, files) {
         case DATASET_TYPE.RGBDTUM: poses = await loadTum(url, files); break;
         case DATASET_TYPE.AR3DPLAN: poses = await loadAr3dplan(url, files); break;
         case DATASET_TYPE.LUBOS: poses = await loadLubos(url, files); break;
-        case DATASET_TYPE.ARENGINERECORDER: poses = await loadAREngineRecorder(url, files); break;
+        case DATASET_TYPE.RECORDER3D: poses = await loadRecorder3D(url, files); break;
         case DATASET_TYPE.ALICEVISION_SFM: poses = await loadAlicevision(url, files); break;
         case DATASET_TYPE.AGISOFT: poses = await loadAgisoft(url, files); break;
         default: throw "Wrong dataset type:"+type;
@@ -53,8 +50,7 @@ export async function loadPoses(type, folder, files) {
 
 export async function loadModel(folder, files) {
     var fn = 'model_low.ply';
-    if(folder) return folder + '/' + fn;
-    if(files) return Array.from(files).find(f => f.name === fn)
+    if(folder || files) return urlOrFileImage(folder, files, fn)
     throw new Error("should have folder or files")
 }
 
@@ -97,6 +93,13 @@ export async function readOrFetchText(url, files, fn, displayError) {
     return text;
 }
 
+/**
+ * Set image path or reference to image file
+ */
+export function urlOrFileImage(urlFolder, files, fn) {
+    return urlFolder ? urlFolder + '/' + fn : Array.from(files).find(f => f.name === fn)
+}
+
 //TODO not sure about that, specially the scale as I do later "position.x *= scale;"
 export function convertM3ToM4(m3, translation, scale) {
     var m4 = new Matrix4();
@@ -119,7 +122,7 @@ export function exportPoses(poses, exportType){
         case 'AGISOFT':
             exportAgisoftReference(poses); break;
         default:
-            exportAREngineRecorder(poses);
+            exportRecorder3D(poses);
     }
 }
 
