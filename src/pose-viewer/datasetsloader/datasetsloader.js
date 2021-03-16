@@ -74,8 +74,11 @@ function limitDisplayedPoses(poses, maximagesdisplayed) {
 }
 
 //read a file from an url or in Files API
-export async function readOrFetchText(url, files, fn, displayError) {
+export async function readOrFetchText(url, files, fn, displayError, ask) {
     var text = null;
+    if(ask) {
+        fn = prompt(fn, fn)
+    }
     if(url) {
         var response = await fetch(url + '/' + fn);
         text = response.ok ? await(response).text() : null;

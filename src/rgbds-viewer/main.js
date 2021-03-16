@@ -17,51 +17,85 @@ import { loadObj } from '../rgbd-viewer/LoadersHelper'
 
 // var folder = 'dataset/2021-02-26_210438_speaking1'
 var folder = 'https://www.kustgame.com/ftp/2021-02-26_210438_speaking1'
-// var folder = 'dataset/2021-02-26_210530_speaking2'
+var speaking1Euler = new Euler(-91/RAD2DEG, -103/RAD2DEG, 176/RAD2DEG)
+var speaking1Pos = new Vector3(1.2, 1.4, 0)
+
+var folder2 = 'dataset/2021-03-09_205154_coucoustoolhires'
 
 var webglApp
 var params = {}
 
 async function init() {
-  webglApp = new WebGlApp(document.body)
+  webglApp = new WebGlApp()
 
   var urlDepth = folder + '/00000601_depth16.bin', urlRgb = folder + '/00000601_image.jpg'
 
-  loadDepth16BinPoints(urlDepth, urlRgb).then(m => {
-    webglApp.scene.add(m)
-    webglApp.animateAdd(guiPositionAnimateCb(m, 4))
-  })
+  var canAttachTransformControl = []
 
-  loadDepth16BinPointsResize(urlDepth, urlRgb).then(m => {
-    webglApp.scene.add(m)
-    webglApp.animateAdd(guiPositionAnimateCb(m, 6))
-  })
+  // loadDepth16BinPoints(urlDepth, urlRgb).then(m => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(speaking1Euler)
+  //   m.position.copy(speaking1Pos)
+  //   canAttachTransformControl.push(m)
+  // })
 
-  loadDepth16BinMesh(urlDepth, urlRgb).then(m => {
-    webglApp.scene.add(m)
-    webglApp.animateAdd(guiPositionAnimateCb(m, -2))
-  })
+
+
+  // loadDepth16BinPointsResize(urlDepth, urlRgb).then(m => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(speaking1Euler)
+  //   m.position.copy(speaking1Pos)
+  //   m.position.z += 2
+  //   canAttachTransformControl.push(m)
+  // })
+
+  // loadDepth16BinMesh(urlDepth, urlRgb).then(m => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(speaking1Euler)
+  //   m.position.copy(speaking1Pos)
+  //   m.position.z += -2
+  // })
 
   loadDepth16BinMeshTexture(urlDepth, urlRgb).then(m => {
+
     webglApp.scene.add(m)
-    webglApp.animateAdd(guiPositionAnimateCb(m, 2))
+    m.setRotationFromEuler(speaking1Euler)
+    m.position.copy(speaking1Pos)
+    m.position.z += 2
+    canAttachTransformControl.push(m)
   })
 
   addRemyAndAnimation().then(({ m, animateCb }) => {
     webglApp.scene.add(m)
     webglApp.animateAdd(animateCb)
+    canAttachTransformControl.push(m)
+    // webglApp.animateAdd(guiPositionAnimateCb(m, 0))
   })
 
   webglApp.scene.add(createFloor())
   webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
   // webglApp.scene.add( new THREE.HemisphereLight( 0x9FC5E8, 0xB45F06 ) ); //to get some "shadow"
 
+  loadObj(
+    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.obj',
+    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.mtl', () => {})
+    .then(m => {
+      m.scale.set(0.157, 0.157, 0.157)
+      m.position.copy(new Vector3(0,1.7,0))
+      m.setRotationFromEuler(new Euler(0.25,0.00,0.01))
+      webglApp.scene.add(m)
+      canAttachTransformControl.push(m)
+    })
+
   webglApp.animate()
+
+  webglApp.attachTransformOnClick(canAttachTransformControl)
 
   createGUI()
 }
 
 function guiPositionAnimateCb(m, zoffset) {
+  zoffset |= 0
   return () => {
     m.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
     m.position.set(params.tx, params.ty, params.tz + zoffset)
@@ -70,21 +104,17 @@ function guiPositionAnimateCb(m, zoffset) {
 
 function createGUI() {
   // var q = new Quaternion(-0.44389683,0.5598062,0.5267938,-0.46050537)
-  var euler = new Euler(-91/RAD2DEG, -103/RAD2DEG, 176/RAD2DEG)
-  var t = new Vector3(1.2, 1.4, 0)
 
   params = {
-    enableWind: true,
-    showBall: false,
     pointsize: 0.005,
     plys_speed: 3,
     plys_loading: 0,
-    rx: euler.x * RAD2DEG,
-    ry: euler.y * RAD2DEG,
-    rz: euler.z * RAD2DEG,
-    tx: t.x,
-    ty: t.y,
-    tz: t.z
+    rx: speaking1Euler.x * RAD2DEG,
+    ry: speaking1Euler.y * RAD2DEG,
+    rz: speaking1Euler.z * RAD2DEG,
+    tx: speaking1Pos.x,
+    ty: speaking1Pos.y,
+    tz: speaking1Pos.z
   }
 
   const gui = new GUI()
@@ -132,7 +162,7 @@ async function addHorse() {
   return {mesh, mixer}
 }
 
-function generateRgbdUrls(folder, idmin, idmax) {
+export function generateRgbdUrls(folder, idmin, idmax) {
   var urls = []
   var count = idmax - idmin
   if (count <= 0) throw 'No images, wrong min/max'
@@ -148,11 +178,11 @@ function generateRgbdUrls(folder, idmin, idmax) {
 
 async function addRemyAndAnimation() {
   var loadingCallback = (percent) => params.plys_loading = Math.round(percent * 100)
-  var urls = generateRgbdUrls(folder, 512, 601) //601
+  var urls = generateRgbdUrls(folder2, 3738, 3741) //3771)
   var objs3d = await loadDepth16BinList(urls, loadingCallback)
   let m = new THREE.Group()
-  m.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
-  m.position.set(params.tx, params.ty, params.tz)
+  m.setRotationFromEuler(new Euler(2.95,1.02,1.73))
+  m.position.copy(new Vector3(-1.155,1.248,0.044))
   var animateCb = dirtyAnimationAnimeCallbackViaGroup(m, objs3d)
   return { m, animateCb }
 }
@@ -172,7 +202,7 @@ async function addCubeWithTexture() {
  * @param {[THREE.Object3D]} objs
  * @returns {function(): void}
  */
-function dirtyAnimationAnimeCallbackViaGroup(g, objs) {
+export function dirtyAnimationAnimeCallbackViaGroup(g, objs) {
   let objIdx = 0, frame = 0
   g.add(...objs)
   g.children.forEach(m => m.visible = false)
@@ -214,7 +244,7 @@ function dirtyAnimationAnimeCallback(obj, objs) {
  * @param onProgess
  * @returns {Promise<[THREE.Object3D]>}
  */
-async function loadDepth16BinList(urls, onProgess) {
+export async function loadDepth16BinList(urls, onProgess) {
   var objs3d = []
 
   var promises = [];

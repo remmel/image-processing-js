@@ -1,10 +1,10 @@
-import {Matrix3, Vector3, Quaternion} from "three";
+import { Matrix3, Vector3, Quaternion, Matrix4 } from 'three'
 import {browseFile} from "../form/formUtils.js";
 import {convertM3ToM4, downloadJson, readOrFetchText, urlOrFileImage} from "./datasetsloader.js";
 
 export async function loadAlicevision(url, files) {
     var poses = [];
-    var data = JSON.parse(await readOrFetchText(url, files, 'cameras.sfm', true));
+    var data = JSON.parse(await readOrFetchText(url, files, 'cameras.sfm', true, true));
 
     var viewsByPoseId = {};
 
@@ -50,8 +50,13 @@ export async function exportAlicevision(poses) {
         var rgbFn = pose.rgbFn;
         var poseId = fn2PoseId[rgbFn];
 
-        var m3 = new Matrix3(); //TODO use quaternion instead
-        m3.setFromMatrix4(pose.raw.mat4);
+        var m3 = new Matrix3();
+        var m4 = new Matrix4();
+        m4.makeRotationFromQuaternion(pose.rotation);
+        m4.transpose()
+        m3.setFromMatrix4(m4); //pose.raw.mat4
+
+        // m3.setFromMatrix4(pose.raw.mat4)
 
         newalicevisionposes.push({
             'poseId': poseId,

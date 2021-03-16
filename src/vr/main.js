@@ -1,11 +1,14 @@
 import { loadGltf, loadObj, loadObjFiles, loadPCD } from '../rgbd-viewer/LoadersHelper'
 import WebGlApp from '../WebGlApp'
 import * as THREE from 'three'
+import { RAD2DEG } from '../pose-viewer/utils3d'
+import { dirtyAnimationAnimeCallbackViaGroup, generateRgbdUrls, loadDepth16BinList } from '../rgbds-viewer/main'
 
 var webglApp
 
-document.getElementById('load-cocina').onclick = e => {
-  var el = e.target
+document.getElementById('load-cocina').onclick = e => demo(e.target)
+
+function demo(el) {
   el.disabled = true
   function cbLoading(percentage) {
     el.value = percentage === 1 ? "Loaded" : "Loading "+Math.round(percentage*100)+"%"
@@ -38,9 +41,6 @@ document.querySelector('.browse-oculus input[type=button]').onclick = async e =>
   var m = await loadObjFiles(files)
   webglApp.scene.add(m)
 }
-
-
-
 
 async function init() {
   webglApp = new WebGlApp(document.body)
@@ -78,6 +78,8 @@ async function init() {
   //   webglApp.scene.add(light);
   //   webglApp.scene.add(light.target);
   // }
+
+  // demo(document.getElementById('load-cocina'))
 }
 
 init()

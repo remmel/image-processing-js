@@ -1,6 +1,9 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js'
+import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
+import { RAD2DEG } from './pose-viewer/utils3d'
+
 
 /**
  * ThreeJs base class with resize and click handled
@@ -24,7 +27,7 @@ export default class WebGlApp {
     this.scene.add(new THREE.AxesHelper(1))
     window.addEventListener('resize', () => this._onWindowResize(), false)
 
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+    this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement)
     this.enableVr()
 
     this.animateCallbacks = []
@@ -38,7 +41,7 @@ export default class WebGlApp {
 
   animate() {
     this.renderer.setAnimationLoop(() => { //before requestAnimationFrame(this.animate.bind(this))
-      if (this.controls) this.controls.update() // only required if controls.enableDamping = true, or if controls.autoRotate = true
+      if (this.orbitControls) this.orbitControls.update() // only required if controls.enableDamping = true, or if controls.autoRotate = true
       this.animateCallbacks.forEach(animateCallback => animateCallback())
       this.renderer.render(this.scene, this.camera)
     })
@@ -71,27 +74,30 @@ export default class WebGlApp {
     return cube
   }
 
-  initClickEvent(callback) {
+  initClickEvent(onClickCb) {
     var canvas = this.renderer.domElement
 
-    canvas.addEventListener('click', e => {
-      this._onClickXY(e.clientX, e.clientY, callback)
+    var lastpointerdown = null
+    canvas.addEventListener('pointerdown', e => lastpointerdown = new Date())
+    canvas.addEventListener('pointerup', e => {
+      if (new Date() - lastpointerdown < 150) //short click only
+        this._onClickXY(e.clientX, e.clientY, onClickCb)
     })
 
     canvas.addEventListener('touchstart', e => {
       if (!e.touches.length) return
-      this._onClickXY(e.touches[0].pageX, e.touches[0].pageY, callback)
+      this._onClickXY(e.touches[0].pageX, e.touches[0].pageY, onClickCb)
     })
   }
 
-  _onClickXY(xpx, ypx, callback) {
+  _onClickXY(xpx, ypx, onClickCb) {
     console.log('clicked', xpx, ypx)
     // calculate mouse position in normalized device coordinates
     // (-1 to +1) for both components
     var mouse = new THREE.Vector2()
     mouse.x = (xpx / this.el.clientWidth) * 2 - 1
     mouse.y = -(ypx / this.el.clientHeight) * 2 + 1
-    callback(mouse)
+    onClickCb(mouse)
   }
 
   /**
@@ -111,5 +117,67 @@ export default class WebGlApp {
     // console.log(cam)
       // }
     // })
+  }
+
+  createTransformControl() {
+    var control = this.transformControl = new TransformControls(this.camera, this.renderer.domElement)
+    this.scene.add(this.transformControl)
+    control.addEventListener('dragging-changed', event => {
+      if (this.orbitControls) this.orbitControls.enabled = !event.value
+    })
+
+    window.addEventListener('keydown', event => {
+      switch (event.keyCode) {
+        case 81: // Q
+          control.setSpace(control.space === 'local' ? 'world' : 'local')
+          break
+        case 87: // W
+          control.setMode('translate')
+          break
+        case 69: // E
+          control.setMode('rotate')
+          break
+        case 82: // R
+          control.setMode('scale')
+          break
+        case 32: // spacebar - pretty print position of object
+          var obj = control.object
+          console.log('position', prettyPrint(obj.position), 'euler', prettyPrint(obj.rotation))
+          break
+      }
+    })
+  }
+
+  attachTransformControl(m) {
+    if (!this.orbitControls.enabled) return
+    console.log('attachTransformControl', m)
+    if (!this.transformControl) this.createTransformControl()
+    this.transformControl.attach(m)
+  }
+
+  attachTransformOnClick(objectsIntersect) {
+    var raycaster = new THREE.Raycaster()
+    this.initClickEvent((mouse) => {
+      raycaster.setFromCamera(mouse, this.camera)
+      var intersects = raycaster.intersectObjects(objectsIntersect, true)
+      console.log(intersects)
+      intersects.some(intersect => {
+        //FIXME quickfix to match group, should add something if is animatione
+        var m = intersect.object.parent instanceof THREE.Group ? intersect.object.parent : intersect.object
+        this.attachTransformControl(m)
+        return true
+      })
+    })
+  }
+}
+
+function prettyPrint(object) {
+  if (object instanceof THREE.Vector3)
+    return '(' + [object.x.toFixed(3), object.y.toFixed(3), object.z.toFixed(3)].join(',') + ')'
+  else if (object instanceof THREE.Euler) {
+    return '(' + [object.x.toFixed(2), object.y.toFixed(2), object.z.toFixed(2)].join(',') + ')'
+      + ' (' + [(object.x * RAD2DEG).toFixed(1), (object.y * RAD2DEG).toFixed(1), (object.z * RAD2DEG).toFixed(1)].join(',') + ')'
+  } else if (object instanceof THREE.Quaternion) {
+    return '(' + [object.x, object.y, object.z, object.w].join(',') + ')'
   }
 }
