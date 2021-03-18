@@ -1,6 +1,6 @@
 import { loadObj, loadPCD, loadPLYMesh, loadPLYPoints, loadPLYs } from './LoadersHelper'
 import { convertGrayscale } from './opencvtest'
-import { loadDepth16BinPointsResize, loadTumPng } from './LoaderRgbd'
+import { loadDepth16BinPointsResize, loadTumPng } from './RgbdLoader.js'
 import { RAD2DEG } from '../pose-viewer/utils3d'
 import { Quaternion } from 'three'
 import WebGlApp from '../WebGlApp'
@@ -22,7 +22,7 @@ async function init() {
   }
   {
     //point cloud ply without faces
-    var m = await loadPLYPoints('https://raw.githubusercontent.com/remmel/hms-AREngine-demo/master/HwAREngineDemo/src/test/resources/00000012.ply')
+    var m = await loadPLYPoints('https://raw.githubusercontent.com/remmel/recorder-3d/master/Recorder3D/src/test/resources/00000012.ply')
     m.setRotationFromQuaternion(new Quaternion(0.019091055, 0.96770465, 0.2512833, 0.0045607537))
     m.rotateX(180 / RAD2DEG)
     m.position.setX(-2)

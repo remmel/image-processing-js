@@ -4,23 +4,29 @@ import {
   loadDepth16BinPointsResize,
   loadDepth16BinPoints,
   loadDepth16BinMesh,
-  loadImage, getImageDataViaCanvas, loadDepth16BinMeshTexture,
-} from '../rgbd-viewer/LoaderRgbd'
+  loadDepth16BinMeshTexture, loadTumPng,
+} from '../rgbd-viewer/RgbdLoader'
 import { Euler, Quaternion, Vector3 } from 'three'
 import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
 import { RAD2DEG } from '../pose-viewer/utils3d'
 import { idPad } from '../pose-viewer/utils'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { loadObj } from '../rgbd-viewer/LoadersHelper'
+import { loadRgbdAnim, generateRgbdUrls, loadRgbdAnim2 } from '../rgbd-viewer/RgbdAnimLoader'
+import { exportGltf } from '../rgbd-viewer/ExporterHelper'
+import { KINECT_INTRINSICS } from '../pose-viewer/datasetsloader/rgbdtum'
 
 //to add label GUI: https://threejs.org/examples/#webgl_instancing_performance
 
 // var folder = 'dataset/2021-02-26_210438_speaking1'
-var folder = 'https://www.kustgame.com/ftp/2021-02-26_210438_speaking1'
-var speaking1Euler = new Euler(-91/RAD2DEG, -103/RAD2DEG, 176/RAD2DEG)
-var speaking1Pos = new Vector3(1.2, 1.4, 0)
+var sp1Folder = 'https://www.kustgame.com/ftp/2021-02-26_210438_speaking1'
+var sp1Euler = new Euler(-91/RAD2DEG, -103/RAD2DEG, 176/RAD2DEG)
+var sp1Pos = new Vector3(1.2, 1.4, 0)
+var sp1UrlDepth = sp1Folder + '/00000601_depth16.bin', sp1UrlRgb = sp1Folder + '/00000601_image.jpg'
 
-var folder2 = 'dataset/2021-03-09_205154_coucoustoolhires'
+var folderCoucoustoolhires = 'dataset/2021-03-09_205154_coucoustoolhires'
+var folderDance = 'dataset/2021-03-16_191017_dance'
+var folderKinect = 'dataset/kinect'
 
 var webglApp
 var params = {}
@@ -28,78 +34,79 @@ var params = {}
 async function init() {
   webglApp = new WebGlApp()
 
-  var urlDepth = folder + '/00000601_depth16.bin', urlRgb = folder + '/00000601_image.jpg'
 
-  var canAttachTransformControl = []
-
-  // loadDepth16BinPoints(urlDepth, urlRgb).then(m => {
-  //   webglApp.scene.add(m)
-  //   m.setRotationFromEuler(speaking1Euler)
-  //   m.position.copy(speaking1Pos)
-  //   canAttachTransformControl.push(m)
-  // })
-
-
-
-  // loadDepth16BinPointsResize(urlDepth, urlRgb).then(m => {
-  //   webglApp.scene.add(m)
-  //   m.setRotationFromEuler(speaking1Euler)
-  //   m.position.copy(speaking1Pos)
-  //   m.position.z += 2
-  //   canAttachTransformControl.push(m)
-  // })
-
-  // loadDepth16BinMesh(urlDepth, urlRgb).then(m => {
-  //   webglApp.scene.add(m)
-  //   m.setRotationFromEuler(speaking1Euler)
-  //   m.position.copy(speaking1Pos)
-  //   m.position.z += -2
-  // })
-
-  loadDepth16BinMeshTexture(urlDepth, urlRgb).then(m => {
-
+  var folderCloseup = 'https://www.kustgame.com/ftp/closeup'
+  loadDepth16BinMeshTexture(folderCloseup + '/00000294_depth16.bin', folderCloseup + '/00000294_image.jpg').then(m => {
     webglApp.scene.add(m)
-    m.setRotationFromEuler(speaking1Euler)
-    m.position.copy(speaking1Pos)
+    m.setRotationFromEuler(new Euler(1.25,1.33,-2.86))
+    m.position.copy(new Vector3(-0.360,1.6,0.397))
+    webglApp.canTransformControl(m)
+  })
+
+  // var folderTum = 'rgbd-viewer/tum'
+  // loadTumPng(folderTum + "/1305031464.115837.png", folderTum + "/1305031464.127681.png").then(m=> {
+  // loadTumPng(folderKinect + "/depth.png", folderKinect + "/rgb.jpg").then(m=> {
+  //   m.rotateX(180/RAD2DEG)
+  //   m.position.y = 1.5
+  //   webglApp.scene.add(m)
+  // })
+
+  // loadDepth16BinMeshTexture(folderKinect + "/00000021_depth.png", folderKinect + "/00000021_image-0.jpg", KINECT_INTRINSICS).then(m => {
+  //   webglApp.scene.add(m)
+  //   m.rotateX(180/RAD2DEG)
+  //   m.position.y = 1.5
+  //   webglApp.canTransformControl(m)
+  // })
+
+  loadDepth16BinPointsResize(sp1UrlDepth, sp1UrlRgb).then(m => {
+    webglApp.scene.add(m)
+    m.setRotationFromEuler(sp1Euler)
+    m.position.copy(sp1Pos)
+    m.position.z += 4
+    webglApp.canTransformControl(m)
+  })
+
+  loadDepth16BinMesh(sp1UrlDepth, sp1UrlRgb).then(m => {
+    webglApp.scene.add(m)
+    m.setRotationFromEuler(sp1Euler)
+    m.position.copy(sp1Pos)
+    m.position.z += -2
+    webglApp.canTransformControl(m)
+  })
+
+  loadDepth16BinMeshTexture(sp1UrlDepth, sp1UrlRgb).then(m => {
+    webglApp.scene.add(m)
+    m.setRotationFromEuler(sp1Euler)
+    m.position.copy(sp1Pos)
     m.position.z += 2
-    canAttachTransformControl.push(m)
+    webglApp.canTransformControl(m)
   })
 
-  addRemyAndAnimation().then(({ m, animateCb }) => {
-    webglApp.scene.add(m)
-    webglApp.animateAdd(animateCb)
-    canAttachTransformControl.push(m)
-    // webglApp.animateAdd(guiPositionAnimateCb(m, 0))
-  })
+  loadObj(
+    '/rgbd-viewer/cubeWithTexture/cube.obj',
+    '/rgbd-viewer/cubeWithTexture/cubetxt.mtl')
+    .then(m => {
+      m.scale.set(0.2,0.2,0.2)
+      webglApp.scene.add(m)
+      webglApp.canTransformControl(m)
+    })
+
+  // var urls = generateRgbdUrls(folderCoucoustoolhires, 3738, 3771)
+  // var onProgress = (percent) => params.plys_loading = Math.round(percent * 100)
+  // loadRgbdAnim(urls, onProgress).then(({ m, animateCb }) => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(new Euler(0.26,-1.32,-1.37))
+  //   m.position.copy(new Vector3(.325,1.286,-0.423))
+  //   webglApp.animateAdd(animateCb)
+  //   webglApp.canTransformControl(m)
+  // })
 
   webglApp.scene.add(createFloor())
   webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
-  // webglApp.scene.add( new THREE.HemisphereLight( 0x9FC5E8, 0xB45F06 ) ); //to get some "shadow"
-
-  loadObj(
-    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.obj',
-    'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.mtl', () => {})
-    .then(m => {
-      m.scale.set(0.157, 0.157, 0.157)
-      m.position.copy(new Vector3(0,1.7,0))
-      m.setRotationFromEuler(new Euler(0.25,0.00,0.01))
-      webglApp.scene.add(m)
-      canAttachTransformControl.push(m)
-    })
 
   webglApp.animate()
 
-  webglApp.attachTransformOnClick(canAttachTransformControl)
-
   createGUI()
-}
-
-function guiPositionAnimateCb(m, zoffset) {
-  zoffset |= 0
-  return () => {
-    m.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
-    m.position.set(params.tx, params.ty, params.tz + zoffset)
-  }
 }
 
 function createGUI() {
@@ -109,26 +116,15 @@ function createGUI() {
     pointsize: 0.005,
     plys_speed: 3,
     plys_loading: 0,
-    rx: speaking1Euler.x * RAD2DEG,
-    ry: speaking1Euler.y * RAD2DEG,
-    rz: speaking1Euler.z * RAD2DEG,
-    tx: speaking1Pos.x,
-    ty: speaking1Pos.y,
-    tz: speaking1Pos.z
+    rx: sp1Euler.x * RAD2DEG,
+    ry: sp1Euler.y * RAD2DEG,
+    rz: sp1Euler.z * RAD2DEG,
+    tx: sp1Pos.x,
+    ty: sp1Pos.y,
+    tz: sp1Pos.z
   }
 
   const gui = new GUI()
-  gui.add(params, 'pointsize').min(0.005).max(0.05).name('Point Size')
-
-  var folderRot = gui.addFolder('Position')
-  folderRot.open()
-  folderRot.add(params, 'rx', -180, 180)
-  folderRot.add(params, 'ry', -180, 180)
-  folderRot.add(params, 'rz', -180, 180)
-  folderRot.add(params, 'tx', -5, 5).step(.1)
-  folderRot.add(params, 'ty', -5, 5).step(.1)
-  folderRot.add(params, 'tz', -5, 5).step(.1)
-
   var folder = gui.addFolder('Animation')
   folder.open()
   folder.add(params, 'plys_speed', 1, 50).step(1).name('Speed')
@@ -136,7 +132,7 @@ function createGUI() {
 }
 
 async function addRemyPointsResize() {
-  var m = await loadDepth16BinPointsResize(folder + '/00000601_depth16.bin', folder + '/00000601_image.jpg')
+  var m = await loadDepth16BinPointsResize(sp1Folder + '/00000601_depth16.bin', sp1Folder + '/00000601_image.jpg')
   // var q = new Quaternion(-0.44389683,0.5598062,0.5267938,-0.46050537)
   // m.setRotationFromQuaternion(q)
   // m.position.set(-2.3739648,0.06929223,-0.19393142)
@@ -146,8 +142,8 @@ async function addRemyPointsResize() {
 }
 
 async function addRemyMeshTexture() {
-  var m = await loadDepth16BinMeshTexture(folder + '/00000601_depth16.bin',
-    folder + '/00000601_image.jpg')
+  var m = await loadDepth16BinMeshTexture(sp1Folder + '/00000601_depth16.bin',
+    sp1Folder + '/00000601_image.jpg')
   return m
 }
 
@@ -162,30 +158,6 @@ async function addHorse() {
   return {mesh, mixer}
 }
 
-export function generateRgbdUrls(folder, idmin, idmax) {
-  var urls = []
-  var count = idmax - idmin
-  if (count <= 0) throw 'No images, wrong min/max'
-  for (let id = idmin, i = 0; id < idmax; id++, i++) {
-    var idStr = idPad(id)
-    urls.push({
-        depth: folder + '/' + idStr + '_depth16.bin',
-        rgb: folder + '/' + idStr + '_image.jpg?a'
-      })
-  }
-  return urls
-}
-
-async function addRemyAndAnimation() {
-  var loadingCallback = (percent) => params.plys_loading = Math.round(percent * 100)
-  var urls = generateRgbdUrls(folder2, 3738, 3741) //3771)
-  var objs3d = await loadDepth16BinList(urls, loadingCallback)
-  let m = new THREE.Group()
-  m.setRotationFromEuler(new Euler(2.95,1.02,1.73))
-  m.position.copy(new Vector3(-1.155,1.248,0.044))
-  var animateCb = dirtyAnimationAnimeCallbackViaGroup(m, objs3d)
-  return { m, animateCb }
-}
 
 async function addCubeWithTexture() {
   loadObj(
@@ -196,74 +168,6 @@ async function addCubeWithTexture() {
     })
 }
 
-/**
- * Create an animation from a list of Object3D //TODO use animation instead, possible?
- * @param {THREE.Group} g
- * @param {[THREE.Object3D]} objs
- * @returns {function(): void}
- */
-export function dirtyAnimationAnimeCallbackViaGroup(g, objs) {
-  let objIdx = 0, frame = 0
-  g.add(...objs)
-  g.children.forEach(m => m.visible = false)
-  return () => {
-    frame++
-    if (frame % params.plys_speed === 0) {
-      if (objIdx === g.children.length) objIdx = 0
-      g.children.forEach(m => m.visible = false)
-      g.children[objIdx].visible = true
-      objIdx++
-    }
-  }
-}
-
-/**
- * Create an animation from a list of Object3D //TODO use animation instead, possible?
- * @param {THREE.Object3D} obj
- * @param {[THREE.Object3D]} objs
- * @returns {function(): void}
- */
-function dirtyAnimationAnimeCallback(obj, objs) {
-  let objIdx = 0, frame = 0
-  return () => {
-    frame++
-    if (objs && frame % params.plys_speed === 0) {
-      objIdx++
-      if (objIdx === objs.length) objIdx = 0
-      obj.geometry = objs[objIdx].geometry //stupidly create multiple material for nothing, I know
-      obj.setRotationFromEuler(new THREE.Euler(params.rx / RAD2DEG, params.ry / RAD2DEG, params.rz / RAD2DEG))
-      obj.position.set(params.tx, params.ty, params.tz)
-      obj.material.size = params.pointsize
-      // obj.material = objs[objIdx].material
-    }
-  }
-}
-
-/**
- * Load multiples rgbd images in parallel
- * @param onProgess
- * @returns {Promise<[THREE.Object3D]>}
- */
-export async function loadDepth16BinList(urls, onProgess) {
-  var objs3d = []
-
-  var promises = [];
-  var progress = 0
-
-  for (let i = 0; i < urls.length; i++) {
-    var { depth, rgb } = urls[i]
-    promises.push(loadDepth16BinMeshTexture(depth, rgb).then(obj => { //loadDepth16BinPoints(
-      objs3d[i] = obj
-      if (onProgess) {
-        progress++
-        onProgess(progress / urls.length)
-      }
-    }))
-  }
-
-  await Promise.all(promises) //TODO return directly promise, or don't change anything?
-  return objs3d //geometries
-}
 
 function createFloor() {
   var geo = new THREE.PlaneBufferGeometry(3, 3)

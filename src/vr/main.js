@@ -1,17 +1,23 @@
-import { loadGltf, loadObj, loadObjFiles, loadPCD } from '../rgbd-viewer/LoadersHelper'
+import { loadObj, loadObjFiles } from '../rgbd-viewer/LoadersHelper'
 import WebGlApp from '../WebGlApp'
 import * as THREE from 'three'
-import { RAD2DEG } from '../pose-viewer/utils3d'
-import { dirtyAnimationAnimeCallbackViaGroup, generateRgbdUrls, loadDepth16BinList } from '../rgbds-viewer/main'
+import { Euler, Vector3 } from 'three'
+import { generateRgbdUrls, loadRgbdAnim } from '../rgbd-viewer/RgbdAnimLoader'
 
 var webglApp
 
 document.getElementById('load-cocina').onclick = e => demo(e.target)
+var elLoadingAnim = document.getElementById('loading-animation')
 
 function demo(el) {
   el.disabled = true
+
   function cbLoading(percentage) {
-    el.value = percentage === 1 ? "Loaded" : "Loading "+Math.round(percentage*100)+"%"
+    el.value = percentage === 1 ? "Loaded" : "Loading cocina "+Math.round(percentage*100)+"%"
+  }
+
+  function cbLoadingAnim(percentage) {
+    elLoadingAnim.innerText = percentage === 1 ? "Loaded" : "Loading anim "+Math.round(percentage*100)+"%"
   }
 
   loadObj(
@@ -21,8 +27,18 @@ function demo(el) {
       m.scale.set(0.157, 0.157, 0.157)
       m.rotation.x = 15 * 3.14 / 180
       m.position.y = 1.69
+      //     m.position.copy(new Vector3(0,1.7,0))
+      //     m.setRotationFromEuler(new Euler(0.25,0.00,0.01))
       webglApp.scene.add(m)
     })
+
+  var urls = generateRgbdUrls('https://www.kustgame.com/ftp/2021-03-09_205622_coucoustool', 1472, 1550)
+  loadRgbdAnim(urls, cbLoadingAnim).then(({ m, animateCb }) => {
+    webglApp.scene.add(m)
+    m.setRotationFromEuler(new Euler(2.42,0.64,2.12))
+    m.position.copy(new Vector3(-0.378,1.363,-0.277))
+    webglApp.animateAdd(animateCb)
+  })
 }
 
 document.getElementById('browse').onchange = async e => {
@@ -48,38 +64,9 @@ async function init() {
 
   webglApp.animate()
 
-  // {
-  //   // PCDFormat
-  //   var m = await loadPCD('https://threejs.org/examples/models/pcd/binary/Zaghetto.pcd')
-  //   m.rotateX(180 / RAD2DEG)
-  //   webglApp.scene.add(m)
-  // }
-  // {
-  //   var m = await loadGltf('vr/depthmaps-lowlowalignhighest.glb')
-  //   m.scale.set(0.2,0.2,0.2)
-  //   m.position.y = 2
-  //   window.M = m
-  //   M.children[0].material.vertexColors=THREE.FaceColors
-  //   webglApp.scene.add(m)
-  // }
-  // {
-  //   const skyColor = 0xB1E1FF;  // light blue
-  //   const groundColor = 0xB97A20;  // brownish orange
-  //   const intensity = 1;
-  //   const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
-  //   webglApp.scene.add(light);
-  // }
 
-  // {
-  //   const color = 0xFFFFFF;
-  //   const intensity = 1;
-  //   const light = new THREE.DirectionalLight(color, intensity);
-  //   light.position.set(5, 10, 2);
-  //   webglApp.scene.add(light);
-  //   webglApp.scene.add(light.target);
-  // }
-
-  // demo(document.getElementById('load-cocina'))
+  if(window.location.search === '?demo')
+    demo(document.getElementById('load-cocina'))
 }
 
 init()

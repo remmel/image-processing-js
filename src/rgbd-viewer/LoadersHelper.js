@@ -43,8 +43,8 @@ export function loadPCD(url) {
  * Load an obj (photogrammetry: no shading)
  * @returns {Promise<THREE.Group>}
  */
-export async function loadObj(objFn, mtlFn, cbLoading) {
-  cbLoading = cbLoading || (() => {})
+export async function loadObj(objFn, mtlFn, onProgress) {
+  onProgress = onProgress || (() => {})
   // TODO should find itselft the mtl. If not providing manually the material, the object will be "blurry" because it use vertrex colors not jpg
   // Diff says that the blurry one has map:null; vertexColors:true
   // Material is MeshPhongMaterial, MeshBasicMaterial might be better, has we don't want shaders
@@ -53,9 +53,9 @@ export async function loadObj(objFn, mtlFn, cbLoading) {
   materials.preload() //load imgs
   var group = await new OBJLoader()
     .setMaterials(materials)
-    .loadAsync(objFn, (e) => cbLoading(e.loaded / e.total * 0.95))
+    .loadAsync(objFn, (e) => onProgress(e.loaded / e.total * 0.95))
   group.children[0].material.flatShading = true //hum... smooth
-  cbLoading(1)
+  onProgress(1)
   return group
 }
 

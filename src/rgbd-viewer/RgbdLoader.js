@@ -82,7 +82,7 @@ export async function loadDepth16BinPoints(urlDepth, urlRgb, intrinsics) {
   var depthImg = new DataImage(samples, 1, intrinsics.w, intrinsics.h, fnDepth)
   var rgbImg = new DataImage(rgbMat.data, 4, rgbMat.cols, rgbMat.rows)
 
-  var obj3d = createObj3dPoints(depthImg, rgbImg, 1440, 1080, intrinsics.fx)
+  var obj3d = createObj3dPoints(depthImg, rgbImg, 240, 180, intrinsics.fx)
   if(rgbMat) rgbMat.delete()
   return obj3d
 }
@@ -108,35 +108,27 @@ export async function loadDepth16BinMesh(urlDepth, urlRgb, intrinsics) {
   return obj3d
 }
 
+//finaly the best choice
 export async function loadDepth16BinMeshTexture(urlDepth, urlRgb, intrinsics) {
-  var response = await fetch(urlDepth)
-  var arrayBuffer = response.ok ? await (response).arrayBuffer() : null
+  var depthData;
+  var depthBuffer = await((await fetch(urlDepth)).arrayBuffer())
+  if(urlDepth.endsWith('depth16.bin')) {
+    depthData = new Int16Array(depthBuffer)
+  } else {
+    depthData = (await decode(depthBuffer)).data
+  }
+
+  // depthData = urlDepth.endsWith('.depth16.bin') ?
 
   intrinsics = intrinsics || HONOR20VIEW_DEPTH_INTRINSICS //default my Honor 20 View intrinsics
 
-  var samples = new Int16Array(arrayBuffer)
 
   var fnDepth = (range) => (range & 0x1FFF) / 1000 // DEPTH16 format, with both distance and precision
   var {w, h, fx} = intrinsics
 
-  // var a = {samples, w, h, fx} = dumbRangeData(); fnDepth = (v) => v
-
-  var m = await createMeshWithTexture(samples, w, h, fx, fnDepth, urlRgb)
+  var m = await createMeshWithTexture(depthData, w, h, fx, fnDepth, urlRgb)
 
   return m
-}
-
-function dumbRangeData() {
-  var h = 6, w = 10, fx = 2
-  var samples = [
-    0.95, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, .95, 1, 1, 1, 1,
-    1, 1, 1, 1, .95, .91, .95, 1, 1, 1,
-    1, 1, 1, 1, 1, .95, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-  ]
-  return { h, w, samples, fx }
 }
 
 function resize(rgbMat, w, h) {
@@ -424,7 +416,11 @@ async function createMeshWithTexture(dData, width, height, focal, fnToZMm, rgbUr
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)) //values of uv
 
-  var texture = new THREE.TextureLoader().load(rgbUrl) //TODO display progress, (e) => console.log("onLoad", e)
+  // var texture = new THREE.TextureLoader().load(rgbUrl, () => {
+  //   console.log(rgbUrl, 'loaded')
+  // }) //TODO display progress, (e) => console.log("onLoad", e)
+
+  var texture = await new THREE.TextureLoader().loadAsync(rgbUrl)
 
   var material = new THREE.MeshPhongMaterial({
     side: THREE.DoubleSide,

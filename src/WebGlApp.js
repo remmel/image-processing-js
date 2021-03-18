@@ -15,6 +15,7 @@ export default class WebGlApp {
     this.el = el = el || document.body
     this.scene = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 0.01, 1000)
+    // this.camera = new THREE.OrthographicCamera()
     this.camera.position.set(2, 2, 2)
 
     this.scene.background = new THREE.Color(0xcccccc)
@@ -31,6 +32,8 @@ export default class WebGlApp {
     this.enableVr()
 
     this.animateCallbacks = []
+
+    this._canTransformControlIntersect = []
   }
 
   _onWindowResize() {
@@ -155,11 +158,21 @@ export default class WebGlApp {
     this.transformControl.attach(m)
   }
 
-  attachTransformOnClick(objectsIntersect) {
+  canTransformControl(m){
+    this._canTransformControlIntersect.push(m)
+
+    if(!this._attachTransformOnClickEnabled) { //add the click listener only once
+      console.log('attachTransformOnClick')
+      this._attachTransformOnClick()
+      this._attachTransformOnClickEnabled = true
+    }
+  }
+
+  _attachTransformOnClick() {
     var raycaster = new THREE.Raycaster()
     this.initClickEvent((mouse) => {
       raycaster.setFromCamera(mouse, this.camera)
-      var intersects = raycaster.intersectObjects(objectsIntersect, true)
+      var intersects = raycaster.intersectObjects(this._canTransformControlIntersect, true)
       console.log(intersects)
       intersects.some(intersect => {
         //FIXME quickfix to match group, should add something if is animatione
