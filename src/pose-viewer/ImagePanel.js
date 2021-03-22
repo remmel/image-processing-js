@@ -1,44 +1,86 @@
-import { getPoses, selectPoseIdx } from './main'
-import { getImageUrl, URLDATAPIXEL } from './utils'
+import {LitElement, html, css} from 'lit-element';
+import {getImageUrl, URLDATAPIXEL} from "./utils";
+import PoseCylinder from "./PoseCylinder";
 
-export default class ImagePanel{
-    /** @param {number} posesLength */
-    constructor(posesLength) {
-        this.curPoseIdx = null
+class ImagePanel extends LitElement {
+    static get styles() {
+        return css`
+            #photo-container {
+                max-height: 100vh;
+                text-align: center;
+                position: relative;
+            }
+            
+            #photo-container img {
+                max-width: 100%;
+                max-height: 100%;
+            }
+            
+            #info-num-pose{
+                color: white;
+                background-color: rgba(0,0,0,0.4);
+            }
+            
+            #photo-container #photo-info{
+                position: absolute;
+                top: 0;
+                left: 33%;
+            }
+    `;
+    }
+
+    static get properties() {
+        return {
+            posesLength: {type: Number},
+            curPoseIdx: {type: Number},
+            curPose: {type: PoseCylinder}, //FIXME why that type is useless? maybe because this is a property, not attribute?
+        };
+    }
+
+    constructor() {
+        super()
+        this.curPoseIdx = -1
+
+        /** @param {PoseCylinder} this.curPose */
         this.curPose = null
         this.playpauseInterval = null
-        this.posesLength = posesLength;
-
-        document.getElementById('btn-previous').onclick = e => selectPoseIdx(this.curPoseIdx-1)
-        document.getElementById('btn-next').onclick = e => selectPoseIdx(this.curPoseIdx+1)
-        document.getElementById('btn-playpause').onclick = e => this.playpause()
-        // document.getElementById('btn-target').onclick = e => cameraOnPose(this.curPose)
-
-        this.renderInfoNumPose(null)
+        this.posesLength = null
+        this.rgb = null
+        this.depth = null
     }
 
-    renderInfoNumPose(){
-        document.getElementById('info-num-pose').textContent = (this.curPoseIdx === null ? '-' : this.curPoseIdx+1)+"/"+this.posesLength;
+    render() {
+        return html`
+        <div id="photo-container">
+            ${this.curPose && html`
+                <img src="${this.rgb ? this.rgb : URLDATAPIXEL}"/>
+                <img src="${this.depth ? this.depth : URLDATAPIXEL}"/>
+            `}
+
+            <div id="photo-info">
+                <span id="info-num-pose">
+                    ${this.curPoseIdx === -1 ? '-' : this.curPoseIdx+1} / ${this.posesLength}
+                </span>
+                <button id="btn-previous" @click=${() => this.selectPoseIdx(this.curPoseIdx-1)}>⏮️</button>
+                <button id="btn-playpause" @click=${this.playpause}>⏯️</button>
+                <button id="btn-next" @click=${() => this.selectPoseIdx(this.curPoseIdx+1)}>⏭️</button>
+            </div>
+        </div>
+    `;
     }
 
-    /** @param {PoseCylinder} poseObj */
-    async select(poseObj) {
-        var $photoRgb = document.getElementById('photo-rgb');
-        poseObj.data.rgb = await getImageUrl(poseObj.data.rgb)
-        $photoRgb.src = poseObj.data.rgb
-
-        var $photoDepth = document.getElementById('photo-depth');
-        if(poseObj.data.depth) {
-            poseObj.data.depth = await getImageUrl(poseObj.data.depth)
-            $photoDepth.src = poseObj.data.depth
-        } else {
-            $photoDepth.src = URLDATAPIXEL
+    async updated(changedProperties) {
+        if(changedProperties.has('curPose') && this.curPose) {
+            this.rgb = await getImageUrl(this.curPose.data.rgb)
+            this.depth = await getImageUrl(this.curPose.data.depth)
+            this.curPoseIdx = this.curPose.idxPose
         }
+    }
 
-        document.getElementById('info-text').textContent = JSON.stringify(poseObj.data.raw);
-        this.curPoseIdx = poseObj.idxPose;
-        this.curPose = poseObj
-        this.renderInfoNumPose()
+    selectPoseIdx(idxPose) {
+        console.log('ImagePanelElt.selectPoseIdx', idxPose)
+        if(idxPose < 0 || idxPose >= this.posesLength || idxPose === null) return false;
+        this.dispatchEvent(new CustomEvent('select-pose-idx', {detail: idxPose}));
     }
 
     playpause() {
@@ -52,18 +94,20 @@ export default class ImagePanel{
                 if(this.curPoseIdx === this.posesLength-1)
                     this.playpauseInterval = clearInterval(this.playpauseInterval);
                 else
-                    selectPoseIdx(this.curPoseIdx+1);
+                    this.selectPoseIdx(this.curPoseIdx+1);
             }, 500);
         }
     }
 }
 
 var preloadImagesOnce = () => {
-    getPoses().forEach(pose => {
-        if(typeof pose.path !== 'string') return;
-        var img=new Image();
-        img.src=pose.path;
-    })
-    preloadImagesOnce = () => {}; //as that fct is called once
+    // getPoses().forEach(pose => {
+    //     if(typeof pose.path !== 'string') return;
+    //     var img=new Image();
+    //     img.src=pose.path;
+    // })
+    // preloadImagesOnce = () => {}; //as that fct is called once
 }
+
+window.customElements.define('image-panel-elt', ImagePanel);
 

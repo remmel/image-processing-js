@@ -1,5 +1,6 @@
 import {Euler, Math, Matrix3, Matrix4, Quaternion, Vector3} from "three";
 import {convertM3ToM4, downloadCsv, readOrFetchText, urlOrFileImage} from "./datasetsloader";
+import * as X2JS from 'x2js-fork'
 
 //import xml, export csv
 export async function loadAgisoft(url, files) {

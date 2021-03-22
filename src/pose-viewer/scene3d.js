@@ -2,17 +2,20 @@ import * as THREE from 'three'
 import { DATASET_TYPE } from './datasetsloader/datasetsloader.js'
 import { createMeshPly } from './utils3d.js'
 import PoseCylinder from './PoseCylinder'
-import { selectPoseObj } from './main'
 import WebGlApp from '../WebGlApp'
 //https://codesandbox.io/s/project-camera-gby2i
 
 var raycaster = new THREE.Raycaster(),
   groupPoses = new THREE.Group(),
   meshPly = null,
-  webgl = null
+  webgl = null,
+    onClickSelectPose = null
 
-export async function init3dscene(datasetType) {
-    webgl = new WebGlApp(document.getElementById('scene3d'))
+export async function init3dscene(datasetType, webGlApp, onClickSelectPose0) {
+    //create if not already created
+    webgl = webGlApp ? webGlApp : new WebGlApp(document.getElementById('scene3d'))
+
+    onClickSelectPose = onClickSelectPose0
 
     var camera = webgl.camera
     var scene = webgl.scene
@@ -21,6 +24,7 @@ export async function init3dscene(datasetType) {
         case DATASET_TYPE.RGBDTUM:
             camera.up = new THREE.Vector3(0, 0, 1) //up is z not y
     }
+
 
     scene.add(createFloor(datasetType))
     scene.add(createLights())
@@ -62,17 +66,18 @@ function removeCameras() {
 }
 
 // When clicking on pose, display images and info
-function onClick3dScene(mouse) {
+export function onClick3dScene(mouse) {
     raycaster.setFromCamera(mouse, webgl.camera)
     var intersects = raycaster.intersectObjects(groupPoses.children) //scene.children
     intersects.some(intersect => {
         if (!(intersect.object instanceof PoseCylinder)) return false
-        selectPoseObj(intersect.object)
+        console.log('scene3d.onClick3dScene', intersect.object, onClickSelectPose)
+        onClickSelectPose(intersect.object)
         return true
     })
 }
 
-function createFloor(datasetType) {
+export function createFloor(datasetType) {
     var geo = new THREE.PlaneBufferGeometry(5, 5, 8, 8)
     var mat = new THREE.MeshBasicMaterial({ color: 0x777777, side: THREE.DoubleSide })
     var plane = new THREE.Mesh(geo, mat)
@@ -94,7 +99,7 @@ function createFloor(datasetType) {
     return plane
 }
 
-function createLights() {
+export function createLights() {
     var group = new THREE.Group()
     var light1 = new THREE.DirectionalLight(0xffffff)
     light1.position.set(1, 1, 1)

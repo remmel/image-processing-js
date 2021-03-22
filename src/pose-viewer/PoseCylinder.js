@@ -46,11 +46,10 @@ export default class PoseCylinder extends THREE.Mesh {
     this.data = pose
   }
 
-  select() {
+  select(meshPly) {
     this.material = cylinderRedMat
     setTimeout(() => this.material = cylinderDefaultMat, 1000)
 
-    var meshPly = getMeshPly()
     if(meshPly) {
       this.camera = PerspectiveCamera.create(this.data.raw.intrinsics, 0.01, 0.1)
       // console.log(this.camera.getFovs())

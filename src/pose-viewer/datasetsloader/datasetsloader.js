@@ -99,8 +99,8 @@ export async function readOrFetchText(url, files, fn, displayError, ask) {
 /**
  * Set image path or reference to image file
  */
-export function urlOrFileImage(urlFolder, files, fn) {
-    return urlFolder ? urlFolder + '/' + fn : Array.from(files).find(f => f.name === fn)
+export function urlOrFileImage(urlFolder, files, fn) { //TODO handle properly f.webkitRelativePath
+    return urlFolder ? urlFolder + '/' + fn : Array.from(files).find(f => f.name === fn || f.name === fn.split('/').pop())
 }
 
 //TODO not sure about that, specially the scale as I do later "position.x *= scale;"

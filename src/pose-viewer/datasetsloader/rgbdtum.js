@@ -30,7 +30,6 @@ export async function loadTum(url, files) {
             'depth' : urlOrFileImage(url, files, image.depth_fn),
             'raw' : image,
         });
-
     })
     return poses;
 }
