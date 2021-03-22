@@ -1,23 +1,12 @@
 import {css, html, LitElement} from 'lit-element';
 import WebGlApp from "../WebGlApp";
-
-
-import * as FormImportExportElt from './form/formImport'
-import * as ImagePanelElt from './ImagePanel'
-
-
+import * as FormImportExportElt from './form/FormElt'
+import * as ImagePanelElt from './ImagePanelElt'
 import {getMeshPly, init3dscene, renderPoses} from "./scene3d";
 import {DATASET_TYPE, exportPoses, loadModel, loadPoses} from "./datasetsloader/datasetsloader";
-import {selectPoseObj} from "../pose-viewer/main";
 import PoseCylinder from "./PoseCylinder";
 
-/**
- * An example element.
- *
- * @slot - This element has a slot
- * @csspart button - The button
- */
-export class Main extends LitElement {
+export class PoseViewerElt extends LitElement {
     static get styles() {
         return css`
         
@@ -45,7 +34,6 @@ export class Main extends LitElement {
             curPose: {type: PoseCylinder},
         };
     }
-
 
     constructor() {
         super()
@@ -109,7 +97,6 @@ export class Main extends LitElement {
 
     /** @param poseObj {PoseCylinder}*/
     selectPoseObj(poseObj) {
-        console.log('main.selectPoseObj', poseObj, this)
         this.curPose = poseObj
         poseObj.select(getMeshPly())
         this.shadowRoot.getElementById('info-text').textContent = JSON.stringify(poseObj.data.raw);
@@ -129,4 +116,4 @@ export class Main extends LitElement {
     // }
 }
 
-window.customElements.define('pose-viewer-elt', Main)
+window.customElements.define('pose-viewer-elt', PoseViewerElt)

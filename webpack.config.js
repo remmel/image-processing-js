@@ -3,7 +3,7 @@ const path = require('path')
 module.exports = {
   mode: 'production',
   entry: {
-    'pose-viewer': './src/pose-viewer/main.js',
+    'pose-viewer': './src/pose-viewer/PoseViewerElt.js',
     'rgbd-viewer': './src/rgbd-viewer/main.js',
     'rgbds-viewer': './src/rgbds-viewer/main.js',
     'raymarching': './src/raymarching/main.js',

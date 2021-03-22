@@ -2,7 +2,7 @@ import {LitElement, html, css} from 'lit-element';
 import {getImageUrl, URLDATAPIXEL} from "./utils";
 import PoseCylinder from "./PoseCylinder";
 
-class ImagePanel extends LitElement {
+class ImagePanelElt extends LitElement {
     static get styles() {
         return css`
             #photo-container {
@@ -109,5 +109,5 @@ var preloadImagesOnce = () => {
     // preloadImagesOnce = () => {}; //as that fct is called once
 }
 
-window.customElements.define('image-panel-elt', ImagePanel);
+window.customElements.define('image-panel-elt', ImagePanelElt);
 

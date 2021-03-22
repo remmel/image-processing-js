@@ -8,7 +8,7 @@ import {fillSelect} from "./formUtils";
  * @slot - This element has a slot
  * @csspart button - The button
  */
-class FormImport extends LitElement {
+class FormElt extends LitElement {
     static get styles() {
         return css`      
       #info{
@@ -169,4 +169,4 @@ class FormImport extends LitElement {
 
 }
 
-window.customElements.define('form-import-export-elt', FormImport)
+window.customElements.define('form-import-export-elt', FormElt)
