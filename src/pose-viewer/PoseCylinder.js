@@ -4,8 +4,6 @@ import { DATASET_TYPE } from './datasetsloader/datasetsloader'
 import PerspectiveCamera from './PerpectiveCamera'
 import ProjectedMaterial from 'three-projected-material'
 import { RAD2DEG } from './utils3d'
-import { getMeshPly } from './scene3d'
-
 
 var cylinderDefaultMat = new THREE.MeshPhongMaterial({ color: 0x999999, vertexColors: THREE.FaceColors, flatShading: true })
 var cylinderRedMat = new THREE.MeshPhongMaterial({ color: 0xff0000, flatShading: true })

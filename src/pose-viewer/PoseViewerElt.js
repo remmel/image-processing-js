@@ -1,10 +1,10 @@
 import {css, html, LitElement} from 'lit-element';
-import WebGlApp from "../WebGlApp";
 import * as FormImportExportElt from './form/FormElt'
 import * as ImagePanelElt from './ImagePanelElt'
-import {getMeshPly, init3dscene, renderPoses} from "./scene3d";
-import {DATASET_TYPE, exportPoses, loadModel, loadPoses} from "./datasetsloader/datasetsloader";
+import {Scene3d} from "./Scene3d";
+import {exportPoses, loadModel, loadPoses} from "./datasetsloader/datasetsloader";
 import PoseCylinder from "./PoseCylinder";
+
 
 export class PoseViewerElt extends LitElement {
     static get styles() {
@@ -39,6 +39,7 @@ export class PoseViewerElt extends LitElement {
         super()
         this.poses = []
         this.curPose = null
+        this.scene3d = null
     }
 
     render() {
@@ -62,8 +63,8 @@ export class PoseViewerElt extends LitElement {
 
     firstUpdated(_changedProperties) {
         let box = this.shadowRoot.getElementById('scene3d')
-        var webGlApp = new WebGlApp(box)
-        init3dscene(DATASET_TYPE.RECORDER3D, webGlApp,  this.selectPoseObj.bind(this))
+        this.scene3d = new Scene3d(box)
+        this.scene3d.onClickSelectPose = this.selectPoseObj.bind(this)
 
         super.firstUpdated(_changedProperties)
     }
@@ -77,7 +78,6 @@ export class PoseViewerElt extends LitElement {
     }
 
     async onLoadPoses(e) {
-        console.log('onLoadPoses', e.detail)
         var {datasetType, datasetFolder, scale, files} = e.detail
         this.poses = await loadPoses(datasetType, datasetFolder, files)
         var model = await loadModel(datasetFolder, files)
@@ -85,7 +85,7 @@ export class PoseViewerElt extends LitElement {
     }
 
     renderPosesMain(poses, model, datasetType, scale) {
-        renderPoses(poses, model, datasetType, scale);
+        this.scene3d.renderPoses(poses, model, datasetType, scale);
         setTimeout(() => {this.selectPoseObj(poses[0].object)}, 1000)
     }
 
@@ -98,22 +98,9 @@ export class PoseViewerElt extends LitElement {
     /** @param poseObj {PoseCylinder}*/
     selectPoseObj(poseObj) {
         this.curPose = poseObj
-        poseObj.select(getMeshPly())
+        poseObj.select(this.scene3d.getMeshPly())
         this.shadowRoot.getElementById('info-text').textContent = JSON.stringify(poseObj.data.raw);
     }
-
-    // // When clicking on pose, display images and info
-    // onClick3dScene(mouse) {
-    //     raycaster.setFromCamera(mouse, webgl.camera)
-    //     var intersects = raycaster.intersectObjects(groupPoses.children) //scene.children
-    //     intersects.some(intersect => {
-    //         if (!(intersect.object instanceof PoseCylinder)) return false
-    //         console.log(onClickSelectPose)
-    //         if(onClickSelectPose) onClickSelectPose(intersect.object)
-    //         else selectPoseObj(intersect.object)
-    //         return true
-    //     })
-    // }
 }
 
 window.customElements.define('pose-viewer-elt', PoseViewerElt)

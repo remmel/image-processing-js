@@ -1,13 +1,7 @@
-import {css, html, LitElement} from 'lit-element';
-import {DATASET_TYPE, DATASET_TYPE_IMPORTLOCAL} from "../datasetsloader/datasetsloader";
-import {fillSelect} from "./formUtils";
+import {css, html, LitElement} from 'lit-element'
+import {DATASET_TYPE} from "../datasetsloader/datasetsloader"
+import {} from './SelectElt'
 
-/**
- * An example element.
- *
- * @slot - This element has a slot
- * @csspart button - The button
- */
 class FormElt extends LitElement {
     static get styles() {
         return css`      
@@ -21,27 +15,45 @@ class FormElt extends LitElement {
             user-select: none;
             overflow-wrap: break-word;
         }
+        
+        hr{
+            width: 25%;
+        }
+        
+        .tab-src:not([selected]){
+            display: none;
+        }
     `
     }
 
     static get properties() {
         return {
+            datasetType: {type: String},
+            datasetFolder: {type: String},
+            tabDatasetSrc: {type: String}
         }
     }
 
     constructor() {
         super()
+        var {datasetType, datasetFolder, scale} = this.getUrlParams()
+        this.datasetType = datasetType ? datasetType : DATASET_TYPE.RECORDER3D
+        this.datasetFolder = datasetFolder ? datasetFolder : 'https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940'
+        this.scale = scale ? scale : 1
+        this.tabDatasetSrc = 'remote'
+
+        if(this.datasetFolder.endsWith('/')) console.warn(this.datasetFolder + " must not end with slash (/)")
     }
 
     render() {
         return html`
             <div id="info">
                 Import source:
-                <label><input type="radio" name="datasetSrc" @change=${this.updateSrcTab} value="demo">Demo</label>
-                <label><input type="radio" name="datasetSrc" @change=${this.updateSrcTab} value="local">Local</label>
-                <label><input type="radio" name="datasetSrc" @change=${this.updateSrcTab} value="remote">Remote</label>
+                <label><input type="radio" name="datasetSrc" @change=${this._onChangeRadio} value="demo" ?checked=${this.tabDatasetSrc==="demo"}>Demo</label>
+                <label><input type="radio" name="datasetSrc" @change=${this._onChangeRadio} value="local" ?checked=${this.tabDatasetSrc==="local"}>Local</label>
+                <label><input type="radio" name="datasetSrc" @change=${this._onChangeRadio} value="remote" ?checked=${this.tabDatasetSrc==="remote"}>Remote</label>
                 <!--    Demo:-->
-                <form class="tab-src tab-src-demo">
+                <form class="tab-src" ?selected=${this.tabDatasetSrc==="demo"}>
                     <select name="querystring" onchange="document.location = this.form.querystring.value">
                         <option value="?">- Load demo dataset -</option>
                         <option value="?datasetType=RGBDTUM&datasetFolder=https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk">RGBDTUM / rgbd_dataset_freiburg1_desk</option>
@@ -53,23 +65,26 @@ class FormElt extends LitElement {
                     </select>
                 </form>
                 <!--    Local:-->
-                <form class="tab-src tab-src-local">
-                    <select name="datasetTypeLocal">
+                <form class="tab-src" ?selected=${this.tabDatasetSrc==="local"}>
+                    <select-elt .options=${DATASET_TYPE}
+                                selected=${this.datasetType}
+                                @change=${e => this.datasetType = e.detail.value}>
                         <option value="">- Select datasetType -</option>
-                    </select>
-                    <label>Choose folder: <input type="file" name="files-import" webkitdirectory mozdirectory msdirectory odirectory directory value="Choose Folder" @change="${this._onBrowseChange}"/></label> (or
-                    <label>Choose files: <input type="file" name="files-import" multiple @change=${this._onBrowseChange}/></label>)
+                    </select-elt>
+                    <label>Choose folder: <input type="file" webkitdirectory mozdirectory msdirectory odirectory directory value="Choose Folder" @change="${this._onBrowseChange}"/></label> (or
+                    <label>Choose files: <input type="file" multiple @change=${this._onBrowseChange}/></label>)
                 </form>
                 <!--    Remote:-->
-                <form class="tab-src tab-src-remote">
-                    <select name="datasetType">
+                <form class="tab-src" ?selected=${this.tabDatasetSrc==="remote"}>
+                    <select-elt .options=${DATASET_TYPE}
+                                selected=${this.datasetType}
+                                @change=${e => this.datasetType = e.detail.value}>
                         <option value="">- Select datasetType -</option>
-                    </select>
-                    <input type="text" name="datasetFolder" placeholder="datasetFolder url eg: https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk" />
+                    </select-elt>
+                    <input type="text" value=${this.datasetFolder} placeholder="datasetFolder url eg: https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk" />
                     <input type="submit" value="Load"/>
                 </form>
-                <!--    Export:-->
-                <hr width="25%"/>
+                <hr/><!--    Export:-->
                 <form>
                     <select name="exportType">
                         <option value="">- Select Export type -</option>
@@ -81,36 +96,42 @@ class FormElt extends LitElement {
                     <input type="file" value="file-general" name="file" style="display: none"/>
                     <input type="button" value="Export" name="export" @click=${this._onClickExport}/>
                 </form>
-                <hr width="25%"/>
+                <hr/>
                 <slot></slot>
             </div>
         `
     }
 
     _onClickExport() {
-        var detail = {
-            dataType: this.shadowRoot.querySelector("select[name=exportType]").value
-        }
-        this.dispatchEvent(new CustomEvent('click-export', {detail}));
+        this.dispatchEvent(new CustomEvent('click-export', {detail: {dataType: this.exportType}}))
     }
 
     _onBrowseChange(e) {
-        var detail = {
-            datasetType: this.getFormImportTypeLocal(),
-            files: e.target.files,
-            scale: 1
-        }
-        this.dispatchEvent(new CustomEvent('load-poses', {detail}))
+        this.dispatchEvent(new CustomEvent('load-poses', {
+            detail: {
+                datasetType: this.datasetType,
+                files: e.target.files,
+                scale: 1
+            }
+        }))
     }
 
     firstUpdated(_changedProperties) {
         super.firstUpdated(_changedProperties)
-        var detail = this.getImportForm()
-        this.dispatchEvent(new CustomEvent('load-poses', {detail}))
 
+        this.querystring = "?datasetType="+this.datasetType+"&datasetFolder="+this.datasetFolder
+        if(this.querystring) this.tabDatasetSrc = "demo" //querystring is set only if the value is an <option>
+
+        this.dispatchEvent(new CustomEvent('load-poses', {
+            detail: {
+                datasetType: this.datasetType,
+                datasetFolder: this.datasetFolder,
+                scale: this.scale
+            }
+        }))
     }
 
-    decodeUrl() {
+    getUrlParams() {
         var params = new URLSearchParams(window.location.search);
         var datasetType = params.get("datasetType");
         var datasetFolder = params.get("datasetFolder");
@@ -118,53 +139,20 @@ class FormElt extends LitElement {
         return {datasetType, datasetFolder, scale};
     }
 
-    /**
-     * Init the form with the url params
-     * The form is submitted to take into account new params
-     * FIXME has multiple responsabilities, not good
-     */
-    getImportForm() {
-        var {datasetType, datasetFolder, scale} = this.decodeUrl();
-        if(!datasetType && !datasetFolder) {
-            datasetType = DATASET_TYPE.RECORDER3D; datasetFolder = 'https://raw.githubusercontent.com/remmel/rgbd-dataset/main/2020-11-26_121940';
-        }
-
-        //set form
-        var $selectDsType = this.shadowRoot.querySelector("select[name=datasetType]");
-        fillSelect($selectDsType, DATASET_TYPE);
-        $selectDsType.value = datasetType;
-
-        fillSelect(this.shadowRoot.querySelector("select[name=datasetTypeLocal]"), DATASET_TYPE_IMPORTLOCAL);
-
-        var $inputDsFolder = this.shadowRoot.querySelector("input[name=datasetFolder]");
-        $inputDsFolder.value = datasetFolder;
-
-        var querystring = "?datasetType="+datasetType+"&datasetFolder="+datasetFolder;
-        var $selectDsDemo = this.shadowRoot.querySelector("select[name=querystring]");
-        var isDemo = $selectDsDemo.querySelector('[value="'+querystring+'"]');
-        if(isDemo)
-            $selectDsDemo.value = querystring;
-
-        //radio - when page loaded, can only be one of thoses values
-        if(isDemo) this.shadowRoot.querySelector("input[name=datasetSrc][value=demo]").checked = true;
-        else this.shadowRoot.querySelector("input[name=datasetSrc][value=remote]").checked = true
-
-        this.updateSrcTab();
-
-        if(datasetFolder.endsWith('/')) console.warn(datasetFolder + " must not end with slash (/)")
-
-        //document.querySelector("input[name=datasetSrc]:checked").value
-        return {datasetType, datasetFolder, scale}
+    set querystring(val) {
+        this.shadowRoot.querySelector("select[name=querystring]").value = val
     }
 
-    getFormImportTypeLocal() {
-        return this.shadowRoot.querySelector("select[name=datasetTypeLocal]").value;
+    get querystring() {
+        return this.shadowRoot.querySelector("select[name=querystring]").value
     }
 
-    updateSrcTab() {
-        var src = this.shadowRoot.querySelector('input[name=datasetSrc]:checked').value //FIXME, use litelt
-        this.shadowRoot.querySelectorAll('.tab-src').forEach(node => node.style.display = 'none')
-        this.shadowRoot.querySelectorAll('.tab-src-'+src).forEach(node => node.style.display='block')
+    get exportType() {
+        return this.shadowRoot.querySelector("select[name=exportType]").value
+    }
+
+    _onChangeRadio(e) {
+        this.tabDatasetSrc = e.target.value
     }
 
 }

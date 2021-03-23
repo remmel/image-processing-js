@@ -16,7 +16,12 @@ export const DATASET_TYPE = {
     AGISOFT: 'AGISOFT', //Agilesoft Metashape format (File > Export > Export Cameras)
 };
 
-export const DATASET_TYPE_IMPORTLOCAL = DATASET_TYPE //except AR3DPLAN
+export const DATASET_TYPE_EXPORT = {
+    FAST_FUSION: 'FAST_FUSION',
+    ALICEVISION_SFM:'ALICEVISION_SFM',
+    AGISOFT: 'AGISOFT',
+    DEFAULT: 'DEFAULT'
+}
 
 /**
  * if "dataset/monstree" => "./dataset/monstree"
@@ -118,12 +123,13 @@ export function convertM3ToM4(m3, translation, scale) {
 
 export function exportPoses(poses, exportType){
     switch (exportType) {
-        case 'FAST_FUSION':
+        case DATASET_TYPE_EXPORT.FAST_FUSION:
             exportTumAssociate(poses); break;
-        case 'ALICEVISION_SFM':
+        case DATASET_TYPE_EXPORT.ALICEVISION_SFM:
             exportAlicevision(poses); break;
-        case 'AGISOFT':
+        case DATASET_TYPE_EXPORT.AGISOFT:
             exportAgisoftReference(poses); break;
+        case DATASET_TYPE_EXPORT.DEFAULT:
         default:
             exportRecorder3D(poses);
     }
