@@ -4,14 +4,11 @@ import { loadDepth16BinPointsResize, loadTumPng } from './RgbdLoader.js'
 import { RAD2DEG } from '../pose-viewer/utils3d'
 import { Quaternion } from 'three'
 import WebGlApp from '../WebGlApp'
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 
-//https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/rgb/1305031468.195985.png
-//https://raw.githubusercontent.com/remmel/rgbd-dataset/main/rgbd_dataset_freiburg1_desk/depth/1305031468.188327.png
-var webglApp
+export async function initRgbdViewer() {
+  convertGrayscale('original', 'grayscale')
 
-async function init() {
-  webglApp = new WebGlApp(document.body)
+  var webglApp = new WebGlApp(document.body)
   webglApp.animate()
 
   {
@@ -63,9 +60,3 @@ async function init() {
   })
 }
 
-//check https://www.smartjava.org/ltjs3/src/chapter-07/03-basic-point-cloud.html
-
-window.main = function() {
-  convertGrayscale('original', 'grayscale')
-  init()
-}

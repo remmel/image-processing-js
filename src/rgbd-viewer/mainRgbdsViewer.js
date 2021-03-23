@@ -1,13 +1,13 @@
 import * as THREE from 'three'
 import {Euler, Vector3} from 'three'
 import WebGlApp from '../WebGlApp'
-import {loadDepth16BinMesh, loadDepth16BinMeshTexture, loadDepth16BinPointsResize,} from '../rgbd-viewer/RgbdLoader'
+import {loadDepth16BinMesh, loadDepth16BinMeshTexture, loadDepth16BinPointsResize,} from './RgbdLoader'
 import {GUI} from 'three/examples/jsm/libs/dat.gui.module'
 import {RAD2DEG} from '../pose-viewer/utils3d'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
-import {loadObj} from '../rgbd-viewer/LoadersHelper'
-import {createPhoto360, createVideo360} from "../rgbd-viewer/Sphere360";
-import {generateRgbdUrls, loadRgbdAnim} from "../rgbd-viewer/RgbdAnimLoader";
+import {loadObj} from './LoadersHelper'
+import {createPhoto360, createVideo360} from "./Sphere360";
+import {generateRgbdUrls, loadRgbdAnim} from "./RgbdAnimLoader";
 
 //to add label GUI: https://threejs.org/examples/#webgl_instancing_performance
 
@@ -24,7 +24,7 @@ var folderKinect = 'dataset/kinect'
 var webglApp
 var params = {}
 
-async function init() {
+export async function initRgbdsViewer() {
   webglApp = new WebGlApp()
 
 
@@ -184,7 +184,7 @@ function createFloor() {
   return plane
 }
 
-async function photo360() {
+export async function initPhoto360() {
   webglApp = new WebGlApp()
 
   var mesh = createPhoto360('https://www.kustgame.com/ftp/photovid360/PIC_20201231_205333.jpg')
@@ -193,7 +193,7 @@ async function photo360() {
   webglApp.animate()
 }
 
-async function video360() {
+export async function initVideo360() {
   webglApp = new WebGlApp()
 
   var mesh = createVideo360("https://www.kustgame.com/ftp/photovid360/PIC_20201231_205342.mp4")
@@ -201,7 +201,3 @@ async function video360() {
 
   webglApp.animate()
 }
-
-window.main = init
-window.photo360 = photo360
-window.video360 = video360

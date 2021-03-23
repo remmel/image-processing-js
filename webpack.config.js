@@ -4,10 +4,8 @@ module.exports = {
   mode: 'production',
   entry: {
     'pose-viewer': './src/pose-viewer/PoseViewerElt.js',
-    'rgbd-viewer': './src/rgbd-viewer/main.js',
-    'rgbds-viewer': './src/rgbds-viewer/main.js',
+    'rgbd-viewer': './src/rgbd-viewer/entry.js',
     'raymarching': './src/raymarching/main.js',
-    'vr' : './src/vr/main.js',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
