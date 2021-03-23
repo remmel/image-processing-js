@@ -1,20 +1,13 @@
 import * as THREE from 'three'
+import {Euler, Vector3} from 'three'
 import WebGlApp from '../WebGlApp'
-import {
-  loadDepth16BinPointsResize,
-  loadDepth16BinPoints,
-  loadDepth16BinMesh,
-  loadDepth16BinMeshTexture, loadTumPng,
-} from '../rgbd-viewer/RgbdLoader'
-import { Euler, Quaternion, Vector3 } from 'three'
-import { GUI } from 'three/examples/jsm/libs/dat.gui.module'
-import { RAD2DEG } from '../pose-viewer/utils3d'
-import { idPad } from '../pose-viewer/utils'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { loadObj } from '../rgbd-viewer/LoadersHelper'
-import { loadRgbdAnim, generateRgbdUrls, loadRgbdAnim2 } from '../rgbd-viewer/RgbdAnimLoader'
-import { exportGltf } from '../rgbd-viewer/ExporterHelper'
-import { KINECT_INTRINSICS } from '../pose-viewer/datasetsloader/rgbdtum'
+import {loadDepth16BinMesh, loadDepth16BinMeshTexture, loadDepth16BinPointsResize,} from '../rgbd-viewer/RgbdLoader'
+import {GUI} from 'three/examples/jsm/libs/dat.gui.module'
+import {RAD2DEG} from '../pose-viewer/utils3d'
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
+import {loadObj} from '../rgbd-viewer/LoadersHelper'
+import {createPhoto360, createVideo360} from "../rgbd-viewer/Sphere360";
+import {generateRgbdUrls, loadRgbdAnim} from "../rgbd-viewer/RgbdAnimLoader";
 
 //to add label GUI: https://threejs.org/examples/#webgl_instancing_performance
 
@@ -39,7 +32,7 @@ async function init() {
   loadDepth16BinMeshTexture(folderCloseup + '/00000294_depth16.bin', folderCloseup + '/00000294_image.jpg').then(m => {
     webglApp.scene.add(m)
     m.setRotationFromEuler(new Euler(1.25,1.33,-2.86))
-    m.position.copy(new Vector3(-0.360,1.6,0.397))
+    m.position.copy(new Vector3(-0.153,1.600,0.006))
     webglApp.canTransformControl(m)
   })
 
@@ -91,7 +84,7 @@ async function init() {
       webglApp.canTransformControl(m)
     })
 
-  // var urls = generateRgbdUrls(folderCoucoustoolhires, 3738, 3771)
+  // var urls = generateRgbdUrls(folderDance, 3738, 3771)
   // var onProgress = (percent) => params.plys_loading = Math.round(percent * 100)
   // loadRgbdAnim(urls, onProgress).then(({ m, animateCb }) => {
   //   webglApp.scene.add(m)
@@ -100,6 +93,20 @@ async function init() {
   //   webglApp.animateAdd(animateCb)
   //   webglApp.canTransformControl(m)
   // })
+
+  var urls = generateRgbdUrls('https://www.kustgame.com/ftp/2021-02-26_210438_speaking1', 512, 601)
+  loadRgbdAnim(urls).then(({ m, animateCb }) => {
+    webglApp.scene.add(m)
+    m.setRotationFromEuler(new Euler(1.95,-1.36,0.31))
+    m.position.copy(new Vector3(1.111,1.329,0.113))
+    webglApp.animateAdd(animateCb)
+    webglApp.canTransformControl(m)
+  })
+
+  {
+   var mesh = createPhoto360('https://www.kustgame.com/ftp/photovid360/PIC_20210318_180917.jpg')
+    webglApp.scene.add( mesh )
+  }
 
   webglApp.scene.add(createFloor())
   webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
@@ -177,7 +184,24 @@ function createFloor() {
   return plane
 }
 
+async function photo360() {
+  webglApp = new WebGlApp()
+
+  var mesh = createPhoto360('https://www.kustgame.com/ftp/photovid360/PIC_20201231_205333.jpg')
+  webglApp.scene.add(mesh)
+
+  webglApp.animate()
+}
+
+async function video360() {
+  webglApp = new WebGlApp()
+
+  var mesh = createVideo360("https://www.kustgame.com/ftp/photovid360/PIC_20201231_205342.mp4")
+  webglApp.scene.add(mesh)
+
+  webglApp.animate()
+}
+
 window.main = init
-
-
-
+window.photo360 = photo360
+window.video360 = video360
