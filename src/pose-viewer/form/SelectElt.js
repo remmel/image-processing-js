@@ -19,7 +19,6 @@ class SelectElt extends LitElement {
         this.shadowRoot.host.querySelectorAll('option').forEach(opt => {
             this.optionsSlot[opt.value] = opt.text
         })
-        console.log(this.optionsSlot)
     }
 
     render() {

@@ -49,7 +49,7 @@ export async function loadPoses(type, folder, files) {
         default: throw "Wrong dataset type:"+type;
     }
 
-    poses = limitDisplayedPoses(poses, 100);
+    poses = limitDisplayedPoses(poses, 1000);
     return poses;
 }
 

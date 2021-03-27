@@ -55,7 +55,7 @@ export class Scene3d {
         raycaster.setFromCamera(mouse, this.webgl.camera)
         let intersects = raycaster.intersectObjects(this.groupPoses.children) //scene.children
         intersects.some(intersect => {
-            // if (!(intersect.object instanceof PoseCylinder)) return false
+            if (!(intersect.object instanceof PoseCylinder)) return false //could be moved in onClickSelectPose
             this.onClickSelectPose(intersect.object)
             return true
         })

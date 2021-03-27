@@ -4,34 +4,62 @@ import * as ImagePanelElt from './ImagePanelElt'
 import {Scene3d} from "./Scene3d";
 import {exportPoses, loadModel, loadPoses} from "./datasetsloader/datasetsloader";
 import PoseCylinder from "./PoseCylinder";
+import {classMap} from "lit-html/directives/class-map";
 
 
 export class PoseViewerElt extends LitElement {
     static get styles() {
+        // language=CSS
         return css`
-        
-      .container{
-        display: flex;
-      }
-            
-      #scene3d {
-        width: 70%;
-        height: 100vh;
-      }
-      
-      #image-panel{
-        width: 30%
-      }
-      
-      #info-text{
-        background-color: rgba(255, 255, 255, 0.5);
-      }
-    `
+            :host {
+                display: flex;
+            }
+
+            @media (orientation: landscape) {
+                :host {
+                    flex-direction: row;
+                }
+
+                #scene3d {
+                    width: 70%;
+                    height: 100vh;
+                }
+
+                #image-panel {
+                    width: 30%
+                }
+            }
+
+            @media (orientation: portrait) {
+                :host {
+                    flex-direction: column;
+                }
+
+                #scene3d {
+                    width: 100%;
+                    height: 70vh;
+                }
+
+                #image-panel {
+                    width: 100%;
+                    height: 30vh;
+                }
+            }
+
+            #info-text {
+                background-color: rgba(255, 255, 255, 0.5);
+            }
+
+            #info-text:not(.show) {
+                display: none;
+            }
+        `
     }
 
     static get properties() {
         return {
             curPose: {type: PoseCylinder},
+            displayInfoText: {type: Boolean}
         };
     }
 
@@ -40,24 +68,26 @@ export class PoseViewerElt extends LitElement {
         this.poses = []
         this.curPose = null
         this.scene3d = null
+        this.displayInfoText = true
     }
 
     render() {
         return html`
-            <div class="container">
-                <div id="scene3d"></div>
-                <image-panel-elt id="image-panel"
-                                 posesLength=${this.poses.length}
-                                 .curPose=${this.curPose}
-                                 @select-pose-idx=${this.onSelectPoseIdx}
-                />
+            <div id="scene3d">
+                <form-import-export-elt
+                        @load-poses="${this.onLoadPoses}"
+                        @click-export="${this.onClickExport}">
+                    <div @click=${() => this.displayInfoText = !this.displayInfoText}>💬</div>
+                    <div id="info-text" class=${classMap({show: this.displayInfoText})}>
+                        Click on Tetrahedron to display pose & image details. <br/>x:red; y:green; z:blue
+                    </div>
+                </form-import-export-elt>
             </div>
-            
-            <form-import-export-elt
-                    @load-poses="${this.onLoadPoses}"
-                    @click-export="${this.onClickExport}">
-                <span id="info-text">Click on Tetrahedron to display pose & image details. <br />x:red; y:green; z:blue</span>
-            </form-import-export-elt>
+            <image-panel-elt id="image-panel"
+                             posesLength=${this.poses.length}
+                             .curPose=${this.curPose}
+                             @select-pose-idx=${this.onSelectPoseIdx}
+            />
         `
     }
 
@@ -86,11 +116,13 @@ export class PoseViewerElt extends LitElement {
 
     renderPosesMain(poses, model, datasetType, scale) {
         this.scene3d.renderPoses(poses, model, datasetType, scale);
-        setTimeout(() => {this.selectPoseObj(poses[0].object)}, 1000)
+        setTimeout(() => {
+            this.selectPoseObj(poses[0].object)
+        }, 1000)
     }
 
     selectPoseIdx(idxPose) {
-        if(idxPose < 0 || idxPose >= this.poses.length || idxPose === null) return false;
+        if (idxPose < 0 || idxPose >= this.poses.length || idxPose === null) return false;
         var pose = this.poses[idxPose];
         this.selectPoseObj(pose.object);
     }

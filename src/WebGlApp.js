@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 import { RAD2DEG } from './pose-viewer/utils3d'
+import {TrackballControls} from "three/examples/jsm/controls/TrackballControls";
 
 
 /**
@@ -107,19 +108,12 @@ export default class WebGlApp {
    * Enable VR if possible
    */
   enableVr() {
-    // console.log(this.renderer.xr, "totott")
-    // this.renderer.xr.addEventListener('sessionstart', (event) =>{
-    //   alert(1)
-    // })
-
-    // navigator.xr && navigator.xr.isSessionSupported('immersive-vr').then(supported => {
-    //   if (supported) {
+    navigator.xr && navigator.xr.isSessionSupported('immersive-vr').then(supported => {
+      if (supported) {
         document.body.appendChild(VRButton.createButton(this.renderer))
         this.renderer.xr.enabled = true
-        // var cam = this.renderer.xr.getCamera()
-    // console.log(cam)
-      // }
-    // })
+      }
+    })
   }
 
   createTransformControl() {
