@@ -3,6 +3,7 @@ import WebGlApp from "./WebGlApp";
 import * as THREE from "three";
 import {loadDepth16BinMeshTexture} from "./rgbd-viewer/RgbdLoader";
 import {loadRecorder3D} from "./pose-viewer/datasetsloader/recorder3d";
+import * as PlayerControls from "./commons/PlayerControls"
 
 
 export class Video3dElt extends LitElement {
@@ -15,14 +16,6 @@ export class Video3dElt extends LitElement {
             #scene3d {
                 width: 100%;
                 height: 100vh;
-            }
-
-            #player-controls {
-                bottom: 10px;
-                width: 100%;
-                position: absolute;
-                background-color: white;
-                text-align: center;
             }
         `
     }
@@ -46,18 +39,13 @@ export class Video3dElt extends LitElement {
     render() {
         return html`
             <div id="scene3d"></div>
-            <div id="player-controls">
-                <span id="info-num-pose">
-                    ${this.frames ? html`
-                        ${this.frameIdx === null ? '-' : this.frameIdx + 1} / ${this.frames.length}` : ''}
-                    
-                </span>
-                <button @click=${() => this.selectFrame(this.frameIdx - 1)}>⏮️</button>
-                <button @click=${this.togglePlayPause}>
-                    ${this.isPlaying ? "⏸️" : "▶️"}
-                </button>
-                <button @click=${() => this.selectFrame(this.frameIdx + 1)}>⏭️</button>
-            </div>
+
+
+            ${this.frames ? html`
+                <player-controls-elt idx=${this.frameIdx} count=${this.frames.length} @select=${this.selectEvent}"></player-controls-elt>
+               
+            ` : ''}
+           
         `
     }
 
@@ -92,36 +80,26 @@ export class Video3dElt extends LitElement {
         this.selectFrame(0)
     }
 
+    async selectEvent(e){
+        await this.selectFrame(e.detail.idx)
+        e.detail.done() //to display or not next one. To avoid displaying next one if prev one is not yet displayed
+    }
+
     async selectFrame(idx) {
         if (idx === -1) idx = this.frames.length - 1
         else if (idx === this.frames.length) idx = 0
         this.frameIdx = idx
 
         var frame = this.frames[idx]
-        var m;
-        if (frame.mesh) { //"cache" system
-            m = frame.mesh
-            m.visible = true
-        } else {
-            m = await loadDepth16BinMeshTexture(frame.depth, frame.rgb)
-            this.group.add(m)
-            frame.mesh = m
-        }
-        if (this.prevMesh) this.prevMesh.visible = false // app crash after loading ~200 models, maybe better to remove and dispose?
-        this.prevMesh = m
-    }
+        var m = await loadDepth16BinMeshTexture(frame.depth, frame.rgb)
 
-    togglePlayPause() {
-        this.isPlaying = !this.isPlaying
-        if (this.isPlaying) this.playing()
-    }
-
-    async playing() {
-        console.log('isPlaying', this.isPlaying)
-        if (!this.isPlaying) return
-        var time = new Date()
-        await this.selectFrame(this.frameIdx + 1)
-        setTimeout(() => this.playing(), 200 - ((new Date) - time)) //if it tooks time to load the image, do not cumulate that time
+        //there is always ONE child
+        this.group.children.forEach((c)=>{
+            c.geometry.dispose();
+            c.material.dispose();
+        })
+        this.group.remove(...this.group.children)
+        this.group.add(m)
     }
 }
 
