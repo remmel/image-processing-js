@@ -1,6 +1,6 @@
 import {css, html, LitElement} from 'lit-element';
 
-class PlayerControls extends LitElement {
+class PlayerControlsElt extends LitElement {
     static get styles() {
         // language=CSS
         return css`
@@ -84,4 +84,4 @@ class PlayerControls extends LitElement {
     }
 }
 
-window.customElements.define('player-controls-elt', PlayerControls)
+window.customElements.define('player-controls-elt', PlayerControlsElt)

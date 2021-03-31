@@ -3,7 +3,7 @@ import WebGlApp from "./WebGlApp";
 import * as THREE from "three";
 import {loadDepth16BinMeshTexture} from "./rgbd-viewer/RgbdLoader";
 import {loadRecorder3D} from "./pose-viewer/datasetsloader/recorder3d";
-import * as PlayerControls from "./commons/PlayerControls"
+import "./commons/PlayerControlsElt"
 
 
 export class Video3dElt extends LitElement {
@@ -22,30 +22,27 @@ export class Video3dElt extends LitElement {
 
     static get properties() {
         return {
-            frameIdx: {type: Number},
-            isPlaying: {type: Boolean}
+            frameIdx: {type: Number}
         };
     }
 
     constructor() {
         super()
-        this.webGlApp = null
-        this.isPlaying = false
-        this.playingInterval = null
         var params = new URLSearchParams(window.location.search)
         this.datasetFolder = params.get("datasetFolder")
     }
 
     render() {
         return html`
-            <div id="scene3d"></div>
-
+            <div id='scene3d'></div>
 
             ${this.frames ? html`
-                <player-controls-elt idx=${this.frameIdx} count=${this.frames.length} @select=${this.selectEvent}"></player-controls-elt>
-               
+                <player-controls-elt idx='${this.frameIdx}'
+                                     count='${this.frames.length}'
+                                     @select='${this.selectEvent}"'>
+                </player-controls-elt>
             ` : ''}
-           
+
         `
     }
 
@@ -66,7 +63,7 @@ export class Video3dElt extends LitElement {
         var p = poses[0]
         this.group.setRotationFromQuaternion(p.rotation)
         this.webGlApp.scene.add(this.group)
-        this.webGlApp.canTransformControl(this.group)
+        this.webGlApp.canTransformControlAdd(this.group)
 
         if (poses.length === 0) return
         var frames = [];

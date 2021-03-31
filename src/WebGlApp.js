@@ -4,6 +4,9 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton.js'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 import { RAD2DEG } from './pose-viewer/utils3d'
 import {TrackballControls} from "three/examples/jsm/controls/TrackballControls";
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+import { PlayerFPS } from './PlayerFPS'
+import { CanTransformControlWebGlApp } from './CanTransformControlWebGlApp'
 
 
 /**
@@ -30,11 +33,11 @@ export default class WebGlApp {
     window.addEventListener('resize', () => this._onWindowResize(), false)
 
     this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement)
+    // var player = new PlayerFPS(this.camera, this.renderer.domElement, this.scene)
+
     this.enableVr()
 
     this.animateCallbacks = []
-
-    this._canTransformControlIntersect = []
   }
 
   _onWindowResize() {
@@ -44,8 +47,8 @@ export default class WebGlApp {
   }
 
   animate() {
-    this.renderer.setAnimationLoop(() => { //before requestAnimationFrame(this.animate.bind(this))
-      if (this.orbitControls) this.orbitControls.update() // only required if controls.enableDamping = true, or if controls.autoRotate = true
+    this.renderer.setAnimationLoop(() => {
+      if (this.orbitControls) this.orbitControls.update()
       this.animateCallbacks.forEach(animateCallback => animateCallback())
       this.renderer.render(this.scene, this.camera)
     })
@@ -116,75 +119,12 @@ export default class WebGlApp {
     })
   }
 
-  createTransformControl() {
-    var control = this.transformControl = new TransformControls(this.camera, this.renderer.domElement)
-    this.scene.add(this.transformControl)
-    control.addEventListener('dragging-changed', event => {
-      if (this.orbitControls) this.orbitControls.enabled = !event.value
-    })
-
-    window.addEventListener('keydown', event => {
-      switch (event.keyCode) {
-        case 81: // Q
-          control.setSpace(control.space === 'local' ? 'world' : 'local')
-          break
-        case 87: // W
-          control.setMode('translate')
-          break
-        case 69: // E
-          control.setMode('rotate')
-          break
-        case 82: // R
-          control.setMode('scale')
-          break
-        case 32: // spacebar - pretty print position of object
-          var obj = control.object
-          console.log('position', prettyPrint(obj.position), 'euler', prettyPrint(obj.rotation))
-          break
-      }
-    })
-  }
-
-  attachTransformControl(m) {
-    if (!this.orbitControls.enabled) return
-    console.log('attachTransformControl', m)
-    if (!this.transformControl) this.createTransformControl()
-    this.transformControl.attach(m)
-  }
-
   canTransformControl(m){
-    this._canTransformControlIntersect.push(m)
-
-    if(!this._attachTransformOnClickEnabled) { //add the click listener only once
-      console.log('attachTransformOnClick')
-      this._attachTransformOnClick()
-      this._attachTransformOnClickEnabled = true
+    if(!this.canTransform){
+      this.canTransform = new CanTransformControlWebGlApp(this.camera, this.scene, this.renderer, this.orbitControls)
+      this.initClickEvent(this.canTransform.onClick.bind(this.canTransform)) //FIXME dirty?
     }
-  }
-
-  _attachTransformOnClick() {
-    var raycaster = new THREE.Raycaster()
-    this.initClickEvent((mouse) => {
-      raycaster.setFromCamera(mouse, this.camera)
-      var intersects = raycaster.intersectObjects(this._canTransformControlIntersect, true)
-      console.log(intersects)
-      intersects.some(intersect => {
-        //FIXME quickfix to match group, should add something if is animatione
-        var m = intersect.object.parent instanceof THREE.Group ? intersect.object.parent : intersect.object
-        this.attachTransformControl(m)
-        return true
-      })
-    })
+    this.canTransform.canTransformControlAdd(m)
   }
 }
 
-function prettyPrint(object) {
-  if (object instanceof THREE.Vector3)
-    return '(' + [object.x.toFixed(3), object.y.toFixed(3), object.z.toFixed(3)].join(',') + ')'
-  else if (object instanceof THREE.Euler) {
-    return '(' + [object.x.toFixed(2), object.y.toFixed(2), object.z.toFixed(2)].join(',') + ')'
-      + ' (' + [(object.x * RAD2DEG).toFixed(1), (object.y * RAD2DEG).toFixed(1), (object.z * RAD2DEG).toFixed(1)].join(',') + ')'
-  } else if (object instanceof THREE.Quaternion) {
-    return '(' + [object.x, object.y, object.z, object.w].join(',') + ')'
-  }
-}

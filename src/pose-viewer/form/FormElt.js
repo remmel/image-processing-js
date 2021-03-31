@@ -1,6 +1,6 @@
 import {css, html, LitElement} from 'lit-element'
 import {DATASET_TYPE} from "../datasetsloader/datasetsloader"
-import {} from './SelectElt'
+import './SelectElt'
 
 class FormElt extends LitElement {
     static get styles() {

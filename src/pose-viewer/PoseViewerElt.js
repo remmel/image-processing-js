@@ -1,6 +1,6 @@
 import {css, html, LitElement} from 'lit-element';
-import * as FormImportExportElt from './form/FormElt'
-import * as ImagePanelElt from './ImagePanelElt'
+import './form/FormElt'
+import './ImagePanelElt'
 import {Scene3d} from "./Scene3d";
 import {exportPoses, loadModel, loadPoses} from "./datasetsloader/datasetsloader";
 import PoseCylinder from "./PoseCylinder";
