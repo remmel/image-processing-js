@@ -1,7 +1,7 @@
 import {css, html, LitElement} from 'lit-element';
 import './form/FormElt'
 import './ImagePanelElt'
-import {Scene3d} from "./Scene3d";
+import {PoseWebGlApp} from "./PoseWebGlApp";
 import {exportPoses, loadModel, loadPoses} from "./datasetsloader/datasetsloader";
 import PoseCylinder from "./PoseCylinder";
 import {classMap} from "lit-html/directives/class-map";
@@ -93,7 +93,7 @@ export class PoseViewerElt extends LitElement {
 
     firstUpdated(_changedProperties) {
         let box = this.shadowRoot.getElementById('scene3d')
-        this.scene3d = new Scene3d(box)
+        this.scene3d = new PoseWebGlApp(box)
         this.scene3d.onClickSelectPose = this.selectPoseObj.bind(this)
 
         super.firstUpdated(_changedProperties)

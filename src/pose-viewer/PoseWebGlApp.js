@@ -4,14 +4,15 @@ import {createMeshPly} from './utils3d.js'
 import PoseCylinder from './PoseCylinder'
 import WebGlApp from '../WebGlApp'
 
-export class Scene3d {
+export class PoseWebGlApp {
     constructor(el) {
         this.webgl = new WebGlApp(el)
         this.meshPly = null
         this.groupPoses = new THREE.Group()
         this.webgl.scene.add(this.createFloor())
         this.webgl.scene.add(this.createLights())
-        this.webgl.initClickEvent(this.onClickCanvas.bind(this))
+        this.webgl.initClickEvent()
+        this.webgl.renderer.domElement.addEventListener('clickcanvas', e => this.onClickCanvas(e.detail))
         this.webgl.animate()
     }
 

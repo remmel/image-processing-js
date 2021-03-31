@@ -41,9 +41,9 @@ export class CanTransformControlWebGlApp {
     })
   }
 
-  onClick(mouse) {
+  onClick(coords) {
     var raycaster = new THREE.Raycaster()
-    raycaster.setFromCamera(mouse, this.camera)
+    raycaster.setFromCamera(coords, this.camera)
     var intersects = raycaster.intersectObjects(this._canTransformControlIntersect, true)
     console.log(intersects)
     intersects.some(intersect => {

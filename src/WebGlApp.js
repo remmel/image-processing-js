@@ -81,30 +81,27 @@ export default class WebGlApp {
     return cube
   }
 
-  initClickEvent(onClickCb) {
-    var canvas = this.renderer.domElement
+  initClickEvent() {
+    var canvasEl = this.renderer.domElement
 
     var lastpointerdown = null
-    canvas.addEventListener('pointerdown', e => lastpointerdown = new Date())
-    canvas.addEventListener('pointerup', e => {
+    canvasEl.addEventListener('pointerdown', e => lastpointerdown = new Date())
+    canvasEl.addEventListener('pointerup', e => {
       if (new Date() - lastpointerdown < 150) //short click only
-        this._onClickXY(e.clientX, e.clientY, onClickCb)
+        this._dispatchClickEvent(e.clientX, e.clientY)
     })
 
-    canvas.addEventListener('touchstart', e => {
+    canvasEl.addEventListener('touchstart', e => {
       if (!e.touches.length) return
-      this._onClickXY(e.touches[0].pageX, e.touches[0].pageY, onClickCb)
+      this._dispatchClickEvent(e.touches[0].pageX, e.touches[0].pageY)
     })
   }
 
-  _onClickXY(xpx, ypx, onClickCb) {
-    console.log('clicked', xpx, ypx)
-    // calculate mouse position in normalized device coordinates
-    // (-1 to +1) for both components
+  _dispatchClickEvent(xpx, ypx) {
     var mouse = new THREE.Vector2()
     mouse.x = (xpx / this.el.clientWidth) * 2 - 1
     mouse.y = -(ypx / this.el.clientHeight) * 2 + 1
-    onClickCb(mouse)
+    this.renderer.domElement.dispatchEvent(new CustomEvent('clickcanvas', { 'detail': mouse }))
   }
 
   /**
@@ -122,7 +119,8 @@ export default class WebGlApp {
   canTransformControl(m){
     if(!this.canTransform){
       this.canTransform = new CanTransformControlWebGlApp(this.camera, this.scene, this.renderer, this.orbitControls)
-      this.initClickEvent(this.canTransform.onClick.bind(this.canTransform)) //FIXME dirty?
+      this.initClickEvent()
+      this.renderer.domElement.addEventListener('clickcanvas', e => this.canTransform.onClick(e.detail))
     }
     this.canTransform.canTransformControlAdd(m)
   }
