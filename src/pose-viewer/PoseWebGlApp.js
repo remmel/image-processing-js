@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import {DATASET_TYPE} from './datasetsloader/datasetsloader.js'
-import {createMeshPly} from './utils3d.js'
+import { createFloor, createMeshPly } from './utils3d.js'
 import PoseCylinder from './PoseCylinder'
 import WebGlApp from '../WebGlApp'
 
@@ -13,6 +13,7 @@ export class PoseWebGlApp {
         this.webgl.scene.add(this.createLights())
         this.webgl.initClickEvent()
         this.webgl.renderer.domElement.addEventListener('clickcanvas', e => this.onClickCanvas(e.detail))
+        this.webgl.enableOrbitControls()
         this.webgl.animate()
     }
 
@@ -67,9 +68,7 @@ export class PoseWebGlApp {
     }
 
     createFloor() {
-        var geo = new THREE.PlaneBufferGeometry(5, 5, 8, 8)
-        var mat = new THREE.MeshBasicMaterial({color: 0x777777, side: THREE.DoubleSide})
-        return this.floor = new THREE.Mesh(geo, mat)
+        return this.floor = createFloor()
     }
 
     updateFloor(datasetType) {

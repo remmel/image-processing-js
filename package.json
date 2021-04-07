@@ -15,8 +15,8 @@
   "dependencies": {
     "fast-png": "^5.0.3",
     "lit-element": "^2.4.0",
-    "three": "^0.121.1",
-    "three-projected-material": "^2.0.1",
+    "three": "^0.127.0",
+    "three-projected-material": "^2.0.3",
     "x2js-fork": "^1.2.0"
   },
   "devDependencies": {

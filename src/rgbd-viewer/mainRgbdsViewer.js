@@ -8,11 +8,16 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
 import {loadObj} from './LoadersHelper'
 import {createPhoto360, createVideo360} from "./Sphere360";
 import {generateRgbdUrls, loadRgbdAnim} from "./RgbdAnimLoader";
+import { KINECT_INTRINSICS } from '../pose-viewer/datasetsloader/rgbdtum'
+import { exportGltf } from './ExporterHelper'
+import { createText } from './FontHelper'
+import { GameFps } from '../commons/fps/GameFps'
+import { cocinaObj, sp1 as sp1 } from '../commons/consts'
 
 //to add label GUI: https://threejs.org/examples/#webgl_instancing_performance
+//https://discourse.threejs.org/t/how-to-draw-3d-graphics-on-google-map/3796/4
 
-// var folder = 'dataset/2021-02-26_210438_speaking1'
-var sp1Folder = 'https://www.kustgame.com/ftp/2021-02-26_210438_speaking1'
+var sp1Folder = sp1.folder
 var sp1Euler = new Euler(-91/RAD2DEG, -103/RAD2DEG, 176/RAD2DEG)
 var sp1Pos = new Vector3(1.2, 1.4, 0)
 var sp1UrlDepth = sp1Folder + '/00000601_depth16.bin', sp1UrlRgb = sp1Folder + '/00000601_image.jpg'
@@ -27,14 +32,35 @@ var params = {}
 export async function initRgbdsViewer() {
   webglApp = new WebGlApp()
 
+  var size = 40
+  webglApp.scene.add(new THREE.GridHelper(size, size))
 
-  var folderCloseup = 'https://www.kustgame.com/ftp/closeup'
-  loadDepth16BinMeshTexture(folderCloseup + '/00000294_depth16.bin', folderCloseup + '/00000294_image.jpg').then(m => {
-    webglApp.scene.add(m)
-    m.setRotationFromEuler(new Euler(1.25,1.33,-2.86))
-    m.position.copy(new Vector3(-0.153,1.600,0.006))
-    webglApp.canTransformControl(m)
-  })
+  var gltf = await (new GLTFLoader()).loadAsync('./rgbd-viewer/collision-world.glb')
+  // debugger
+  webglApp.scene.add(gltf.scene)
+
+  // webglApp.controls = new PlayerFPSControls(webglApp.camera, webglApp.renderer.domElement, webglApp.scene)
+  var gameFps = new GameFps(webglApp.camera, webglApp.renderer.domElement)
+  webglApp.animateAdd(delta => gameFps.update(delta))
+  gameFps.canCollide(gltf.scene)
+
+  {
+    var geo = new THREE.PlaneBufferGeometry(5, 5, 8, 8)
+    var mat = new THREE.MeshBasicMaterial({ color: 0x777777 })
+    var floor = new THREE.Mesh(geo, mat)
+    floor.rotation.x = -Math.PI / 2
+    webglApp.scene.add(floor)
+    gameFps.canCollide(floor)
+  }
+
+
+  // var folderCloseup = 'https://www.kustgame.com/ftp/closeup'
+  // loadDepth16BinMeshTexture(folderCloseup + '/00000294_depth16.bin', folderCloseup + '/00000294_image.jpg').then(m => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(new Euler(1.25,1.33,-2.86))
+  //   m.position.copy(new Vector3(-0.153,1.600,0.006))
+  //   webglApp.canTransformControl(m)
+  // })
 
   // var folderTum = 'rgbd-viewer/tum'
   // loadTumPng(folderTum + "/1305031464.115837.png", folderTum + "/1305031464.127681.png").then(m=> {
@@ -44,45 +70,85 @@ export async function initRgbdsViewer() {
   //   webglApp.scene.add(m)
   // })
 
-  // loadDepth16BinMeshTexture(folderKinect + "/00000021_depth.png", folderKinect + "/00000021_image-0.jpg", KINECT_INTRINSICS).then(m => {
+  var folderKinectVsHonor = "dataset/kinect/closeup_kinectvshonor20view/"
+  loadDepth16BinMeshTexture(folderKinectVsHonor + "/00000019_depth.png", folderKinectVsHonor + "/00000019_image.jpg", KINECT_INTRINSICS).then(m => {
+    webglApp.scene.add(m)
+    // m.rotateX(180/RAD2DEG)
+    // m.position.y = 1.5
+    m.position.copy(new Vector3(-0.356,1.500,0.399))
+    m.setRotationFromEuler(new Euler(3.14,0.00,0.00))
+    // webglApp.canTransformControl(m)
+
+    // setTimeout(() => exportGltf(webglApp.scene), 2000)
+  })
+  var txtKinect = await createText('Kinect 360')
+  txtKinect.position.copy(new Vector3(-0.729,1.043,-0.308))
+  webglApp.scene.add(txtKinect)
+  // webglApp.canTransformControl(txtKinect)
+
+
+  loadDepth16BinMeshTexture(folderKinectVsHonor + "/00001254_depth16.bin", folderKinectVsHonor + "/00001254_image.jpg").then(m => {
+    webglApp.scene.add(m)
+    // m.rotateX(180/RAD2DEG)
+    // m.position.y = 1.5
+    m.position.copy(new Vector3(-0.468,1.408,-0.123))
+    m.setRotationFromEuler(new Euler(-0.09,1.36,-1.53))
+    // webglApp.canTransformControl(m)
+
+    // setTimeout(() => exportGltf(webglApp.scene), 2000)
+  })
+
+  var txtHonor = await createText('Honor View 20')
+  txtHonor.position.copy(new Vector3(0.000,1.056,-0.341))
+  txtHonor.setRotationFromEuler(new Euler(1.49,-1.55,1.49))
+  webglApp.scene.add(txtHonor)
+  // webglApp.canTransformControl(txtHonor)
+
+
+  // loadObj(cocinaObj.obj, cocinaObj.mtl, e => console.log(e)).then(m => {
+  //   m.scale.set(0.157, 0.157, 0.157)
+  //   m.rotation.x = 15 * 3.14 / 180
+  //   m.position.y = 1.69
+  //
+  //   //     m.position.copy(new Vector3(0,1.7,0))
+  //   //     m.setRotationFromEuler(new Euler(0.25,0.00,0.01))
   //   webglApp.scene.add(m)
-  //   m.rotateX(180/RAD2DEG)
-  //   m.position.y = 1.5
-  //   webglApp.canTransformControl(m)
   // })
 
-  loadDepth16BinPointsResize(sp1UrlDepth, sp1UrlRgb).then(m => {
-    webglApp.scene.add(m)
-    m.setRotationFromEuler(sp1Euler)
-    m.position.copy(sp1Pos)
-    m.position.z += 4
-    webglApp.canTransformControl(m)
-  })
 
-  loadDepth16BinMesh(sp1UrlDepth, sp1UrlRgb).then(m => {
-    webglApp.scene.add(m)
-    m.setRotationFromEuler(sp1Euler)
-    m.position.copy(sp1Pos)
-    m.position.z += -2
-    webglApp.canTransformControl(m)
-  })
 
-  loadDepth16BinMeshTexture(sp1UrlDepth, sp1UrlRgb).then(m => {
-    webglApp.scene.add(m)
-    m.setRotationFromEuler(sp1Euler)
-    m.position.copy(sp1Pos)
-    m.position.z += 2
-    webglApp.canTransformControl(m)
-  })
-
-  loadObj(
-    '/rgbd-viewer/cubeWithTexture/cube.obj',
-    '/rgbd-viewer/cubeWithTexture/cubetxt.mtl')
-    .then(m => {
-      m.scale.set(0.2,0.2,0.2)
-      webglApp.scene.add(m)
-      webglApp.canTransformControl(m)
-    })
+  // loadDepth16BinPointsResize(sp1UrlDepth, sp1UrlRgb).then(m => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(sp1Euler)
+  //   m.position.copy(sp1Pos)
+  //   m.position.z += 4
+  //   webglApp.canTransformControl(m)
+  // })
+  //
+  // loadDepth16BinMesh(sp1UrlDepth, sp1UrlRgb).then(m => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(sp1Euler)
+  //   m.position.copy(sp1Pos)
+  //   m.position.z += -2
+  //   webglApp.canTransformControl(m)
+  // })
+  //
+  // loadDepth16BinMeshTexture(sp1UrlDepth, sp1UrlRgb).then(m => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(sp1Euler)
+  //   m.position.copy(sp1Pos)
+  //   m.position.z += 2
+  //   webglApp.canTransformControl(m)
+  // })
+  //
+  // loadObj(
+  //   '/rgbd-viewer/cubeWithTexture/cube.obj',
+  //   '/rgbd-viewer/cubeWithTexture/cubetxt.mtl')
+  //   .then(m => {
+  //     m.scale.set(0.2,0.2,0.2)
+  //     webglApp.scene.add(m)
+  //     webglApp.canTransformControl(m)
+  //   })
 
   // var urls = generateRgbdUrls(folderDance, 3738, 3771)
   // var onProgress = (percent) => params.plys_loading = Math.round(percent * 100)
@@ -94,26 +160,26 @@ export async function initRgbdsViewer() {
   //   webglApp.canTransformControl(m)
   // })
 
-  var urls = generateRgbdUrls('https://www.kustgame.com/ftp/2021-02-26_210438_speaking1', 512, 601)
-  loadRgbdAnim(urls).then(({ m, animateCb }) => {
-    webglApp.scene.add(m)
-    m.setRotationFromEuler(new Euler(1.95,-1.36,0.31))
-    m.position.copy(new Vector3(1.111,1.329,0.113))
-    webglApp.animateAdd(animateCb)
-    webglApp.canTransformControl(m)
-  })
+  // var urls = generateRgbdUrls(sp1.folder, 512, 601)
+  // loadRgbdAnim(urls).then(({ m, animateCb }) => {
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(new Euler(1.95,-1.36,0.31))
+  //   m.position.copy(new Vector3(1.111,1.329,0.113))
+  //   webglApp.animateAdd(animateCb)
+  //   webglApp.canTransformControl(m)
+  // })
 
-  {
-   var mesh = createPhoto360('https://www.kustgame.com/ftp/photovid360/PIC_20210318_180917.jpg')
-    webglApp.scene.add( mesh )
-  }
+  // {
+  //  var mesh = createPhoto360('https://www.kustgame.com/ftp/photovid360/PIC_20210318_180917.jpg')
+  //   webglApp.scene.add( mesh )
+  // }
 
-  webglApp.scene.add(createFloor())
+  // webglApp.scene.add(createFloor())
   webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
 
   webglApp.animate()
 
-  createGUI()
+  // createGUI()
 }
 
 function createGUI() {
@@ -186,6 +252,7 @@ function createFloor() {
 
 export async function initPhoto360() {
   webglApp = new WebGlApp()
+  webglApp.enableOrbitControls()
 
   var mesh = createPhoto360('https://www.kustgame.com/ftp/photovid360/PIC_20201231_205333.jpg')
   webglApp.scene.add(mesh)
@@ -195,6 +262,7 @@ export async function initPhoto360() {
 
 export async function initVideo360() {
   webglApp = new WebGlApp()
+  webglApp.enableOrbitControls()
 
   var mesh = createVideo360("https://www.kustgame.com/ftp/photovid360/PIC_20201231_205342.mp4")
   webglApp.scene.add(mesh)

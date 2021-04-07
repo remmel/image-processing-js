@@ -4,7 +4,8 @@ import * as THREE from "three";
 import {loadDepth16BinMeshTexture} from "./rgbd-viewer/RgbdLoader";
 import {loadRecorder3D} from "./pose-viewer/datasetsloader/recorder3d";
 import "./commons/PlayerControlsElt"
-
+import { sp1 } from './commons/consts'
+import { Vector3 } from 'three'
 
 export class Video3dElt extends LitElement {
     static get styles() {
@@ -29,7 +30,8 @@ export class Video3dElt extends LitElement {
     constructor() {
         super()
         var params = new URLSearchParams(window.location.search)
-        this.datasetFolder = params.get("datasetFolder")
+        var ds = params.get("datasetFolder")
+        this.datasetFolder = ds ? ds : sp1.folder
     }
 
     render() {
@@ -42,16 +44,14 @@ export class Video3dElt extends LitElement {
                                      @select='${this.selectEvent}"'>
                 </player-controls-elt>
             ` : ''}
-
         `
     }
 
     firstUpdated(_changedProperties) {
-        this.webGlApp = new WebGlApp(this.shadowRoot.getElementById('scene3d'))
-        this.webGlApp.animate()
-        this.webGlApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
-        // this.webGlApp.scene.add(this.createFloor())
-
+        var webgl = this.webGlApp = new WebGlApp(this.shadowRoot.getElementById('scene3d'))
+        webgl.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
+        webgl.enableOrbitControls(new Vector3(-1, 0, 0))
+        webgl.animate()
         this.loadPoses()
         super.firstUpdated(_changedProperties)
     }
@@ -63,7 +63,7 @@ export class Video3dElt extends LitElement {
         var p = poses[0]
         this.group.setRotationFromQuaternion(p.rotation)
         this.webGlApp.scene.add(this.group)
-        this.webGlApp.canTransformControlAdd(this.group)
+        // this.webGlApp.canTransformControl(this.group)
 
         if (poses.length === 0) return
         var frames = [];

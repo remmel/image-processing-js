@@ -6,7 +6,8 @@ module.exports = {
     'pose-viewer': './src/pose-viewer/PoseViewerElt.js',
     'rgbd-viewer': './src/rgbd-viewer/main.js',
     'raymarching': './src/raymarching/main.js',
-    'video3d-editor': './src/Video3dElt.js'
+    'video3d-editor': './src/Video3dElt.js',
+    'marker': './src/marker/main.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

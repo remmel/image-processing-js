@@ -44,6 +44,13 @@ export function createSphere(radius, color) {
     )
 }
 
+export function createFloor(size) {
+    // size = size || 5
+    var geo = new THREE.PlaneBufferGeometry(5, 5, 8, 8)
+    var mat = new THREE.MeshBasicMaterial({ color: 0x777777, side: THREE.DoubleSide })
+    return new THREE.Mesh(geo, mat)
+}
+
 export const Color = {
     Blue: 0x0000ff,
     Red: 0xff0000,

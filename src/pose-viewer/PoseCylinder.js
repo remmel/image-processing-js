@@ -5,7 +5,8 @@ import PerspectiveCamera from './PerpectiveCamera'
 import ProjectedMaterial from 'three-projected-material'
 import { RAD2DEG } from './utils3d'
 
-var cylinderDefaultMat = new THREE.MeshPhongMaterial({ color: 0x999999, vertexColors: THREE.FaceColors, flatShading: true })
+//TODO put back the top face in another color, as code was not compatible with Threejs 127
+var cylinderDefaultMat = new THREE.MeshPhongMaterial({ color: 0x999999, flatShading: true })
 var cylinderRedMat = new THREE.MeshPhongMaterial({ color: 0xff0000, flatShading: true })
 
 /**
@@ -20,9 +21,9 @@ export default class PoseCylinder extends THREE.Mesh {
     geometry.applyMatrix4(new THREE.Matrix4().makeScale(1, 0.75, 1)) //rectangular base
     if (datasetType === DATASET_TYPE.LUBOS) {
       geometry.rotateZ(90/RAD2DEG) //pictures are in portrait not landscape
-      geometry.faces[3].color.setHex(0xffff00)
+      // geometry.faces[3].color.setHex(0xffff00)
     } else {
-      geometry.faces[2].color.setHex(0xffff00)
+      // geometry.faces[2].color.setHex(0xffff00) (material was with: vertexColors: THREE.FaceColors)
     }
 
     super(geometry, cylinderDefaultMat)

@@ -3,6 +3,7 @@ import WebGlApp from '../WebGlApp'
 import * as THREE from 'three'
 import {Euler, Vector3} from 'three'
 import {generateRgbdUrls, loadRgbdAnim} from './RgbdAnimLoader'
+import { cocinaObj, coucoustool } from '../commons/consts'
 
 export async function initVr() {
     var webglApp
@@ -21,19 +22,17 @@ export async function initVr() {
             elLoadingAnim.innerText = percentage === 1 ? "Loaded" : "Loading anim " + Math.round(percentage * 100) + "%"
         }
 
-        loadObj(
-            'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.obj',
-            'https://www.kustgame.com/ftp/cocina/depthmaps-lowlowalignhighest.mtl', cbLoading)
-            .then(m => {
-                m.scale.set(0.157, 0.157, 0.157)
-                m.rotation.x = 15 * 3.14 / 180
-                m.position.y = 1.69
-                //     m.position.copy(new Vector3(0,1.7,0))
-                //     m.setRotationFromEuler(new Euler(0.25,0.00,0.01))
-                webglApp.scene.add(m)
-            })
+        loadObj(cocinaObj.obj, cocinaObj.mtl, cbLoading)
+          .then(m => {
+              m.scale.set(0.157, 0.157, 0.157)
+              m.rotation.x = 15 * 3.14 / 180
+              m.position.y = 1.69
+              //     m.position.copy(new Vector3(0,1.7,0))
+              //     m.setRotationFromEuler(new Euler(0.25,0.00,0.01))
+              webglApp.scene.add(m)
+          })
 
-        var urls = generateRgbdUrls('https://www.kustgame.com/ftp/2021-03-09_205622_coucoustool', 1472, 1550)
+        var urls = generateRgbdUrls(coucoustool.folder, 1472, 1550)
         loadRgbdAnim(urls, cbLoadingAnim).then(({m, animateCb}) => {
             webglApp.scene.add(m)
             m.setRotationFromEuler(new Euler(2.42, 0.64, 2.12))
@@ -62,6 +61,8 @@ export async function initVr() {
     async function init() {
         webglApp = new WebGlApp(document.body)
         webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1))
+        webglApp.enableOrbitControls()
+        webglApp.enableVr()
 
         webglApp.animate()
 

@@ -1,12 +1,8 @@
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js'
-import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
-import { RAD2DEG } from './pose-viewer/utils3d'
-import {TrackballControls} from "three/examples/jsm/controls/TrackballControls";
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
-import { PlayerFPS } from './PlayerFPS'
 import { CanTransformControlWebGlApp } from './CanTransformControlWebGlApp'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { Vector3 } from 'three'
 
 
 /**
@@ -20,7 +16,6 @@ export default class WebGlApp {
     this.scene = new THREE.Scene()
     this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 0.01, 1000)
     // this.camera = new THREE.OrthographicCamera()
-    this.camera.position.set(2, 2, 2)
 
     this.scene.background = new THREE.Color(0xcccccc)
 
@@ -32,12 +27,10 @@ export default class WebGlApp {
     this.scene.add(new THREE.AxesHelper(1))
     window.addEventListener('resize', () => this._onWindowResize(), false)
 
-    this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement)
-    // var player = new PlayerFPS(this.camera, this.renderer.domElement, this.scene)
-
-    this.enableVr()
-
     this.animateCallbacks = []
+
+    // this.enableVr()
+    // this.enableOrbitControls()
   }
 
   _onWindowResize() {
@@ -47,9 +40,10 @@ export default class WebGlApp {
   }
 
   animate() {
+    const clock = new THREE.Clock()
     this.renderer.setAnimationLoop(() => {
-      if (this.orbitControls) this.orbitControls.update()
-      this.animateCallbacks.forEach(animateCallback => animateCallback())
+      const delta = clock.getDelta()
+      this.animateCallbacks.forEach(animateCallback => animateCallback(delta))
       this.renderer.render(this.scene, this.camera)
     })
   }
@@ -102,6 +96,15 @@ export default class WebGlApp {
     mouse.x = (xpx / this.el.clientWidth) * 2 - 1
     mouse.y = -(ypx / this.el.clientHeight) * 2 + 1
     this.renderer.domElement.dispatchEvent(new CustomEvent('clickcanvas', { 'detail': mouse }))
+  }
+
+  /**
+   * @param {Vector3} v3 : initial camera position
+   */
+  enableOrbitControls(v3) {
+    this.camera.position.copy(v3 ? v3 : new Vector3(1.5, 1.5, 1.5))
+    this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement)
+    this.animateAdd(() => this.orbitControls.update())
   }
 
   /**

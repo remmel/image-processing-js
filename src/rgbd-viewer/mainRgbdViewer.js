@@ -1,14 +1,18 @@
 import { loadObj, loadPCD, loadPLYMesh, loadPLYPoints, loadPLYs } from './LoadersHelper'
 import { convertGrayscale } from './opencvtest'
-import { loadDepth16BinPointsResize, loadTumPng } from './RgbdLoader.js'
+import { loadDepth16BinMeshTexture, loadDepth16BinPointsResize, loadTumPng } from './RgbdLoader.js'
 import { RAD2DEG } from '../pose-viewer/utils3d'
-import { Quaternion } from 'three'
+import { Euler, Quaternion, Vector3 } from 'three'
 import WebGlApp from '../WebGlApp'
+import * as THREE from 'three'
+import { closeup } from '../commons/consts'
 
 export async function initRgbdViewer() {
   convertGrayscale('original', 'grayscale')
 
   var webglApp = new WebGlApp(document.body)
+  webglApp.enableOrbitControls()
+  webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
   webglApp.animate()
 
   {
@@ -42,6 +46,14 @@ export async function initRgbdViewer() {
     m.rotateY(180 / RAD2DEG) //to avoid having it mixed with the other points cloud
     webglApp.scene.add(m)
   }
+
+  var folderCloseup = closeup.folder
+  loadDepth16BinMeshTexture(folderCloseup + '/00000294_depth16.bin', folderCloseup + '/00000294_image.jpg').then(m => {
+    webglApp.scene.add(m)
+    m.setRotationFromEuler(new Euler(1.25,1.33,-2.86))
+    m.position.copy(new Vector3(-0.153,1.600,0.006))
+    webglApp.canTransformControl(m)
+  })
 
   var zoom = document.getElementById('zoom')
   Object.values(document.querySelectorAll('.gui canvas')).forEach(item => {
