@@ -6,7 +6,6 @@ import {GUI} from 'three/examples/jsm/libs/dat.gui.module'
 import {RAD2DEG} from '../pose-viewer/utils3d'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
 import {loadObj} from './LoadersHelper'
-import {createPhoto360, createVideo360} from "./Sphere360";
 import {generateRgbdUrls, loadRgbdAnim} from "./RgbdAnimLoader";
 import { KINECT_INTRINSICS } from '../pose-viewer/datasetsloader/rgbdtum'
 import { exportGltf } from './ExporterHelper'
@@ -29,7 +28,7 @@ var folderKinect = 'dataset/kinect'
 var webglApp
 var params = {}
 
-export async function initRgbdsViewer() {
+export async function initFpsViewer() {
   webglApp = new WebGlApp()
 
   var size = 40
@@ -239,33 +238,4 @@ async function addCubeWithTexture() {
     .then(m => {
       webglApp.scene.add(m)
     })
-}
-
-
-function createFloor() {
-  var geo = new THREE.PlaneBufferGeometry(3, 3)
-  var mat = new THREE.MeshBasicMaterial({ color: 0x777777, side: THREE.DoubleSide })
-  var plane = new THREE.Mesh(geo, mat)
-  plane.rotation.x = 90/RAD2DEG
-  return plane
-}
-
-export async function initPhoto360() {
-  webglApp = new WebGlApp()
-  webglApp.enableOrbitControls()
-
-  var mesh = createPhoto360('https://www.kustgame.com/ftp/photovid360/PIC_20201231_205333.jpg')
-  webglApp.scene.add(mesh)
-
-  webglApp.animate()
-}
-
-export async function initVideo360() {
-  webglApp = new WebGlApp()
-  webglApp.enableOrbitControls()
-
-  var mesh = createVideo360("https://www.kustgame.com/ftp/photovid360/PIC_20201231_205342.mp4")
-  webglApp.scene.add(mesh)
-
-  webglApp.animate()
 }
