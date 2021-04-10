@@ -68,7 +68,7 @@ export class PoseViewerElt extends LitElement {
         this.poses = []
         this.curPose = null
         this.scene3d = null
-        this.displayInfoText = true
+        this.displayInfoText = false
     }
 
     render() {

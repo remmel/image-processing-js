@@ -8,7 +8,8 @@ export function fillSelect($selectElement, values) {
 // popup the browse file window, TODO inject input file in dom here
 export function browseFile() {
     return new Promise((resolve, reject) => {
-        var $file = document.querySelector("input[name=file]");
+        var $file = document.createElement("input");
+        $file.type = "file";
         $file.addEventListener('change', e => {
             const reader = new FileReader()
             reader.onload = pe => resolve(pe.target.result);

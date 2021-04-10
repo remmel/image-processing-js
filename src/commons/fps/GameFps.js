@@ -72,7 +72,7 @@ export class GameFps {
   }
 
   _controls(deltaTime) {
-    const speed = 25
+    const speed = 5
     if (this.playerOnFloor) {
       if (this.gamecontrols.forwardPressed)
         this.playerVelocity.add(this._getForwardVector().multiplyScalar(speed * deltaTime))

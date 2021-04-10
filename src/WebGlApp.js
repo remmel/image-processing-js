@@ -1,8 +1,8 @@
 import * as THREE from 'three'
+import { Vector3 } from 'three'
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js'
 import { CanTransformControlWebGlApp } from './CanTransformControlWebGlApp'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { Vector3 } from 'three'
+import { OrbitControlsPlus } from './commons/OrbitControlsPlus'
 
 
 /**
@@ -23,6 +23,9 @@ export default class WebGlApp {
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(el.clientWidth, el.clientHeight)
     el.appendChild(this.renderer.domElement)
+
+    // this.renderer.gammaOutput = true
+    // this.renderer.gammaFactor = 2.2
 
     this.scene.add(new THREE.AxesHelper(1))
     window.addEventListener('resize', () => this._onWindowResize(), false)
@@ -103,8 +106,9 @@ export default class WebGlApp {
    */
   enableOrbitControls(v3) {
     this.camera.position.copy(v3 ? v3 : new Vector3(1.5, 1.5, 1.5))
-    this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.animateAdd(() => this.orbitControls.update())
+    this.orbitControls = new OrbitControlsPlus(this.camera, this.renderer.domElement)
+    this.animateAdd((delta) => this.orbitControls.update(delta))
+    this.scene.add(this.orbitControls.sphere)
   }
 
   /**

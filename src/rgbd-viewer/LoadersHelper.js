@@ -5,6 +5,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { readAsDataURL, readAsText } from '../pose-viewer/form/formUtils'
+import { MeshBasicMaterial, MeshPhongMaterial, TextureLoader } from 'three'
 
 /**
  * Returns ply Object3D as Points
@@ -54,7 +55,7 @@ export async function loadObj(objFn, mtlFn, onProgress) {
   var group = await new OBJLoader()
     .setMaterials(materials)
     .loadAsync(objFn, (e) => onProgress(e.loaded / e.total * 0.95))
-  group.children[0].material.flatShading = true //hum... smooth
+  // group.children[0].material.flatShading = true //hum... smooth
   onProgress(1)
   return group
 }
@@ -94,12 +95,19 @@ export async function loadObjFiles(fileList) {
       }
     })
   }
-
-
   return group
 }
 
 export async function loadGltf(url) {
   const data = await new GLTFLoader().loadAsync(url)
-  return data.scene.children[0]
+
+  data.scene.children.forEach(m => {
+    if (m.material && m.material.map && m.material.map.encoding)
+      m.material.map.encoding = THREE.LinearEncoding
+
+    //m.material = new THREE.MeshBasicMaterial({map: m.material.map})
+    // m.material.flatShading = true
+    // m.material.needsUpdate = true
+  })
+  return data.scene
 }

@@ -19,7 +19,6 @@ export class CanTransformControlWebGlApp {
     })
 
     window.addEventListener('keydown', event => {
-      console.log(event)
       switch (event.key.toLowerCase()) {
         case 'w':
           control.setSpace(control.space === 'local' ? 'world' : 'local')
@@ -57,7 +56,7 @@ export class CanTransformControlWebGlApp {
   // control that mesh
   attachTransformControl(m) {
     if (!this.orbitControls.enabled) return
-    console.log('attachTransformControl', m)
+    console.log('attachTransformControl', m, 'W: local/world coordinate; T: translate; R: rotate; S: scale; Espace: translation and rotation info')
     this.transformControl.attach(m)
   }
 
