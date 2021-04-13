@@ -8,7 +8,7 @@
     "start": "webpack-dev-server --mode development",
     "format": "prettier --write '**/*.js'",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist --no-history"
   },
   "author": "",
   "license": "MIT",
