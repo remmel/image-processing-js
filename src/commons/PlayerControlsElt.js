@@ -63,7 +63,8 @@ class PlayerControlsElt extends LitElement {
                 idx: this.idx,
                 done: () => {
                     if(isPlaying && this.isPlaying) {
-                        setTimeout(() => this.isPlaying && this.selectFrame(this.idx+1, true), 200 - ((new Date) - time))
+                        setTimeout(() => this.isPlaying && this.selectFrame(this.idx+1, true), 125 - ((new Date) - time))
+                        //usually the we never have to wait more, as the loading time is already ~200ms
                     }
                 }
             }

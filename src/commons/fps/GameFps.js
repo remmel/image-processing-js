@@ -11,7 +11,7 @@ const GRAVITY = 30
 export class GameFps {
   constructor(camera, domElement) {
     this.worldOctree = new Octree()
-    this.playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1.5, 0), 0.35)
+    this.playerCollider = new Capsule(new THREE.Vector3(0, 0.35, 0), new THREE.Vector3(0, 1.70, 0), 0.35)
     this.playerVelocity = new THREE.Vector3()
     this.playerDirection = new THREE.Vector3()
     this.playerOnFloor = false

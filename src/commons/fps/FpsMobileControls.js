@@ -10,11 +10,20 @@ export var blockerHtml = `
 `
 
 var btnHtml = `
+<style>
+  .btn.compass{
+    filter: grayscale(100%);
+  }
+  .btn.compass[data-enabled="true"] {
+    filter: none
+  }
+</style>
 <div style='
   font-size: 30px;
   position: absolute;
   user-select: none;
-  top: 10px;
+  top: 5px;
+  left: 5px;
   ' class='btn compass'>🧭</div>
 <div style='
     font-size: 40px;
@@ -76,7 +85,7 @@ export class FpsMobileControls {
 
     btns.addEventListener('touchstart', this.onTouchStartPosition.bind(this), false)
     btns.addEventListener('touchend', this.onTouchEndPosition.bind(this), false)
-    this.elBtnCompass.addEventListener('click', () => this.dvcOrieControls.enabled = !this.dvcOrieControls.enabled, false)
+    this.elBtnCompass.addEventListener('click', this.onCompassClick.bind(this), false)
   }
 
   initBlocker() {
@@ -123,7 +132,6 @@ export class FpsMobileControls {
 
   // touch position events
   onTouchStartPosition(event) {
-    console.log("onTouchStartPosition", event)
     if (event.target === this.elBtnForward) { //or this.isTouchBtn(event.targetTouches[0], this.btnForward)
       this.forwardPressed = true
     } else if (event.target === this.elBtnBackward) {
@@ -133,6 +141,10 @@ export class FpsMobileControls {
 
   onTouchEndPosition(event) {
     this.forwardPressed = this.backwardPressed = false
+  }
+
+  onCompassClick(e) {
+    this.elBtnCompass.dataset.enabled = this.dvcOrieControls.enabled = !this.dvcOrieControls.enabled
   }
 
   // isTouchBtn(touch, btn) {

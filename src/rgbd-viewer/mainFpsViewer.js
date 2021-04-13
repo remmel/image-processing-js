@@ -1,18 +1,13 @@
 import * as THREE from 'three'
-import { Color, Euler, Group, Vector3 } from 'three'
+import { Euler, Vector3 } from 'three'
 import WebGlApp from '../WebGlApp'
-import {loadDepth16BinMesh, loadDepth16BinMeshTexture, loadDepth16BinPointsResize,} from './RgbdLoader'
-import {GUI} from 'three/examples/jsm/libs/dat.gui.module'
-import {RAD2DEG} from '../pose-viewer/utils3d'
-import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader'
-import { loadGltf, loadObj } from './LoadersHelper'
-import {generateRgbdUrls, loadRgbdAnim} from "./RgbdAnimLoader";
-import { KINECT_INTRINSICS } from '../pose-viewer/datasetsloader/rgbdtum'
-import { exportGltf } from './ExporterHelper'
-import { createText } from './FontHelper'
+import { loadDepth16BinMeshTexture, loadDepth16BinPointsResize } from './RgbdLoader'
+import { RAD2DEG } from '../pose-viewer/utils3d'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { loadObj } from './LoadersHelper'
 import { GameFps } from '../commons/fps/GameFps'
-import { cocinaObj, sp1 as sp1 } from '../commons/consts'
-import { createPhoto360 } from './Sphere360'
+import { loadSceneCocina, loadSceneApartof, sp1 as sp1 } from '../commons/demoscenes'
+import { addElement } from '../commons/domUtils'
 
 //to add label GUI: https://threejs.org/examples/#webgl_instancing_performance
 //https://discourse.threejs.org/t/how-to-draw-3d-graphics-on-google-map/3796/4
@@ -29,32 +24,61 @@ var folderKinect = 'dataset/kinect'
 var webglApp
 var params = {}
 
+var loadingHtml = `
+  <span style='position: absolute;
+    text-align: center;
+    top: 10px;
+    width: 100%;
+    user-select: none;'>
+      Loading...
+  </span>
+`
+
+var scenesHtml = `
+  <div style='position: absolute;
+    top: 5px; 
+    right: 5px;'>
+      <select onchange='document.location="?scene="+this.value'>
+          <option>- Scene -</option>
+          <option>apartof</option>
+          <option>cocina</option>
+      </select>
+  </div>
+`
+
 export async function initFpsViewer() {
   webglApp = new WebGlApp()
+  var gameFps = null //dumb gameFps
 
+  var elLoading = addElement(loadingHtml)
 
-  // var gltf = await (new GLTFLoader()).loadAsync('./rgbd-viewer/collision-world.glb')
-  // // debugger
-  // webglApp.scene.add(gltf.scene)
-
-  var gameFps = null
-  if(isEditorMode()) {
-    gameFps = {canCollide: () => {}}
-    webglApp.enableOrbitControls()
-    webglApp.scene.add(new THREE.GridHelper(20, 20))
-  } else {
-    gameFps = new GameFps(webglApp.camera, webglApp.renderer.domElement)
-    webglApp.animateAdd(delta => gameFps.update(delta))
+  /** @param percentage {Number} : float between 0-1 included */
+  function onProgress(percentage) {
+    elLoading.innerText = percentage === 1 ? '' : 'Loading ' + Math.round(percentage * 100) + '%'
   }
 
-  {
-    var geo = new THREE.PlaneBufferGeometry(5, 5, 8, 8)
-    var mat = new THREE.MeshBasicMaterial({ color: 0x777777 })
-    var floor = new THREE.Mesh(geo, mat)
-    floor.rotation.x = -Math.PI / 2
-    floor.position.y = -0.1
-    webglApp.scene.add(floor)
-    gameFps.canCollide(floor)
+  var elScene = addElement(scenesHtml)
+
+  switch (getMode()) {
+    case MODE.FPS:
+      gameFps = new GameFps(webglApp.camera, webglApp.renderer.domElement)
+      webglApp.animateAdd(delta => gameFps.update(delta))
+      break
+    case MODE.EDITOR:
+      webglApp.enableOrbitControls()
+      webglApp.scene.add(new THREE.GridHelper(20, 20))
+      break
+    case MODE.VR:
+      webglApp.enableVr()
+  }
+
+  switch (getScene()) {
+    case "cocina":
+      loadSceneCocina(webglApp, gameFps, onProgress)
+      break
+    case "apartof":
+      loadSceneApartof(webglApp, gameFps, onProgress)
+      break
   }
 
 
@@ -129,30 +153,7 @@ export async function initFpsViewer() {
   // })
 
 
-  loadGltf(folder + '/glb/rework.gltf').then(g => {
-    var visibles = new Group()
-    var colliders = new Group()
 
-    var children = [...g.children] //must copy list, it seems that when adding in remove move in others
-
-    children.forEach(m => {
-      if (!m.name.startsWith('Plane')) {
-        visibles.add(m)
-      } else {//MeshStandardMaterial
-        colliders.add(m)
-        //create other side
-        // m.material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
-        var m2 = m.clone()
-        m2.rotateX(Math.PI)
-        // m2.material = new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-        colliders.add(m2)
-      }
-    })
-    webglApp.scene.add(visibles)
-    gameFps.canCollide(colliders)
-    webglApp.scene.add(colliders)
-    console.log('glb', g)
-  })
 
 
   // loadDepth16BinPointsResize(sp1UrlDepth, sp1UrlRgb).then(m => {
@@ -207,13 +208,6 @@ export async function initFpsViewer() {
   //   webglApp.canTransformControl(m)
   // })
 
-  {
-    var m = createPhoto360('dataset/CV60/PIC_20210318_181124.jpg')
-    m.setRotationFromEuler(new Euler(-0.36,1.45,0.25))
-    // webglApp.canTransformControl(m)
-    webglApp.scene.add(m)
-  }
-
   // webglApp.scene.add(createFloor())
   webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
 
@@ -257,7 +251,16 @@ async function addCubeWithTexture() {
     })
 }
 
+const MODE = {
+  FPS : "fps",
+  EDITOR: "editor",
+  VR: "vr"
+}
 
-function isEditorMode() {
-  return new URLSearchParams(window.location.search).get("editor") === ""
+function getMode() {
+  return new URLSearchParams(window.location.search).get("mode") || MODE.FPS
+}
+
+function getScene() {
+  return new URLSearchParams(window.location.search).get("scene") || "apartof"
 }

@@ -73,4 +73,12 @@ export class OrbitControlsPlus {
     this.orbitControls.target.add(diffPos) //move target = red shere
     this.orbitControls.object.position.add(diffPos) //move camera
   }
+
+  get enabled() {
+    return this.orbitControls.enabled
+  }
+
+  set enabled(val) {
+    this.orbitControls.enabled = val
+  }
 }

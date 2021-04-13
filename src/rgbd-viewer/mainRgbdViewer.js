@@ -5,7 +5,7 @@ import { RAD2DEG } from '../pose-viewer/utils3d'
 import { Euler, Quaternion, Vector3 } from 'three'
 import WebGlApp from '../WebGlApp'
 import * as THREE from 'three'
-import { closeup } from '../commons/consts'
+import { closeup } from '../commons/demoscenes'
 
 export async function initRgbdViewer() {
   convertGrayscale('original', 'grayscale')

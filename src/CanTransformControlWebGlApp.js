@@ -4,7 +4,7 @@ import { RAD2DEG } from './pose-viewer/utils3d'
 
 export class CanTransformControlWebGlApp {
   //when contructed, we will really need it
-  constructor(camera, scene, renderer, orbitControls, webappgl) {
+  constructor(camera, scene, renderer, orbitControls) {
     this.camera = camera
     this.renderer = renderer
     this.scene = scene
@@ -44,7 +44,6 @@ export class CanTransformControlWebGlApp {
     var raycaster = new THREE.Raycaster()
     raycaster.setFromCamera(coords, this.camera)
     var intersects = raycaster.intersectObjects(this._canTransformControlIntersect, true)
-    console.log(intersects)
     intersects.some(intersect => {
       //FIXME quickfix to match group, should add something if is animatione
       var m = intersect.object.parent instanceof THREE.Group ? intersect.object.parent : intersect.object
@@ -55,9 +54,10 @@ export class CanTransformControlWebGlApp {
 
   // control that mesh
   attachTransformControl(m) {
-    if (!this.orbitControls.enabled) return
-    console.log('attachTransformControl', m, 'W: local/world coordinate; T: translate; R: rotate; S: scale; Espace: translation and rotation info')
-    this.transformControl.attach(m)
+    if (this.orbitControls && this.orbitControls.enabled) {
+      console.log('attachTransformControl', m, 'W: local/world coordinate; T: translate; R: rotate; S: scale; Espace: translation and rotation info')
+      this.transformControl.attach(m)
+    }
   }
 
   // add a mesh which can be controlled when selected

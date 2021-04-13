@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export function createPhoto360(url) {
-    const geometry = new THREE.SphereGeometry(500, 60, 40);
+    const geometry = new THREE.SphereGeometry(50, 60, 40);
 // invert the geometry on the x-axis so that all of the faces point inward
     geometry.scale(-1, 1, 1);
 

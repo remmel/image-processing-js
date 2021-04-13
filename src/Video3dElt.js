@@ -4,7 +4,7 @@ import * as THREE from "three";
 import {loadDepth16BinMeshTexture} from "./rgbd-viewer/RgbdLoader";
 import {loadRecorder3D} from "./pose-viewer/datasetsloader/recorder3d";
 import "./commons/PlayerControlsElt"
-import { sp1 } from './commons/consts'
+import { sp1 } from './commons/demoscenes'
 import { Vector3 } from 'three'
 
 export class Video3dElt extends LitElement {
@@ -92,8 +92,8 @@ export class Video3dElt extends LitElement {
 
         //there is always ONE child
         this.group.children.forEach((c)=>{
-            c.geometry.dispose();
-            c.material.dispose();
+            c.geometry.dispose()
+            c.material.dispose()
         })
         this.group.remove(...this.group.children)
         this.group.add(m)

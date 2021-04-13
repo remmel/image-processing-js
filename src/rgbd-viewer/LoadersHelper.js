@@ -54,7 +54,7 @@ export async function loadObj(objFn, mtlFn, onProgress) {
   materials.preload() //load imgs
   var group = await new OBJLoader()
     .setMaterials(materials)
-    .loadAsync(objFn, (e) => onProgress(e.loaded / e.total * 0.95))
+    .loadAsync(objFn, e => onProgress(e.loaded / e.total * 0.95))
   // group.children[0].material.flatShading = true //hum... smooth
   onProgress(1)
   return group
@@ -98,8 +98,10 @@ export async function loadObjFiles(fileList) {
   return group
 }
 
-export async function loadGltf(url) {
-  const data = await new GLTFLoader().loadAsync(url)
+export async function loadGltf(url, onProgress) {
+  onProgress = onProgress || (() => {})
+  //e.total is expected to be provided by apache server (not by local server)
+  const data = await new GLTFLoader().loadAsync(url, e => onProgress(e.loaded / e.total * 0.95))
 
   data.scene.children.forEach(m => {
     if (m.material && m.material.map && m.material.map.encoding)
@@ -109,5 +111,6 @@ export async function loadGltf(url) {
     // m.material.flatShading = true
     // m.material.needsUpdate = true
   })
+  onProgress(1)
   return data.scene
 }

@@ -111,9 +111,7 @@ export default class WebGlApp {
     this.scene.add(this.orbitControls.sphere)
   }
 
-  /**
-   * Enable VR if possible
-   */
+  /** Enable VR if possible */
   enableVr() {
     navigator.xr && navigator.xr.isSessionSupported('immersive-vr').then(supported => {
       if (supported) {
