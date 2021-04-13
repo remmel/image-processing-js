@@ -21,7 +21,7 @@ class ImagePanelElt extends LitElement {
 
             img {
                 max-width: 100%;
-                max-height: 100%;
+                max-height: 50vh;
             }
 
             #photo-info {

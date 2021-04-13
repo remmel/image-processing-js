@@ -5,18 +5,16 @@ import { Matrix4, Quaternion, Vector3 } from 'three'
 const STATE_HEADER = 'nb w h cx cy fx fy' // 89 1080 1920 534.779968 961.452026 1645.181030 1430.592285
 
 //TODO avoid using thoses .mat files to avoid http calls, see git for my trials to use ply file for pose
-export async function loadLubos(url, files) {
+export async function loadLubos(url, files, onProgress) {
     var poses = [];
-    var $loading = document.getElementById('loading');
     var text = await readOrFetchText(url, files, 'posesPLY.csv', true); //PLY: position(x,z,-y)
     var items = csv2objects(text);
 
     var textState = await readOrFetchText(url, files, 'state.txt')
     var state = textState ? csv2objects(STATE_HEADER+"\n"+textState, ' ')[0] : {}
 
-    var i=0, nb = items.length;
-    for(var item of items) {
-        if(url) $loading.textContent = "loading "+ ++i + "/"+nb;
+    for(const [i, item] of items.entries()) {
+        if(url) onProgress((i+1)/items.length)
 
         var frameId = item.frame_id;
         item.mat4 = await fetchLubosMat(url, files, frameId + '.mat');

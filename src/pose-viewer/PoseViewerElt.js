@@ -59,7 +59,8 @@ export class PoseViewerElt extends LitElement {
     static get properties() {
         return {
             curPose: {type: PoseCylinder},
-            displayInfoText: {type: Boolean}
+            displayInfoText: {type: Boolean},
+            loadingPercentage: {type: Number}
         };
     }
 
@@ -69,6 +70,7 @@ export class PoseViewerElt extends LitElement {
         this.curPose = null
         this.scene3d = null
         this.displayInfoText = false
+        this.loadingPercentage = 1
     }
 
     render() {
@@ -77,6 +79,9 @@ export class PoseViewerElt extends LitElement {
                 <form-import-export-elt
                         @load-poses="${this.onLoadPoses}"
                         @click-export="${this.onClickExport}">
+                    ${this.loadingPercentage<1 ? html`
+                      <span>Loading ${Math.round(this.loadingPercentage*100)}%</span> 
+                    ` : ''}
                     <div @click=${() => this.displayInfoText = !this.displayInfoText}>💬</div>
                     <div id="info-text" class=${classMap({show: this.displayInfoText})}>
                         Click on Tetrahedron to display pose & image details. <br/>x:red; y:green; z:blue
@@ -107,9 +112,13 @@ export class PoseViewerElt extends LitElement {
         this.selectPoseIdx(e.detail)
     }
 
+    onProgressLoading(i) {
+        this.loadingPercentage = i
+    }
+
     async onLoadPoses(e) {
         var {datasetType, datasetFolder, scale, files} = e.detail
-        this.poses = await loadPoses(datasetType, datasetFolder, files)
+        this.poses = await loadPoses(datasetType, datasetFolder, files, this.onProgressLoading.bind(this))
         var model = await loadModel(datasetFolder, files)
         this.renderPosesMain(this.poses, model, datasetType, scale);
     }

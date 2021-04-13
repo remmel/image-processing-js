@@ -34,7 +34,7 @@ function folderNameToUrl(folder) {
 }
 
 // folder or file
-export async function loadPoses(type, folder, files) {
+export async function loadPoses(type, folder, files, onProgress) {
     var url = folderNameToUrl(folder);
 
     var poses = [];
@@ -42,7 +42,7 @@ export async function loadPoses(type, folder, files) {
     switch (type) {
         case DATASET_TYPE.RGBDTUM: poses = await loadTum(url, files); break;
         case DATASET_TYPE.AR3DPLAN: poses = await loadAr3dplan(url, files); break;
-        case DATASET_TYPE.LUBOS: poses = await loadLubos(url, files); break;
+        case DATASET_TYPE.LUBOS: poses = await loadLubos(url, files, onProgress); break;
         case DATASET_TYPE.RECORDER3D: poses = await loadRecorder3D(url, files); break;
         case DATASET_TYPE.ALICEVISION_SFM: poses = await loadAlicevision(url, files); break;
         case DATASET_TYPE.AGISOFT: poses = await loadAgisoft(url, files); break;
