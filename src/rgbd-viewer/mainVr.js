@@ -38,9 +38,7 @@ export async function initVr() {
         webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1))
         webglApp.enableOrbitControls()
         webglApp.enableVr()
-
         webglApp.animate()
-
 
         if (window.location.search === '?demo')
             demo(document.getElementById('load-cocina'))

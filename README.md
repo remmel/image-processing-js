@@ -84,6 +84,46 @@ Error `Error: EPERM: operation not permitted, stat` is produced on Windows 10 wh
   - https://github.com/mrdoob/three.js/issues/8400
   - https://www.decarpentier.nl/downloads/lensdistortion-webgl/lensdistortion-webgl.html
 
+# Convert video
+```shell
+# Extract video to images
+ffmpeg -i Chae_Demo_Upres.mp4 -vframes 3 frames/frame-%05d.png
+
+# Images to video
+# rgb
+ffmpeg -framerate 25 -start_number 354 -i %08d_image.jpg -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p video/output.mp4
+# depth
+ffmpeg -framerate 25 -start_number 354 -i video/%08d_depthhue.png -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p video/output_depth.mp4
+
+# Merge rgb+depth video
+ffmpeg -i output_color_1440x1080.mp4 -i output_depth_1440x1080.mp4 -filter_complex vstack output_rgbd_1440x1080.mp4
+```
+
+mogrify -resize 1080x1440 -path upscaled *.png
+
+
+# How to store depth data in RGB ? (hue?)
+Grayscale 16bits precision is 2^16=65536. As RGB is 8bit per channel <=> 2^24=16 millions
+Usually we have 1<=>1mm, thus in grayscale we could store 65 meters, although we don't need so much
+Thus is we want to have same range than grayscale (0-65m), max eror is 0.2cm, this is bad when for grayscale this is 1mm
+```javascript
+Math.floor(hsv2rgb2rgb(10066/65535) * 65535) //10069
+Math.floor(hsv2rgb2rgb(10065/65535) * 65535) //9898
+```
+
+With 4m range, the max error is 8mm, this is not acceptable neither
+```javascript
+Math.floor(hsv2rgb2rgb(1001/4000) * 4000) //1000
+Math.floor(hsv2rgb2rgb(1002/4000) * 4000) //1010
+```
+
+In hsv, with s=v=100%, h can have 2*256=1536 differents values when encoded in RGB 8b
+
+We could also set a minrange and maxrange (clipping box), as we know that first 0.5m is not accurange
+
+[Depthkit.js](https://juniorxsound.github.io/Depthkit.js/examples/simple.html) is using a clipping box, and only save depth between 1757 and 2486 (729)
+
+Understand HSV: https://alloyui.com/examples/color-picker/hsv.html
 
 [recorder-3d]:(https://github.com/remmel/recorder-3d)
 [pose-viewer.html]:(https://remmel.github.com/image-processing-js/pose-viewer.html)

@@ -3,8 +3,9 @@ import {KINECT_INTRINSICS} from '../pose-viewer/datasetsloader/rgbdtum'
 
 import {decode} from 'fast-png'
 import { DataImage } from './DataImage'
+import { rgb2hsv } from './ConvertColor'
 
-export const HONOR20VIEW_DEPTH_INTRINSICS = {
+export const HONOR20VIEW_DEPTH_INTRINSICS = {  //default my Honor 20 View intrinsics
   w: 240, //x
   h: 180, //y
   fx: 178.824,
@@ -31,7 +32,7 @@ export async function loadTumPng(urlDepth, urlRgb, intrinsics) {
   }
 
   var fnTumDepth = (range) => range / 5000 // Tum format: 1<=>0.2mm _ 5000 <=> 1m
-  var obj3d = createObj3dPointsWithRGBDSameSize(depthPng.data, rgbMat.data, depthPng.width, depthPng.height, intrinsics.fx, fnTumDepth)
+  var obj3d = createObj3dPointsWithRGBDSameSize(depthPng.data, rgbMat.data, depthPng.width, depthPng.height, {x:intrinsics.fx, y:intrinsics.fy}, fnTumDepth)
   if(rgbMat) rgbMat.delete()
   return obj3d
 }
@@ -41,7 +42,7 @@ export async function loadDepth16BinPointsResize(urlDepth, urlRgb, intrinsics) {
   var response = await fetch(urlDepth)
   var arrayBuffer = response.ok ? await (response).arrayBuffer() : null
 
-  let rgbMat = await loadImageAsCvMat(urlRgb, 'rgb')
+  let rgbMat = await loadImageAsCvMat(urlRgb)
 
   intrinsics = intrinsics || HONOR20VIEW_DEPTH_INTRINSICS //default my Honor 20 View intrinsics
 
@@ -53,7 +54,7 @@ export async function loadDepth16BinPointsResize(urlDepth, urlRgb, intrinsics) {
   var samples = new Int16Array(arrayBuffer)
 
   var fnDepth = (range) => (range & 0x1FFF) / 1000 // DEPTH16 format, with both distance and precision
-  var obj3d = createObj3dPointsWithRGBDSameSize(samples, rgbMat.data, intrinsics.w, intrinsics.h, intrinsics.fx, fnDepth)
+  var obj3d = createObj3dPointsWithRGBDSameSize(samples, rgbMat.data, intrinsics.w, intrinsics.h, {x:intrinsics.fx, y:intrinsics.fy}, fnDepth)
   if(rgbMat) rgbMat.delete()
   return obj3d
 }
@@ -70,7 +71,7 @@ export async function loadDepth16BinPoints(urlDepth, urlRgb, intrinsics) {
   var response = await fetch(urlDepth)
   var arrayBuffer = response.ok ? await (response).arrayBuffer() : null
 
-  let rgbMat = await loadImageAsCvMat(urlRgb)
+  let rgb = await loadImageViaCanvas(urlRgb) // let rgbMat = await loadImageAsCvMat(urlRgb)
 
   intrinsics = intrinsics || HONOR20VIEW_DEPTH_INTRINSICS //default my Honor 20 View intrinsics
 
@@ -80,25 +81,35 @@ export async function loadDepth16BinPoints(urlDepth, urlRgb, intrinsics) {
   var fnDepth = (range) => (range & 0x1FFF) / 1000 // DEPTH16 format, with both distance and precision
 
   var depthImg = new DataImage(samples, 1, intrinsics.w, intrinsics.h, fnDepth)
-  var rgbImg = new DataImage(rgbMat.data, 4, rgbMat.cols, rgbMat.rows)
+  var rgbImg = new DataImage(rgb.data, 4, rgb.width, rgb.height)
 
-  var obj3d = createObj3dPoints(depthImg, rgbImg, 240, 180, intrinsics.fx)
-  if(rgbMat) rgbMat.delete()
+  // var w = depthImg.w, h=depthImg.h //wanted with
+  var w = rgbImg.w, h=rgbImg.h
+  var obj3d = createObj3dPoints(depthImg, rgbImg, w, h, intrinsics.fx)
+  // if(rgbMat) rgbMat.delete()
   return obj3d
 }
 
+/**
+ * Colors are store in BufferGeometry:
+ * `geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))`
+ * @param {String} urlDepth
+ * @param {String} urlRgb
+ * @param {Object} intrinsics
+ * @returns {Promise<Mesh>} Mesh<BufferGeometry,MeshPhongMaterial>
+ */
 export async function loadDepth16BinMesh(urlDepth, urlRgb, intrinsics) {
   var response = await fetch(urlDepth)
   var arrayBuffer = response.ok ? await (response).arrayBuffer() : null
 
-  intrinsics = intrinsics || HONOR20VIEW_DEPTH_INTRINSICS //default my Honor 20 View intrinsics
+  intrinsics = intrinsics || HONOR20VIEW_DEPTH_INTRINSICS
 
   var samples = new Int16Array(arrayBuffer)
 
   var fnDepth = (range) => (range & 0x1FFF) / 1000 // DEPTH16 format, with both distance and precision
   var {w, h, fx} = intrinsics
 
-  let rgbMat = await loadImageAsCvMat(urlRgb, 'rgb')
+  let rgbMat = await loadImageAsCvMat(urlRgb)
   var rgbImg = new DataImage(rgbMat.data, 4, rgbMat.cols, rgbMat.rows) //or resize
 
   // var obj3d = createMeshWithColorUsingIndex(samples, w, h, fx, fnDepth, rgbImg)
@@ -108,7 +119,10 @@ export async function loadDepth16BinMesh(urlDepth, urlRgb, intrinsics) {
   return obj3d
 }
 
-//finaly the best choice
+/**
+ * Uses texture with uv, seems to be the best choice
+ * @return {Promise<Mesh>} Mesh<BufferGeometry,MeshPhongMaterial>
+ */
 export async function loadDepth16BinMeshTexture(urlDepth, urlRgb, intrinsics) {
   var depthData;
   var depthBuffer = await((await fetch(urlDepth)).arrayBuffer())
@@ -140,7 +154,8 @@ function resize(rgbMat, w, h) {
   return dst
 }
 
-function createObj3dPointsWithRGBDSameSize(dData, rgbData, width, height, focal, fnToZMm) {
+/** @return {THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>} */
+function createObj3dPointsWithRGBDSameSize(dData, rgbData, width, height, focal, fnToZmeter) {
   var vertices = []
   var colors = []
 
@@ -151,10 +166,10 @@ function createObj3dPointsWithRGBDSameSize(dData, rgbData, width, height, focal,
       var idx = (i * width + j)
       var range = dData[idx]
       if (range === 0) continue //no value
-      var z = fnToZMm(range)
-      var x = (j - width / 2) * z / focal
-      var y = (i - height / 2) * z / focal
-      vertices.push(x, y, z)
+      var z = fnToZmeter(range)
+      var x = (j - width / 2) * z / focal.x
+      var y = (i - height / 2) * z / focal.y
+      vertices.push(x, y, z) //in meters
 
       if (rgbData) { //colors image has 4 channels RGBA
         var r = rgbData[idx * 4 + 0]
@@ -169,6 +184,12 @@ function createObj3dPointsWithRGBDSameSize(dData, rgbData, width, height, focal,
 
 /**
  * @return {THREE.Points}
+ * @param {DataImage} depthImg
+ * @param {DataImage} rgbImg
+ * @param {Number} width wanted width
+ * @param {Number} height wanted height
+ * @param depthFocal
+ * @return {Points<BufferGeometry, PointsMaterial>}
  */
 function createObj3dPoints(depthImg, rgbImg, width, height, depthFocal) {
   var vertices = []
@@ -443,12 +464,12 @@ function createPoints(vertices, colors) {
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
   }
 
-  var material = new THREE.PointsMaterial({ size: 0.005 })
+  var material = new THREE.PointsMaterial({ size: 0.0001 })
   material.vertexColors = colors.length > 0
   return new THREE.Points(geometry, material)
 }
 
-async function loadImage(url) {
+async function createImageTag(url) {
   return new Promise((resolve, reject) => {
     var img = new Image()
     img.crossOrigin = "Anonymous" //to avoid `The canvas has been tainted by cross-origin data` err
@@ -459,33 +480,184 @@ async function loadImage(url) {
 }
 
 //alternative to OpenCV mat to read rgb image //TODO try to use it
-async function getImageDataViaCanvas(url) {
-  var img = await loadImage(url)
+async function loadImageViaCanvas(url) {
+  var img = await createImageTag(url)
   var canvas = document.createElement('canvas')
   canvas.width = img.width
   canvas.height = img.height
   canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height)
   var data = canvas.getContext('2d').getImageData(0, 0, img.width, img.height).data
-  return data
+  return {
+    data: data,
+    width: img.width,
+    height: img.height
+  }
 }
 
-//CvType.CV_16UC1
-// Mat src = Imgcodecs.imread(srcPath);
-// Mat dst = new Mat(w, h, CvType.CV_16UC1);
+/**
+ * Load an image directly from the <img>. Could also create a canvas and provides its id (see history)
+ * Mat src = Imgcodecs.imread(srcPath); Mat dst = new Mat(w, h, CvType.CV_16UC1);
+ * @return cv.Mat
+ */
 async function loadImageAsCvMat(url) {
-  var img = await loadImage(url).catch(e => {})
+  var img = await createImageTag(url).catch(e => {})
   if(!img) return null
   return cv.imread(img)
 }
 
-async function loadImageAsCvMatViaCanvas(url, elId) {
-  var img = await loadImage(url).catch(e => {})
-  if(!img) return null
-  var canvasOriginal = document.getElementById(elId)
-  var ctxOriginal = canvasOriginal.getContext('2d')
-  canvasOriginal.width = img.width
-  canvasOriginal.height = img.height
-  ctxOriginal.drawImage(img, 0, 0)
-  return cv.imread(elId)
+/** @return {THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>} */
+export async function loadDepthChae(url) {
+  var img = await loadImageViaCanvas(url)
+  /** @var {Uint8ArrayClamped} */ var imgdata = img.data
+
+  var rgba = imgdata.subarray(0, 1024*512*4)
+
+  var mindepth = 1757.81005859375, maxdepth = 2486.320068359375,
+    focalLength = { 'x': 1988.536987304688, 'y': 1085.140380859375 },
+    principalPoint = { 'x': 1988.536987304688, 'y': 1085.140380859375 }
+
+  var focalLength2 = {x:focalLength.x/2, y:focalLength.y/2} //divided / 2 has this was focal for size x2
+
+  var depth = new Int16Array(1024*512)
+  var fnToZmeter = mm => mm / 1000
+
+  var offset = 1024 * 512 * 4
+  for (var i = 0; i < 1024 * 512; i++) {
+    var r = img.data[i * 4 + 0 + offset]
+    var g = img.data[i * 4 + 1 + offset]
+    var b = img.data[i * 4 + 2 + offset]
+
+    if (r > 0 || g > 0 || b > 0) {
+      var hsv = rgb2hsv(r, g, b)
+      depth[i] = hsv.h * (maxdepth - mindepth) + mindepth
+    } else {
+      //depth[i] = 1000 //in mm
+    }
+  }
+
+  //depth array is expected by the fn to have 1 channel, cannot do something else
+  var obj3d = createObj3dPointsWithRGBDSameSize(depth, rgba, 1024, 512,focalLength2, fnToZmeter)
+  return obj3d
 }
 
+/** @return {THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>} */
+export async function loadDepthGoat(url) {
+  var img = await loadImageViaCanvas(url)
+  /** @var {Uint8ArrayClamped} */ var data = img.data
+  var w = img.width/2, h=img.height //image split vertically, should be 480x640
+
+  var rgba = new Uint8Array(w*h*4)
+  var depth = new Int16Array(w*h)
+
+  // var mindepth = 1757.81005859375, maxdepth = 2486.320068359375,
+  //   focalLength = { 'x': 1988.536987304688, 'y': 1085.140380859375 },
+  //   principalPoint = { 'x': 1988.536987304688, 'y': 1085.140380859375 } //to be divided /2 has size is *2
+
+
+  var fnToZmeter = mm => mm / 1000
+
+  for(var x = 0; x<w; x++) {
+    for(var y = 0; y<h; y++) {
+      var idxDataColor = (x + w + y * 2 * w) * 4
+      var idxDataDepth = (x + 0 + y * 2 * w) * 4
+
+      //rgb
+      var idxRgba = (x+y*w)*4
+      rgba[idxRgba+0]=data[idxDataColor+0]
+      rgba[idxRgba+1]=data[idxDataColor+1]
+      rgba[idxRgba+2]=data[idxDataColor+2]
+
+      // depth - //createObj3dPoints... is expecting a depth array with 1 channel, must do that stuff here and not in the fnToZmeter
+      var r = img.data[idxDataDepth + 0]
+      var g = img.data[idxDataDepth + 1]
+      var b = img.data[idxDataDepth + 2]
+
+      if (r > 0 || g > 0 || b > 0) {
+        var hsv = rgb2hsv(r, g, b)
+        depth[x+y*w] = hsv.h * 3 * 1000 //(maxdepth - mindepth) + mindepth  //in mm
+      } else {
+        // depth[x+y*w] = 1000 //in mm - for testing purposes
+      }
+    }
+  }
+
+  var intrMat = new THREE.Matrix3()
+  intrMat.elements = [593.76177978515625, 0, 0, 0, 594.7872314453125, 0, 241.74200439453125, 319.98410034179688, 1]
+
+  var focal = {x: intrMat.elements[0], y: intrMat.elements[4]}
+  // intrMat.transpose()
+  // let ifx = 1.0 / intrMat.elements[0]
+  // let ify = 1.0 / intrMat.elements[4]
+  // let itx = -intrMat.elements[2] / intrMat.elements[0]
+  // let ity = -intrMat.elements[5] / intrMat.elements[4]
+  // var iK = [ifx, ify, itx, ity]
+
+  var obj3d = createObj3dPointsWithRGBDSameSize(depth, rgba, w, h, focal, fnToZmeter)
+  return obj3d
+}
+
+/** @return {THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>} */
+export async function loadDepthCustom(url, nearClipping, farClipping) {
+  var img = await loadImageViaCanvas(url)
+  /** @var {Uint8ArrayClamped} */ var data = img.data
+  var w = img.width, h=img.height //image split vertically, should be 480x640
+
+  var rgba = new Uint8Array(w*h*4)
+  var depth = new Int16Array(w*h)
+
+  // var mindepth = 1757.81005859375, maxdepth = 2486.320068359375,
+  //   focalLength = { 'x': 1988.536987304688, 'y': 1085.140380859375 },
+  //   principalPoint = { 'x': 1988.536987304688, 'y': 1085.140380859375 } //to be divided /2 has size is *2
+
+
+  var fnToZmeter = mm => mm / 1000
+
+  var check = []
+
+  for(var x = 0; x<w; x++) {
+    for(var y = 0; y<h; y++) {
+      var idxDataColor = (x + w + y * 2 * w) * 4
+      var idxDataDepth = (x + 0 + y * 2 * w) * 4
+
+      //rgb
+      var idxRgba = (x+y*w)*4
+      rgba[idxRgba+0]=data[idxDataColor+0]
+      rgba[idxRgba+1]=data[idxDataColor+1]
+      rgba[idxRgba+2]=data[idxDataColor+2]
+
+      // depth - //createObj3dPoints... is expecting a depth array with 1 channel, must do that stuff here and not in the fnToZmeter
+      var r = img.data[idxDataDepth + 0]
+      var g = img.data[idxDataDepth + 1]
+      var b = img.data[idxDataDepth + 2]
+
+      if (r > 0 || g > 0 || b > 0) {
+        var hsv = rgb2hsv(r, g, b) //hsv.h between 0-1
+
+        var dint = Math.round(hsv.h * 3000)
+        depth[x+y*w] = dint //(maxdepth - mindepth) + mindepth  //in mm
+
+        if(y === 0) {
+          let v = check[dint]
+          check[dint] = (v==undefined) ? 1 : v+1
+        }
+
+      } else {
+        // depth[x+y*w] = 1000 //in mm - for testing purposes
+      }
+    }
+  }
+
+  var intrMat = new THREE.Matrix3()
+  intrMat.elements = [593.76177978515625, 0, 0, 0, 594.7872314453125, 0, 241.74200439453125, 319.98410034179688, 1]
+
+  var focal = {x: intrMat.elements[0], y: intrMat.elements[4]}
+  // intrMat.transpose()
+  // let ifx = 1.0 / intrMat.elements[0]
+  // let ify = 1.0 / intrMat.elements[4]
+  // let itx = -intrMat.elements[2] / intrMat.elements[0]
+  // let ity = -intrMat.elements[5] / intrMat.elements[4]
+  // var iK = [ifx, ify, itx, ity]
+
+  var obj3d = createObj3dPointsWithRGBDSameSize(depth, rgba, w, h, focal, fnToZmeter)
+  return obj3d
+}

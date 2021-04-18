@@ -11,7 +11,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.[name].js',
+    filename: 'js/bundle.[name].js',
   },
   performance: {
     maxEntrypointSize: 1024000,

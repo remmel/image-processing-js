@@ -3,5 +3,5 @@ dataset
 datasetgit
 .DS_Store
 node_modules
-dist/bundle.*.js
-dist/bundle.*.js.map
+dist/js/bundle.*.js
+dist/js/bundle.*.js.map

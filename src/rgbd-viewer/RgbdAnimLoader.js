@@ -12,7 +12,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
  * 2. frame by frame (with .visible or animation)
  * 3. VideoTexture : https://threejs.org/examples/?q=video#webxr_vr_video
  *    https://threejs.org/examples/?q=video#webgl_materials_video
- * 4. Compare with pointcloud / colored faces
+ * 4. Compare with pointcloud / colored faces (26.5MB point cloud high, 0.1MB point cloud low)
  * 5. Edit video, and crop texture and depth
  * 6. Projected image?
  * 7. Load next 10 frames ahead of time, after dispose
@@ -85,12 +85,13 @@ export async function loadDepth16BinList(urls, onProgess) {
  */
 export function dirtyAnimationAnimeCallbackViaGroup(g, objs) {
   let objIdx = 0, frame = 0
-  g.add(...objs)
-  g.children.forEach(m => m.visible = false) //TODO duplicated
-  return () => {
+  objs.forEach(m => {
+    g.add(m)
+    m.visible = false
+  })
+  return delta => {
     frame++
-    //TODO use ms instead
-    var speed = window.params && params.plys_speed ? params.plys_speed : 6
+    var speed = 3 //TODO use ms instead ?
     if (frame % speed === 0) {
       if (objIdx === g.children.length) objIdx = 0
       g.children.forEach(m => m.visible = false)
