@@ -446,7 +446,8 @@ async function createMeshWithTexture(dData, width, height, focal, fnToZMm, rgbUr
   var material = new THREE.MeshPhongMaterial({
     side: THREE.DoubleSide,
     flatShading: true,
-    map: texture
+    map: texture,
+    //wireframe: true,
   })
 
   return new THREE.Mesh(geometry, material)

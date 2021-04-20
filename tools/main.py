@@ -88,7 +88,7 @@ def color_depth16grayscalepng(input, output):
         for y in range(0,h):
             depthmm = gray[y,x]/5 #png was encoded as 5000<=>1m
             if(depthmm > 100 and depthmm <= farClip): #only take care about depth between 0-1535 depth must be between 10cm and 1.5m
-                hsv = colorsys.hsv_to_rgb(depthmm/farClip, 1,1) #1536 different possible values
+                hsv = colorsys.hsv_to_rgb(depthmm/farClip, 1,1) #1530 different possible values
                 image[y,x] = tuple(reversed((hsv[0]*255, hsv[1]*255, hsv[2]*255)))
 
     if output:
