@@ -142,9 +142,12 @@ export async function initRgbdViewer() {
 
   {
     loadDepth16BinMeshTexture(localstandupbrown6 + '/00000354_depth16.bin', localstandupbrown6 + '/00000354_image.jpg').then(m => {
-      m.rotateZ(-90 / RAD2DEG)
-      m.position.set(1.5, 0, 0)
+      // m.rotateZ(-90 / RAD2DEG)
+      m.position.set(0.551,0.000,0.000)
+      m.rotation.set(-3.14,-0.01,1.57)
       webglApp.scene.add(m)
+      webglApp.canTransformControl(m)
+      webglApp.canTransform.attachTransformControl(m)
     })
   }
 

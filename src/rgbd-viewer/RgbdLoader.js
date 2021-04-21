@@ -83,8 +83,8 @@ export async function loadDepth16BinPoints(urlDepth, urlRgb, intrinsics) {
   var depthImg = new DataImage(samples, 1, intrinsics.w, intrinsics.h, fnDepth)
   var rgbImg = new DataImage(rgb.data, 4, rgb.width, rgb.height)
 
-  // var w = depthImg.w, h=depthImg.h //wanted with
-  var w = rgbImg.w, h=rgbImg.h
+  var w = depthImg.w, h=depthImg.h //wanted width
+  // var w = rgbImg.w, h=rgbImg.h
   var obj3d = createObj3dPoints(depthImg, rgbImg, w, h, intrinsics.fx)
   // if(rgbMat) rgbMat.delete()
   return obj3d
@@ -416,12 +416,12 @@ async function createMeshWithTexture(dData, width, height, focal, fnToZMm, rgbUr
 
         var w = width-1 //if there are h*w range pixel, there will be (h-1)*(w-1)*2 triangles
         var h = height-1
-        if(correctTriangle(nw, se, sw)) { //◣ anticlock
+        if(correctTriangle(nw, sw, se)) { //◣ anticlock
           positions.push(...infonw.xyz, ...infosw.xyz, ...infose.xyz) //9 values
           uvs.push((x-1)/w, 1-(y-1)/h, (x-1)/w, 1-y/h, x/w, 1-y/h) // 6 values
         }
 
-        if(correctTriangle(nw, ne, se)) { //◥ anticlock
+        if(correctTriangle(nw, se, ne)) { //◥ anticlock
           positions.push(...infonw.xyz, ...infose.xyz, ...infone.xyz)
           uvs.push((x-1)/w, 1-(y-1)/h, x/w, 1-y/h, x/w, 1-(y-1)/h) // 6 values
         }
@@ -447,7 +447,7 @@ async function createMeshWithTexture(dData, width, height, focal, fnToZMm, rgbUr
     side: THREE.DoubleSide,
     flatShading: true,
     map: texture,
-    //wireframe: true,
+    wireframe: true,
   })
 
   return new THREE.Mesh(geometry, material)
@@ -465,7 +465,7 @@ function createPoints(vertices, colors) {
     geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
   }
 
-  var material = new THREE.PointsMaterial({ size: 0.0001 })
+  var material = new THREE.PointsMaterial({ size: 0.005 })
   material.vertexColors = colors.length > 0
   return new THREE.Points(geometry, material)
 }

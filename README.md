@@ -89,14 +89,42 @@ Error `Error: EPERM: operation not permitted, stat` is produced on Windows 10 wh
 # Extract video to images
 ffmpeg -i Chae_Demo_Upres.mp4 -vframes 3 frames/frame-%05d.png
 
+# Resize depth
+mogrify -resize 1440 -path resized1440 *.png
+
+#magnify?
+#convert 00000455_depthhue.png -filter point -resize 1440  resized1440/00000455_depthhue.png
+
+for file in *.png; do convert $file -filter point -resize 1440 resized1440/$file; done
+
 # Images to video
 # rgb
-ffmpeg -framerate 25 -start_number 354 -i %08d_image.jpg -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p video/output.mp4
+ffmpeg -framerate 25 -start_number 354 -i %08d_image.jpg -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p video/output_color_1440x1080.mp4
 # depth
-ffmpeg -framerate 25 -start_number 354 -i video/%08d_depthhue.png -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p video/output_depth.mp4
+ffmpeg -framerate 25 -start_number 354 -i %08d_depthhue.png -c:v libx264 -profile:v high -crf 0 -pix_fmt yuv420p output_depth_1440x1080_crf0.mp4
 
 # Merge rgb+depth video
-ffmpeg -i output_color_1440x1080.mp4 -i output_depth_1440x1080.mp4 -filter_complex vstack output_rgbd_1440x1080.mp4
+ffmpeg -i output_color_1440x1080.mp4 -i output_depth_1440x1080_crf50.mp4 -filter_complex vstack output_rgbd_1440x1080_crf50.mp4
+
+# or directly
+ffmpeg -framerate 25 -start_number 354 -i %08d_image.jpg -start_number 354 -i depth/resized1440/%08d_depthhue.png -crf 0 -filter_complex vstack output_rgbd_1440x1080_direct.mp4
+
+
+#scale:
+-vf scale=240:180,setsar=1:1
+```
+
+```shell
+# lossless?
+
+ffmpeg -framerate 25 -start_number 354 -i %08d_image.jpg -c:v libx264 -crf 0 -pix_fmt yuv420p output_color_1440x1080_crf0.mp4
+ffmpeg -framerate 25 -start_number 354 -i %08d_depthhue.png -c:v libx264 -crf 0 -pix_fmt yuv420p output_depth_1440x1080_crf0.mp4
+
+ffmpeg -i output_color_1440x1080_crf0.mp4 -i output_depth_1440x1080_crf0.mp4 -crf 0 -filter_complex vstack output_rgbd_1440x1080_crf0b.mp4
+
+#1 frame video
+ffmpeg -i 00000354_image.jpg -i depth/resized1440/00000354_depthhue.png -crf 0 -filter_complex vstack output_rgbd_1440x1080_crf0_1f.mp4
+ffmpeg -i 00000354_image.jpg -i depth/resized1440/00000354_depthhue.png -lossless 1 -filter_complex vstack output_rgbd_1440x1080_lossless_1f.webm
 ```
 
 mogrify -resize 1080x1440 -path upscaled *.png
