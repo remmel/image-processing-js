@@ -18,6 +18,9 @@ import { createText } from './FontHelper'
 import { RgbdVideo } from './RgbdVideo'
 import { generateRgbdUrls, loadRgbdAnim, TYPE } from './RgbdAnimLoader'
 
+/**
+ * This is a debug script, to test different object types
+ */
 export async function initRgbdViewer() {
   // convertGrayscale('original', 'grayscale')
 
@@ -138,13 +141,18 @@ export async function initRgbdViewer() {
   //   })
   // }
 
-  var localstandupbrown6 = 'dataset/2021-04-12_190518_standupbrown6'
+
+  // compare static mesh vs video mesh
+  var localstandupbrown6 = 'rgbd-viewer/standupbrown6'
+  // var localstandupbrown6 = 'dataset/2021-04-12_190518_standupbrown6'
 
   {
     loadDepth16BinMeshTexture(localstandupbrown6 + '/00000354_depth16.bin', localstandupbrown6 + '/00000354_image.jpg').then(m => {
       // m.rotateZ(-90 / RAD2DEG)
-      m.position.set(0.551,0.000,0.000)
-      m.rotation.set(-3.14,-0.01,1.57)
+      // m.position.set(0.551,0.000,0.000)
+      // m.rotation.set(-3.14,-0.01,1.57)
+      m.rotateX(180/RAD2DEG)
+      m.position.set(0.000,0.248,0.000)
       webglApp.scene.add(m)
       webglApp.canTransformControl(m)
       webglApp.canTransform.attachTransformControl(m)
@@ -152,14 +160,13 @@ export async function initRgbdViewer() {
   }
 
   {
-    var url = 'rgbd-viewer/output_rgbd_1440x1080.mp4'
-    // var url = 'rgbd-viewer/Chae_Demo_Upres.mp4'
-    // var url = localstandupbrown6 + '/video/output_rgbd_1440x1080_direct_crf20.mp4' //output_rgbd_1440x1080.mp4' //output_rgbd_240x180.mp4
-    var rgbdVideo = new RgbdVideo(url)
-    webglApp.scene.add(rgbdVideo.mesh)
-    // rgbdVideo.mesh.position.copy(standupbrowPos.clone().add(new Vector3(0, 0, -1)))
-    // rgbdVideo.mesh.setRotationFromEuler(standupbrownEuler)
-    rgbdVideo.mesh.rotateZ(-90 / RAD2DEG)
+    var fn = 'output_rgbd_1440x1080.mp4'
+    // var fn = '00000354_rgbd.png'
+    var rgbdVideo = new RgbdVideo(localstandupbrown6 + '/' + fn)
+    webglApp.scene.add(rgbdVideo)
+    // rgbdVideo.position.copy(standupbrowPos.clone().add(new Vector3(0, 0, -1)))
+    // rgbdVideo.setRotationFromEuler(standupbrownEuler)
+    // rgbdVideo.rotateZ(-90 / RAD2DEG)
   }
 
   createZoom()

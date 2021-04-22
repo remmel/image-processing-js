@@ -56,6 +56,7 @@ const SHADER_VERTEX = `
       
     if(depth0 < 0.1) return;
       
+    // as same vertex is share with 6 triangles, should check all the triangles
     float depthSW = depth(depthvUv + vec2(-textureStep.x,  0.0));
     float depthNW = depth(depthvUv + vec2(-textureStep.x, -textureStep.y));
     float depthNE = depth(depthvUv + vec2(0.0,  -textureStep.y));
@@ -90,7 +91,7 @@ const SHADER_FRAGMENT = `
   void main() { 
     if ( visibility < 0.9 ) discard;
     vec4 color = texture2D(map, vUv);
-    gl_FragColor = vec4(color.r, color.g, color.b, 1.0); 
+    gl_FragColor = vec4(color.r, color.g, color.b, visibility); 
   }
 `
 
@@ -101,31 +102,48 @@ const SHADER_FRAGMENT = `
  * A simplier code with only depth : https://threejs.org/examples/?q=kinect#webgl_video_kinect
  * More info about how to create rgbd video in that repo
  *
- * TODO handle mesh (it only handle point cloud)
+ * The point close to the edges are lost because the vertex is shared with 6 triangles.
+ * I tried to multiply by 6 the number of vertex (each face will have its own vertex - thus non indexed mesh),
+ * and for each vertex indicate its position in the triangle (position.z=1-6) to be able in the shader to calculate the depth diff with 2 others vertices (taking in to account their position in the current triangle),
+ * but it did not work and I don't know why. Anyways, it will make 6x more vertices, then for the moment it's easier to just make x2 on the depth resolution.
+ * Another workaround could to distinguish edges with 0 depth and other object, to not remove thoses with edge 0 depth
+ * Also if one of the vertex is far behind to put it on that depth than other 2 vertices
+ * To finish because triangles have 2 differents orientations ( out of 4), somes triangles of other orientations could be place to edge to avoid having nothing
+ * Another alternative could be to stay with points cloud, but with size which depend of the camera distance
+ *
+ * It would be better to extends Mesh or Points, but as it can be one or other, I extends Object3D stuff instead and the Mesh/Point will be a child
  */
-export class RgbdVideo {
-  constructor(url) {
-    this.isMesh = true
-    const elVideo = this.elVideo = createElement(`<video muted loop playsinline autoplay crossorigin='anonymous'>`)
-    elVideo.src = url + "?ts="+new Date().getTime()
-    elVideo.onloadedmetadata = this.onloadedmetadata.bind(this)
+export class RgbdVideo extends Group {
+  /**
+   * @param url can be a video, but for debugging purpose a png file
+   * @param isMesh {Boolean} if it's Points or Mesh
+   */
+  constructor(url, isMesh = true) {
+    super()
 
-    this.mesh = new Group() //need to do that, otherwise, to use some loaded cb, TODO must extends Points or Object3D
+    if (url.toLowerCase().endsWith('.png')) { //poster instead?
+      this.texture = new THREE.TextureLoader().load(url)
+      this.addObject3D(isMesh)
+    } else {
+      const elVideo = this.elVideo = createElement(`<video muted loop playsinline autoplay crossorigin='anonymous'>`)
+      elVideo.src = url //+ '?ts=' + new Date().getTime()
+      this.texture = new THREE.VideoTexture(this.elVideo)
+      this.texture.minFilter = THREE.NearestFilter
+      elVideo.onloadedmetadata = () => {
+        this.addObject3D(isMesh)
+        this.play()
+      }
+    }
   }
 
-  onloadedmetadata(e) {
+  // TODO should add intrinsics and geometry size in a json or in video comment
+  addObject3D(isMesh) {
     // const width = this.elVideo.videoWidth, height = this.elVideo.videoHeight/2 //height divided by 2 because 2 vids
     const nearClipping = 0, farClipping = 1529*2
     // const nearClipping = 1757.81, farClipping = 2486.32
 
-    const width = 240, height = 180 // I don't understand why width must be equals to height otherwise mesh is a mess
-    // it would be better that width=240 and heigth=180 to have same grid that depth img
-    var geometry = this.createGeometry(width, height)
-
-    var texture = new THREE.VideoTexture(this.elVideo)
-    //var texture = new THREE.TextureLoader().load('dataset/2021-04-12_190518_standupbrown6/00000354_rgbd2.png')
-
-    texture.minFilter = THREE.NearestFilter
+    const width = 240, height = 180
+    var geometry = this.createGeometry(width, height, isMesh)
 
     var {fx, fy} = HONOR20VIEW_DEPTH_INTRINSICS
     //if depth image has been resized
@@ -133,7 +151,7 @@ export class RgbdVideo {
 
     var material = new THREE.ShaderMaterial({
       uniforms: {
-        'map': { value: texture },
+        'map': { value: this.texture },
         'width': { value: width },
         'height': { value: height },
         'nearClipping': { value: nearClipping },
@@ -149,31 +167,22 @@ export class RgbdVideo {
       // wireframe: true
     })
 
-    var m = this.isMesh ? new THREE.Mesh(geometry, material) : new THREE.Points(geometry, material)
-    this.mesh.add(m)
-
-    // force play and stop on 1st frame
-    // this.elVideo.play().then(()=>setTimeout(() => {
-    //   this.elVideo.pause()
-    //   this.elVideo.currentTime = 0.0
-    // }, 200))
-    this.elVideo.play()
+    this.add(isMesh ? new THREE.Mesh(geometry, material) : new THREE.Points(geometry, material))
   }
 
-  createGeometry(width, height) { //static
+  createGeometry(width, height, isMesh) { //static
     var geometry = new THREE.BufferGeometry()
 
-    // TODO double the number of vertices, to avoid losing triangle when close to edge
     // creates an array of Vec3(num_col, num_row, 0) for each pixel
-    const vertices = new Float32Array(width * height * 3)
+    const vertices = new Uint16Array(width * height * 3)
     const faces = []
     for (let x = 0, i = 0; x < width; x++) {
       for (let y = 0; y < height; y++, i++) {
         vertices[i*3 + 0] = x //col
         vertices[i*3 + 1] = y //row
 
-        //not last row or col
-        if(this.isMesh && x > 0 && y > 0) {
+        //not 1st row or col
+        if(isMesh && x > 0 && y > 0) {
           //why this is height and not width???, idem below. This is what works after so many tests
           faces.push(i-height-1, i-1, i) //nw, sw, *se*◣
           faces.push(i-height-1, i, i-height) //nw, *se*, ne ◥
@@ -181,13 +190,20 @@ export class RgbdVideo {
       }
     }
 
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
-    if(this.isMesh) geometry.setIndex(faces)
+    geometry.setAttribute('position', new THREE.Uint16BufferAttribute(vertices, 3))
+    if(isMesh) geometry.setIndex(faces) //alternative to not use index, is to makes 6x vertices
 
     return geometry
   }
 
   play() {
     this.elVideo.play()
+  }
+
+  forcePause1stFrame() {
+    this.elVideo.play().then(() => setTimeout(() => {
+      this.elVideo.pause()
+      this.elVideo.currentTime = 0.0
+    }, 200))
   }
 }
