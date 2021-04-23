@@ -1,13 +1,13 @@
 import { loadGltf, loadObj } from '../rgbd-viewer/LoadersHelper'
-import { Euler, Group, Vector3 } from 'three'
 import * as THREE from 'three'
-import { generateRgbdUrls, loadRgbdAnim, TYPE } from '../rgbd-viewer/RgbdAnimLoader'
+import { Euler, Group, Vector3 } from 'three'
+import { generateRgbdUrls, loadRgbdAnim, TYPE } from './rgbd/RgbdAnimLoader'
 import { createPhoto360 } from '../rgbd-viewer/Sphere360'
 import { Reflector } from 'three/examples/jsm/objects/Reflector'
 import { RAD2DEG } from '../pose-viewer/utils3d'
-import { loadDepth16BinMeshTexture, loadDepth16BinPoints, loadDepth16BinPointsResize } from '../rgbd-viewer/RgbdLoader'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { loadDepth16BinMesh } from './rgbd/RgbdMeshLoader'
 import { idPad } from '../pose-viewer/utils'
+import { loadDepth16BinPoints } from './rgbd/RgbdPointsLoader'
 
 //online dataset urls
 export var sp1 = {
@@ -173,7 +173,7 @@ export function loadAnimTest(webglApp, gameFps, onProgress) {
 }
 
 export function loadRgbdImg(webglApp, gameFps, onProgress) {
-  loadDepth16BinMeshTexture(closeup.depth, closeup.rgb).then(m => {
+  loadDepth16BinMesh(closeup.depth, closeup.rgb).then(m => {
     webglApp.scene.add(m)
     m.setRotationFromEuler(closeup.rotation)
     m.position.copy(closeup.position)

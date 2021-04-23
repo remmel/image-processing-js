@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { Group } from 'three'
-import { HONOR20VIEW_DEPTH_INTRINSICS } from './RgbdLoader'
-import { createElement } from '../commons/domUtils'
+import { HONOR20VIEW_DEPTH_INTRINSICS } from './RgbdMeshLoader'
+import { createElement } from '../domUtils'
 
 // language=shader
 const SHADER_VERTEX = `

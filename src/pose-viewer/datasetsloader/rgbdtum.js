@@ -10,7 +10,8 @@ export const KINECT_INTRINSICS = {
     fx : 525,
     fy: 525,
     cx : 319.5,
-    cy: 239.5
+    cy: 239.5,
+    rangeToMeters: range => range / 5000 // Tum format: 1<=>0.2mm _ 5000 <=> 1m
 }
 
 export async function loadTum(url, files) {

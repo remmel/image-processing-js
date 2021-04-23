@@ -1,22 +1,19 @@
-import { loadPCD, loadPLYPoints } from './LoadersHelper'
-import { convertGrayscale } from './opencvtest'
-import {
-  loadDepth16BinMesh,
-  loadDepth16BinMeshTexture,
-  loadDepth16BinPoints,
-  loadDepth16BinPointsResize,
-  loadDepthChae, loadDepthCustom,
-  loadDepthGoat,
-  loadTumPng,
-} from './RgbdLoader.js'
 import { RAD2DEG } from '../pose-viewer/utils3d'
 import * as THREE from 'three'
 import { Euler, Quaternion, Vector3 } from 'three'
 import WebGlApp from '../WebGlApp'
 import { closeup, standupbrown } from '../commons/demoscenes'
 import { createText } from './FontHelper'
-import { RgbdVideo } from './RgbdVideo'
-import { generateRgbdUrls, loadRgbdAnim, TYPE } from './RgbdAnimLoader'
+import {
+  loadDepth16BinPoints,
+  loadDepth16BinPointsWithRGBDSameSize,
+  loadTumPng,
+} from '../commons/rgbd/RgbdPointsLoader'
+import { loadPCD, loadPLYPoints } from './LoadersHelper'
+import { KINECT_INTRINSICS } from '../pose-viewer/datasetsloader/rgbdtum'
+import { loadDepth16BinMesh } from '../commons/rgbd/RgbdMeshLoader'
+import { generateRgbdUrls, loadRgbdAnim, TYPE } from '../commons/rgbd/RgbdAnimLoader'
+import { loadDepth16BinMeshTexture } from '../commons/rgbd/RgbdVideo2'
 
 /**
  * This is a debug script, to test different object types
@@ -29,91 +26,67 @@ export async function initRgbdViewer() {
   webglApp.scene.add(new THREE.AmbientLight(0xFFFFFF, 1)) //to render exactly the texture (photogrammetry)
   webglApp.animate()
 
-  // {
-  //   // PCDFormat
-  //   var m = await loadPCD('https://threejs.org/examples/models/pcd/binary/Zaghetto.pcd')
-  //   m.rotateX(180 / RAD2DEG)
-  //   webglApp.scene.add(m)
-  // }
-  // {
-  //   //point cloud ply without faces (Lesly room)
-  //   var m = await loadPLYPoints('https://raw.githubusercontent.com/remmel/recorder-3d/master/Recorder3D/src/test/resources/00000012.ply')
-  //   m.setRotationFromQuaternion(new Quaternion(0.019091055, 0.96770465, 0.2512833, 0.0045607537))
-  //   m.rotateX(180 / RAD2DEG)
-  //   m.position.setX(-2)
-  //   webglApp.scene.add(m)
-  // }
-  // {
-  //   //rgbd_dataset_freiburg1_desk
-  //   var m = await loadTumPng('rgbd-viewer/tum/1305031464.115837.png', 'rgbd-viewer/tum/1305031464.127681.png')
-  //   m.setRotationFromQuaternion(new Quaternion(0.9049, -0.1485, 0.1165, -0.3816))
-  //   m.rotateY(180 / RAD2DEG)
-  //   webglApp.scene.add(m)
-  // }
-  // {
-  //   //https://github.com/remmel/hms-AREngine-demo (my office wardrobe)
-  //   var m = await loadDepth16BinPointsResize('rgbd-viewer/arengine-recorder/00000070_depth16.bin',
-  //     'rgbd-viewer/arengine-recorder/00000070_image.jpg')
-  //   var q = new Quaternion(0.020149395, 0.99818397, 0.05096002, -0.025030866)
-  //   q.multiply(new Quaternion(1, 0, 0, 0))
-  //   m.setRotationFromQuaternion(q)
-  //   m.rotateY(180 / RAD2DEG) //to avoid having it mixed with the other points cloud
-  //   webglApp.scene.add(m)
-  // }
-  //
-  // var closeupPosition = new Vector3(-0.153, 1.600, 0.006)
-  // var closeupRotation = new Euler(1.25, 1.33, -2.86)
-  //
-  //
-  // var txtPosition = new Vector3(0.190, 1.146, -0.206)
-  // var txtRotation = new Euler(-1.87, -1.46, -1.88)
-  //
-  // loadDepth16BinPointsResize(closeup.depth, closeup.rgb).then(m => {
-  //   webglApp.scene.add(m)
-  //   m.position.copy(closeupPosition)
-  //   m.setRotationFromEuler(closeupRotation)
-  //   // webglApp.canTransformControl(m)
-  //
-  //   var t = createText('Points 180x140')
-  //   t.position.copy(txtPosition)
-  //   t.setRotationFromEuler(txtRotation)
-  //   webglApp.canTransformControl(t)
-  //   webglApp.scene.add(t)
-  // })
-  //
-  // loadDepth16BinPoints(closeup.depth, closeup.rgb).then(m => {
-  //   webglApp.scene.add(m)
-  //   m.position.copy(closeupPosition.clone().add(new Vector3(0, 0, .5)))
-  //   m.setRotationFromEuler(closeupRotation)
-  //   // webglApp.canTransformControl(m)
-  //   var t = createText('Points 1440x1080')
-  //   t.position.copy(txtPosition.clone().add(new Vector3(0, 0, .5)))
-  //   t.setRotationFromEuler(txtRotation)
-  //   webglApp.scene.add(t)
-  // })
-  //
-  // loadDepth16BinMesh(closeup.depth, closeup.rgb).then(m => {
-  //   webglApp.scene.add(m)
-  //   m.position.copy(closeupPosition.clone().add(new Vector3(0, 0, 1)))
-  //   m.setRotationFromEuler(closeupRotation)
-  //   // webglApp.canTransformControl(m)
-  //   var t = createText('Mesh Colors Triangles')
-  //   t.position.copy(txtPosition.clone().add(new Vector3(0, 0, 1)))
-  //   t.setRotationFromEuler(txtRotation)
-  //   webglApp.scene.add(t)
-  // })
-  //
-  // loadDepth16BinMeshTexture(closeup.depth, closeup.rgb).then(m => {
-  //   webglApp.scene.add(m)
-  //   m.position.copy(closeupPosition.clone().add(new Vector3(0, 0, 1.5)))
-  //   m.setRotationFromEuler(closeupRotation)
-  //   var t = createText('Mesh Texture UV')
-  //   t.position.copy(txtPosition.clone().add(new Vector3(0, 0, 1.5)))
-  //   t.setRotationFromEuler(txtRotation)
-  //   webglApp.scene.add(t)
-  //   // webglApp.canTransformControl(m)
-  // })
-  //
+  {
+    // PCDFormat
+    var m = await loadPCD('https://threejs.org/examples/models/pcd/binary/Zaghetto.pcd')
+    m.rotateX(180 / RAD2DEG)
+    webglApp.scene.add(m)
+  }
+  {
+    //point cloud ply without faces (Lesly room)
+    var m = await loadPLYPoints('https://raw.githubusercontent.com/remmel/recorder-3d/master/Recorder3D/src/test/resources/00000012.ply')
+    m.setRotationFromQuaternion(new Quaternion(0.019091055, 0.96770465, 0.2512833, 0.0045607537))
+    m.rotateX(180 / RAD2DEG)
+    m.position.setX(-2)
+    webglApp.scene.add(m)
+  }
+  {
+    //rgbd_dataset_freiburg1_desk
+    var m = await loadDepth16BinPointsWithRGBDSameSize('rgbd-viewer/tum/1305031464.115837.png', 'rgbd-viewer/tum/1305031464.127681.png', KINECT_INTRINSICS)
+    m.setRotationFromQuaternion(new Quaternion(0.9049, -0.1485, 0.1165, -0.3816))
+    m.rotateY(180 / RAD2DEG)
+    webglApp.scene.add(m)
+  }
+  {
+    //https://github.com/remmel/hms-AREngine-demo (my office wardrobe)
+    var m = await loadDepth16BinPoints('rgbd-viewer/arengine-recorder/00000070_depth16.bin',
+      'rgbd-viewer/arengine-recorder/00000070_image.jpg')
+    var q = new Quaternion(0.020149395, 0.99818397, 0.05096002, -0.025030866)
+    q.multiply(new Quaternion(1, 0, 0, 0))
+    m.setRotationFromQuaternion(q)
+    m.rotateY(180 / RAD2DEG) //to avoid having it mixed with the other points cloud
+    webglApp.scene.add(m)
+  }
+
+  var closeupPosition = new Vector3(-0.153, 1.600, 0.006)
+  var closeupRotation = new Euler(1.25, 1.33, -2.86)
+
+
+  var txtPosition = new Vector3(0.190, 1.146, -0.206)
+  var txtRotation = new Euler(-1.87, -1.46, -1.88)
+
+  loadDepth16BinPoints(closeup.depth, closeup.rgb).then(m => {
+    webglApp.scene.add(m)
+    m.position.copy(closeupPosition.clone().add(new Vector3(0, 0, .5)))
+    m.setRotationFromEuler(closeupRotation)
+    // webglApp.canTransformControl(m)
+    var t = createText('Points')
+    t.position.copy(txtPosition.clone().add(new Vector3(0, 0, .5)))
+    t.setRotationFromEuler(txtRotation)
+    webglApp.scene.add(t)
+  })
+
+  loadDepth16BinMesh(closeup.depth, closeup.rgb).then(m => {
+    webglApp.scene.add(m)
+    m.position.copy(closeupPosition.clone().add(new Vector3(0, 0, 1)))
+    m.setRotationFromEuler(closeupRotation)
+    // webglApp.canTransformControl(m)
+    var t = createText('Mesh')
+    t.position.copy(txtPosition.clone().add(new Vector3(0, 0, 1)))
+    t.setRotationFromEuler(txtRotation)
+    webglApp.scene.add(t)
+  })
+
   // loadDepthChae('rgbd-viewer/Chae_Demo_Upres.png').then(m => {
   //   // m.rotateZ(90/RAD2DEG)
   //   webglApp.scene.add(m)
@@ -146,28 +119,35 @@ export async function initRgbdViewer() {
   var localstandupbrown6 = 'rgbd-viewer/standupbrown6'
   // var localstandupbrown6 = 'dataset/2021-04-12_190518_standupbrown6'
 
-  {
-    loadDepth16BinMeshTexture(localstandupbrown6 + '/00000354_depth16.bin', localstandupbrown6 + '/00000354_image.jpg').then(m => {
-      // m.rotateZ(-90 / RAD2DEG)
-      // m.position.set(0.551,0.000,0.000)
-      // m.rotation.set(-3.14,-0.01,1.57)
-      m.rotateX(180/RAD2DEG)
-      m.position.set(0.000,0.248,0.000)
-      webglApp.scene.add(m)
-      webglApp.canTransformControl(m)
-      webglApp.canTransform.attachTransformControl(m)
-    })
-  }
+  // {
+  //   loadDepth16BinMesh(localstandupbrown6 + '/00000354_depth16.bin', localstandupbrown6 + '/00000354_image.jpg').then(m => {
+  //     // m.rotateZ(-90 / RAD2DEG)
+  //     // m.position.set(0.551,0.000,0.000)
+  //     // m.rotation.set(-3.14,-0.01,1.57)
+  //     m.rotateX(180/RAD2DEG)
+  //     m.position.set(0.000,0.248,0.000)
+  //     webglApp.scene.add(m)
+  //     webglApp.canTransformControl(m)
+  //     webglApp.canTransform.attachTransformControl(m)
+  //   })
+  // }
+  //
+  // {
+  //   var fn = 'output_rgbd_1440x1080.mp4'
+  //   // var fn = '00000354_rgbd.png'
+  //   var rgbdVideo = new RgbdVideo(localstandupbrown6 + '/' + fn)
+  //   webglApp.scene.add(rgbdVideo)
+  //   // rgbdVideo.position.copy(standupbrowPos.clone().add(new Vector3(0, 0, -1)))
+  //   // rgbdVideo.setRotationFromEuler(standupbrownEuler)
+  //   // rgbdVideo.rotateZ(-90 / RAD2DEG)
+  // }
 
-  {
-    var fn = 'output_rgbd_1440x1080.mp4'
-    // var fn = '00000354_rgbd.png'
-    var rgbdVideo = new RgbdVideo(localstandupbrown6 + '/' + fn)
-    webglApp.scene.add(rgbdVideo)
-    // rgbdVideo.position.copy(standupbrowPos.clone().add(new Vector3(0, 0, -1)))
-    // rgbdVideo.setRotationFromEuler(standupbrownEuler)
-    // rgbdVideo.rotateZ(-90 / RAD2DEG)
-  }
+  // {
+  //   var folder = 'dataset/2021-04-12_190518_standupbrown6'
+  //   var rgbdVideo2 = new RgbdVideo2(folder)
+  //   webglApp.scene.add(rgbdVideo2)
+  //   webglApp.animateAdd(delta => rgbdVideo2.update(delta))
+  // }
 
   createZoom()
 }

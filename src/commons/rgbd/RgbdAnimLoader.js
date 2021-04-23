@@ -1,8 +1,8 @@
-import { idPad, accumulate } from '../pose-viewer/utils'
+import { idPad, accumulate } from '../../pose-viewer/utils'
 import * as THREE from 'three'
 import { Euler, NumberKeyframeTrack, Vector3 } from 'three'
-import { loadDepth16BinMeshTexture } from './RgbdLoader'
-import { RAD2DEG } from '../pose-viewer/utils3d'
+import { loadDepth16BinMesh } from './RgbdMeshLoader'
+import { RAD2DEG } from '../../pose-viewer/utils3d'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 /**
@@ -64,7 +64,7 @@ export async function loadDepth16BinList(urls, onProgess) {
 
   for (let i = 0; i < urls.length; i++) {
     var { depth, rgb } = urls[i]
-    promises.push(loadDepth16BinMeshTexture(depth, rgb).then(obj => { //loadDepth16BinPoints(
+    promises.push(loadDepth16BinMesh(depth, rgb).then(obj => { //loadDepth16BinPoints(
       objs3d[i] = obj
       if (onProgess) {
         progress++

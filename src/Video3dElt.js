@@ -1,7 +1,7 @@
 import {css, html, LitElement} from 'lit-element';
 import WebGlApp from "./WebGlApp";
 import * as THREE from "three";
-import {loadDepth16BinMeshTexture} from "./rgbd-viewer/RgbdLoader";
+import {loadDepth16BinMesh} from "./commons/rgbd/RgbdMeshLoader";
 import {loadRecorder3D} from "./pose-viewer/datasetsloader/recorder3d";
 import "./commons/PlayerControlsElt"
 import { sp1 } from './commons/demoscenes'
@@ -88,7 +88,7 @@ export class Video3dElt extends LitElement {
         this.frameIdx = idx
 
         var frame = this.frames[idx]
-        var m = await loadDepth16BinMeshTexture(frame.depth, frame.rgb)
+        var m = await loadDepth16BinMesh(frame.depth, frame.rgb)
 
         //there is always ONE child
         this.group.children.forEach((c)=>{
