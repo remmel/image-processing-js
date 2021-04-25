@@ -53,16 +53,22 @@ export class Video3dElt extends LitElement {
         webgl.enableOrbitControls(new Vector3(-1, 0, 0))
         webgl.animate()
         this.loadPoses()
+
+        // this.createClippingBox()
+
         super.firstUpdated(_changedProperties)
     }
 
     async loadPoses() {
-        var poses = await loadRecorder3D(this.datasetFolder)
-
         this.group = new THREE.Group()
+        this.webGlApp.scene.add(this.group)
+
+        var poses = await loadRecorder3D(this.datasetFolder)
+        this.groupPoses = new THREE.Group()
+        this.group.add(this.groupPoses)
+
         var p = poses[0]
         this.group.setRotationFromQuaternion(p.rotation)
-        this.webGlApp.scene.add(this.group)
         // this.webGlApp.canTransformControl(this.group)
 
         if (poses.length === 0) return
@@ -91,12 +97,27 @@ export class Video3dElt extends LitElement {
         var m = await loadDepth16BinMesh(frame.depth, frame.rgb)
 
         //there is always ONE child
-        this.group.children.forEach((c)=>{
+        this.groupPoses.children.forEach((c)=>{
             c.geometry.dispose()
             c.material.dispose()
         })
-        this.group.remove(...this.group.children)
-        this.group.add(m)
+        this.groupPoses.remove(...this.groupPoses.children)
+        this.groupPoses.add(m)
+    }
+
+    createClippingBox() {
+        var near = 1, far = 2.1
+        var depthDiff = far - near
+        let boxGeo = new THREE.BoxGeometry(3, 2, depthDiff)
+        let boxMat = new THREE.MeshBasicMaterial({
+            color: 0xffff00,
+            wireframe: true,
+        })
+
+        var box = this.clippingBox = new THREE.Mesh(boxGeo, boxMat)
+        box.position.set(0,0,near + depthDiff/2)
+
+        this.group.add(box)
     }
 }
 

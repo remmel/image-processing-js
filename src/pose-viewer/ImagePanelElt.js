@@ -1,6 +1,6 @@
 import {LitElement, html, css} from 'lit-element';
-import {getImageUrl, URLDATAPIXEL} from "./utils";
 import PoseCylinder from "./PoseCylinder";
+import { readAsDataURL } from './form/formUtils'
 
 class ImagePanelElt extends LitElement {
     static get styles() {
@@ -116,5 +116,28 @@ var preloadImagesOnce = () => {
     // preloadImagesOnce = () => {}; //as that fct is called once
 }
 
-window.customElements.define('image-panel-elt', ImagePanelElt);
+window.customElements.define('image-panel-elt', ImagePanelElt)
 
+
+//URL.createObjectURL(e.target.files[0]);
+async function getImageUrl(urlOrFile) {
+    if(typeof urlOrFile === 'string')
+        return urlOrFile
+    else if(urlOrFile instanceof File)
+        return await readAsDataURL(urlOrFile);
+}
+
+const URLDATAPIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=='
+
+export function getImageSize(urlOrFile) {
+    return new Promise((resolve, reject) => {
+        var img = document.createElement('img')
+        getImageUrl(urlOrFile).then(url => {
+            img.src= url
+            img.onload = (e) => {
+                var {width, height} = e.target
+                resolve({width, height})
+            }
+        })
+    })
+}

@@ -1,6 +1,14 @@
-import {Euler, Math, Matrix3, Matrix4, Quaternion, Vector3} from "three";
-import {convertM3ToM4, downloadCsv, readOrFetchText, urlOrFileImage} from "./datasetsloader";
+import {Euler, Matrix3, Matrix4, Quaternion, Vector3} from "three";
+import {
+    convertM3ToM4,
+    downloadCsv,
+    downloadXml,
+    readOrFetchText,
+    urlOrFileImage,
+} from './datasetsloader'
 import * as X2JS from 'x2js-fork'
+import { getImageSize } from '../ImagePanelElt'
+import { HONOR20VIEW_DEPTH_INTRINSICS } from '../../commons/rgbd/RgbdMeshLoader'
 
 //import xml, export csv
 export async function loadAgisoft(url, files) {
@@ -9,8 +17,9 @@ export async function loadAgisoft(url, files) {
     var xml = await readOrFetchText(url, files, 'cameras.xml', true) //no default name for agisoft
     var document = (new X2JS()).xml_str2json(xml);
 
-    var scale = 0.1; //TODO estimate default scale
+    var scale = 1; //TODO estimate default scale
     var transformWorld = null;
+
     if(document.document.chunk.transform) {
         var transform = document.document.chunk.transform;
         if (transform.scale)
@@ -56,7 +65,7 @@ export async function loadAgisoft(url, files) {
     return poses;
 }
 
-export function exportAgisoftReference(poses){
+export function exportAgisoftReferenceCsv(poses){
     var csv = "label,tx,ty,tz,omega (x),phi (y),kappa (z)\n";
     poses.forEach(pose => {
         if(!pose.rotation instanceof Euler && !pose.rotation instanceof Quaternion)
@@ -83,4 +92,66 @@ export function exportAgisoftReference(poses){
         ].join(',') + "\n";
     });
     downloadCsv(csv, "references.csv");
+}
+
+//TODO add other export which complete existing cameras.xml
+export async function exportAgisoftXml(poses) {
+
+    var cameraList = []
+    poses.forEach(p => {
+        var m4 = new Matrix4()
+        m4.makeRotationFromQuaternion(p.rotation)
+        m4.setPosition(p.position)
+
+        // m4.invert() //should I?
+        m4.transpose()
+        cameraList.push({
+            'transform': m4.elements.join(' '),
+            '_id': p.id,
+            '_sensor_id': 0,
+            '_label': p.rgbFn.replace('.jpg', ''),
+        })
+    })
+
+    //get resolution of 1 image
+    var size = await getImageSize(poses[0].rgb)
+
+    var hardcodedHonor20ViewFocal = Math.round(HONOR20VIEW_DEPTH_INTRINSICS.fx / HONOR20VIEW_DEPTH_INTRINSICS.w * size.width)
+
+    var root = {
+        'document': {
+            '_version': '1.5.0',
+            'chunk': {
+                '_label': 'Chunk 1',
+                '_enabled': true,
+                'sensors': {
+                    '_next_id': 1,
+                    'sensor': {
+                        'resolution': { '_width': size.width, '_height': size.height },
+                        'property': { '_name': 'layer_index', '_value': '0' },
+                        'bands': { 'band': [{ '_label': 'Red' }, { '_label': 'Green' }, { '_label': 'Blue' }] },
+                        'data_type': 'uint8',
+                        'calibration': {
+                            'resolution': { '_width': size.width, '_height': size.height },
+                            'f': hardcodedHonor20ViewFocal, //to put something, better to calibrate using chessboard (eg boofcv android app)
+                            'cx': '0', //it's look this is diff with width/2
+                            'cy': '0', //it's look this is diff with height/2
+                            '_type': 'frame',
+                            '_class': 'adjusted',
+                        },
+                        '_id': '0',
+                        '_label': 'unknown',
+                        '_type': 'frame',
+                    },
+                },
+                'cameras': [{
+                    '_next_id': poses.length,
+                    '_next_group_id': 0,
+                    'camera': cameraList,
+                }],
+            },
+        },
+    }
+
+    downloadXml(root, "cameras_exported.xml");
 }

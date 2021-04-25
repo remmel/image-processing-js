@@ -1,9 +1,6 @@
-import { idPad, accumulate } from '../../pose-viewer/utils'
+import { accumulate, idPad } from '../../pose-viewer/utils'
 import * as THREE from 'three'
-import { Euler, NumberKeyframeTrack, Vector3 } from 'three'
 import { loadDepth16BinMesh } from './RgbdMeshLoader'
-import { RAD2DEG } from '../../pose-viewer/utils3d'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 /**
  * Thoses anim takes too much GPU RAM

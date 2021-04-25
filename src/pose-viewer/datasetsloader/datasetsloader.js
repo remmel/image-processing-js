@@ -5,7 +5,8 @@ import {exportAlicevision, loadAlicevision} from "./alicevision.js";
 import {exportRecorder3D, loadRecorder3D} from "./recorder3d.js";
 import {loadAr3dplan} from "./ar3dplan.js";
 import {loadLubos} from "./3dlivescanner.js";
-import {exportAgisoftReference, loadAgisoft} from "./agisoft.js";
+import { exportAgisoftReferenceCsv, exportAgisoftXml, loadAgisoft } from './agisoft.js'
+import * as X2JS from 'x2js-fork'
 
 export const DATASET_TYPE = {
     RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
@@ -19,7 +20,8 @@ export const DATASET_TYPE = {
 export const DATASET_TYPE_EXPORT = {
     FAST_FUSION: 'FAST_FUSION',
     ALICEVISION_SFM:'ALICEVISION_SFM',
-    AGISOFT: 'AGISOFT',
+    AGISOFT_CSV: 'AGISOFT_CSV',
+    AGISOFT_XML: 'AGISOFT_XML',
     DEFAULT: 'DEFAULT'
 }
 
@@ -127,8 +129,10 @@ export function exportPoses(poses, exportType){
             exportTumAssociate(poses); break;
         case DATASET_TYPE_EXPORT.ALICEVISION_SFM:
             exportAlicevision(poses); break;
-        case DATASET_TYPE_EXPORT.AGISOFT:
-            exportAgisoftReference(poses); break;
+        case DATASET_TYPE_EXPORT.AGISOFT_CSV:
+            exportAgisoftReferenceCsv(poses); break;
+        case DATASET_TYPE_EXPORT.AGISOFT_XML:
+            exportAgisoftXml(poses); break;
         case DATASET_TYPE_EXPORT.DEFAULT:
         default:
             exportRecorder3D(poses);
@@ -136,19 +140,26 @@ export function exportPoses(poses, exportType){
 }
 
 export function downloadCsv(csv, fn) {
-    var encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
-    var link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", fn);
-    document.body.appendChild(link); // Required for FF
-    link.click()
+    var encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csv)
+    downloadData(encodedUri, fn)
 }
 
 export function downloadJson(obj, fn) {
-    var encodedUri = encodeURI("data:text/json;charset=utf-8," + JSON.stringify(obj, null, 4));
-    var link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", fn);
-    document.body.appendChild(link); // Required for FF
+    var encodedUri = encodeURI('data:text/json;charset=utf-8,' + JSON.stringify(obj, null, 4))
+    downloadData(encodedUri, fn)
+}
+
+export function downloadXml(obj, fn) {
+    var x2js = new X2JS()
+    var xmlAsStr = x2js.json2xml_str(obj)
+    var encodedUri = encodeURI('data:text/xml;charset=utf-8,' + xmlAsStr)
+    downloadData(encodedUri, fn)
+}
+
+function downloadData(encodedUri, fn) {
+    var link = document.createElement('a')
+    link.setAttribute('href', encodedUri)
+    link.setAttribute('download', fn)
+    document.body.appendChild(link) // Required for FF
     link.click()
 }

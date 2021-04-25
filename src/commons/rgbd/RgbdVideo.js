@@ -15,7 +15,7 @@ const SHADER_VERTEX = `
   varying float visibility;
 
   const float  _Epsilon = .03;
-  const float MAX_DIFF = 0.05;
+  const float MAX_DIFF = 0.05; //is dependant of clip dimensions
 
   // return [0-1, 0-1, 0-1]
   vec3 rgb2hsv(vec3 c) {
@@ -62,9 +62,11 @@ const SHADER_VERTEX = `
     float depthNE = depth(depthvUv + vec2(0.0,  -textureStep.y));
       
     visibility = 1.0;
-    if(!isCorrect(depthNW, depthSW, depth0) || !isCorrect(depthNW, depth0, depthNE)) {
-        visibility = 0.0;
-        return;
+    if(farClipping-nearClipping > 2000.0) { //no need to check if clipped inf 2m, because there are proably no background 
+        if(!isCorrect(depthNW, depthSW, depth0) || !isCorrect(depthNW, depth0, depthNE)) {
+            visibility = 0.0;
+            return;
+        }
     }
       
     float z = (depth0 * (farClipping - nearClipping) + nearClipping) / 1000.0; //z in meters
@@ -126,7 +128,7 @@ export class RgbdVideo extends Group {
       this.addObject3D(isMesh)
     } else {
       const elVideo = this.elVideo = createElement(`<video muted loop playsinline autoplay crossorigin='anonymous'>`)
-      elVideo.src = url //+ '?ts=' + new Date().getTime()
+      elVideo.src = url + '?ts=' + new Date().getTime()
       this.texture = new THREE.VideoTexture(this.elVideo)
       this.texture.minFilter = THREE.NearestFilter
       elVideo.onloadedmetadata = () => {
@@ -138,9 +140,7 @@ export class RgbdVideo extends Group {
 
   // TODO should add intrinsics and geometry size in a json or in video comment
   addObject3D(isMesh) {
-    // const width = this.elVideo.videoWidth, height = this.elVideo.videoHeight/2 //height divided by 2 because 2 vids
-    const nearClipping = 0, farClipping = 1529*2
-    // const nearClipping = 1757.81, farClipping = 2486.32
+    const nearClipping = 1000, farClipping = 2100 //hue range: 1529
 
     const width = 240, height = 180
     var geometry = this.createGeometry(width, height, isMesh)

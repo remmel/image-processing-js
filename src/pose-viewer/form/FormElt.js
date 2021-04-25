@@ -90,7 +90,8 @@ class FormElt extends LitElement {
                 <select name="exportType">
                     <option value="">- Select Export type -</option>
                     <option value="ALICEVISION_SFM">Alicevision - .sfm</option>
-                    <option value="AGISOFT">Agisoft (omega,phi,kappa) - .csv</option>
+                    <option value="AGISOFT_CSV">Agisoft (omega,phi,kappa) - .csv</option>
+                    <option value="AGISOFT_XML">Agisoft .xml</option>
                     <option value="FAST_FUSION">FastFusion - associate.txt</option>
                     <option value="DEFAULT">Default - .csv</option>
                 </select>

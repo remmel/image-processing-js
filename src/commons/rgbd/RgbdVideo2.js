@@ -2,21 +2,18 @@ import * as THREE from 'three'
 import { Group } from 'three'
 import { createElement } from '../domUtils'
 import { createGeometry, HONOR20VIEW_DEPTH_INTRINSICS } from './RgbdMeshLoader'
-import { decode } from 'fast-png'
 import { createRgbdUrls } from '../demoscenes'
 import { loadDepthData } from './DataImage'
 
 /**
- * Class using video for rgb and bins for depth
+ * Class using VideoTexture for rgb and bins for depth
  */
 export class RgbdVideo2 extends Group {
-  constructor(folder) {
+  constructor(folder, fps = 25) {
     super()
 
     this.folder = folder
-
-    this.frameIdx = 0
-    window.RGBDVIDEO2 = this
+    this.fps = fps
 
     // material
     /** @var {HTMLVideoElement} elVideo  */
@@ -53,11 +50,16 @@ export class RgbdVideo2 extends Group {
     this.geometries = await Promise.all(promises)
   }
 
+  //or ontimeupdate
   update() {
     if(this.geometries.length === 0) return
 
-    var frameIdx = Math.floor(this.elVideo.currentTime * 25)
+    var frameIdx = Math.floor(this.elVideo.currentTime * this.fps)
+    // handle offset
+    frameIdx = (frameIdx+1)%this.geometries.length
+    if(!this.geometries[frameIdx]) return console.error("geo not found at "+frameIdx)
     this.mesh.geometry = this.geometries[frameIdx]
+
     if(this.prevFrameIdx !== undefined && this.prevFrameIdx !== frameIdx)
       this.geometries[this.prevFrameIdx].dispose()
 
@@ -66,7 +68,7 @@ export class RgbdVideo2 extends Group {
 }
 
 async function createGeometryDepth(urlDepth, intrinsics = HONOR20VIEW_DEPTH_INTRINSICS) {
-  var depthData = loadDepthData(urlDepth)
+  var depthData = await loadDepthData(urlDepth)
   var {w, h, fx, rangeToMeters} = intrinsics
   return createGeometry(depthData, w, h, fx, rangeToMeters)
 }
