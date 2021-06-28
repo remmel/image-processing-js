@@ -44,7 +44,9 @@ export var closeup = {
 
 //dataset/20210318_160008.obj/glb/rework.gltf
 // export var appartof = 'dataset/20210318_160008.obj_apartof/rework/apartof.glb'
-export var apartof = 'https://www.kustgame.com/ftp/20210318_160008_apartof/apartof.glb'
+// export var apartof = 'dataset/apart/apartof2.glb'
+// export var apartof = 'dataset/apart/apartof2-onlymyoffice.glb'
+export var apartof = 'https://www.kustgame.com/ftp/apartof/apartof2.glb'
 
 //dataset/CV60/PIC_20210318_181124.jpg
 export var appartmyroom360 = 'https://www.kustgame.com/ftp/photovid360/PIC_20210318_181124.jpg'
@@ -74,13 +76,13 @@ export function loadSceneCocina(webglApp, gameFps, onProgress){
       webglApp.scene.add(m)
     })
 
-  var urls = generateRgbdUrls(coucoustool.folder, 1472, 1550)
-  loadRgbdAnim(urls, onProgress).then(({m, animateCb}) => { //2 onProgress not handled
-    webglApp.scene.add(m)
-    m.setRotationFromEuler(new Euler(2.42, 0.64, 2.12))
-    m.position.copy(new Vector3(-0.378, 1.363, -0.277))
-    webglApp.animateAdd(animateCb)
-  })
+  // var urls = generateRgbdUrls(coucoustool.folder, 1472, 1550)
+  // loadRgbdAnim(urls, onProgress).then(({m, animateCb}) => { //2 onProgress not handled
+  //   webglApp.scene.add(m)
+  //   m.setRotationFromEuler(new Euler(2.42, 0.64, 2.12))
+  //   m.position.copy(new Vector3(-0.378, 1.363, -0.277))
+  //   webglApp.animateAdd(animateCb)
+  // })
 }
 
 export function loadSceneApartof(webglApp, gameFps, onProgress) {
@@ -100,6 +102,10 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
     loadGltf(apartof, onProgress).then(g => {
       var visibles = new Group()
       var colliders = new Group()
+
+      var name = apartof.substr(apartof.lastIndexOf('/')+1).slice(0, -4)
+      visibles.name="visibles-"+name
+      colliders.name="colliders-"+name
 
       var children = [...g.children] //must copy list, it seems that when adding in remove move in others
 
@@ -142,15 +148,19 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
     webglApp.scene.add(m)
   }
 
+  // {
+  //   var urls = generateRgbdUrls(standupbrown, 354, 354+54, 3)
+  //   loadRgbdAnim(urls, onProgress, TYPE.BOOMERANG).then(({m, animateCb}) => { //2 onProgress not handled
+  //     webglApp.scene.add(m)
+  //     m.position.copy(new Vector3(0.760,1.656,-2.914))
+  //     m.setRotationFromEuler(new Euler(2.57,0.90,2.04))
+  //     webglApp.animateAdd(animateCb)
+  //     webglApp.canTransformControl(m)
+  //   })
+  // }
+
   {
-    var urls = generateRgbdUrls(standupbrown, 354, 354+54, 3)
-    loadRgbdAnim(urls, onProgress, TYPE.BOOMERANG).then(({m, animateCb}) => { //2 onProgress not handled
-      webglApp.scene.add(m)
-      m.position.copy(new Vector3(0.760,1.656,-2.914))
-      m.setRotationFromEuler(new Euler(2.57,0.90,2.04))
-      webglApp.animateAdd(animateCb)
-      webglApp.canTransformControl(m)
-    })
+
   }
 }
 

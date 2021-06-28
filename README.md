@@ -20,7 +20,7 @@ It is possible to import and export the poses in many format.
 
 # Video3D Editor
 
-[Video3D Editor][video3d-editor.html] : can currently only visualize 3d video
+[Video3D Editor](https://remmel.github.com/image-processing-js/video3d-editor.html) : can currently only visualize 3d video
 
 Thoses rgbd images can be: rgb(jpg) + depth(depth16.bin) or rgb(jpg) + depth(16b grayscale png)
 
@@ -131,9 +131,9 @@ mogrify -resize 1080x1440 -path upscaled *.png
 
 
 # How to store depth data in RGB ? (hue?)
-Grayscale 16bits precision is 2^16=65536. As RGB is 8bit per channel <=> 2^24=16 millions
+Grayscale 16bits precision is 2^16=65536. As RGB is 8bit per channel <=> 2^(2*8)=16 millions
 Usually we have 1<=>1mm, thus in grayscale we could store 65 meters, although we don't need so much
-Thus is we want to have same range than grayscale (0-65m), max eror is 0.2cm, this is bad when for grayscale this is 1mm
+Thus is we want to have same range than grayscale (0-65m), max error is 0.2cm, this is bad when for grayscale this is 1mm
 ```javascript
 Math.floor(hsv2rgb2rgb(10066/65535) * 65535) //10069
 Math.floor(hsv2rgb2rgb(10065/65535) * 65535) //9898
@@ -147,13 +147,13 @@ Math.floor(hsv2rgb2rgb(1002/4000) * 4000) //1010
 
 In hsv, with s=v=100%, h can have 2*256=1536 differents values when encoded in RGB 8b
 
-We could also set a minrange and maxrange (clipping box), as we know that first 0.5m is not accurange
+We could also set a minrange and maxrange (clipping box) as the first 0.5m is not accurate/recorded and we can ignore background.
 
 [Depthkit.js](https://juniorxsound.github.io/Depthkit.js/examples/simple.html) is using a clipping box, and only save depth between 1757 and 2486 (729)
 
 Understand HSV: https://alloyui.com/examples/color-picker/hsv.html
 
-[recorder-3d]:(https://github.com/remmel/recorder-3d)
-[pose-viewer.html]:(https://remmel.github.com/image-processing-js/pose-viewer.html)
-[video3d-editor.html]:(https://remmel.github.com/image-processing-js/video3d-editor.html)
-[fps-viewer.html]:(https://remmel.github.com/image-processing-js/fps-viewer.html)
+[recorder-3d]: https://github.com/remmel/recorder-3d
+[pose-viewer.html]: https://remmel.github.com/image-processing-js/pose-viewer.html
+[video3d-editor.html]: https://remmel.github.com/image-processing-js/video3d-editor.html
+[fps-viewer.html]: https://remmel.github.com/image-processing-js/fps-viewer.html

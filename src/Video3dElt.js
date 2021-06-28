@@ -54,7 +54,7 @@ export class Video3dElt extends LitElement {
         webgl.animate()
         this.loadPoses()
 
-        // this.createClippingBox()
+        this.createClippingBox()
 
         super.firstUpdated(_changedProperties)
     }

@@ -115,7 +115,7 @@ const SHADER_FRAGMENT = `
  *
  * It would be better to extends Mesh or Points, but as it can be one or other, I extends Object3D stuff instead and the Mesh/Point will be a child
  */
-export class RgbdVideo extends Group {
+export class RgbdVideoHue extends Group {
   /**
    * @param url can be a video, but for debugging purpose a png file
    * @param isMesh {Boolean} if it's Points or Mesh

@@ -34,7 +34,7 @@ export class CanTransformControlWebGlApp {
           break
         case ' ': // spacebar - pretty print position of object
           var obj = control.object
-          console.log('position', prettyPrint(obj.position), 'euler', prettyPrint(obj.rotation))
+          console.log('position', prettyPrint(obj.position), 'euler', prettyPrint(obj.rotation), 'scale', prettyPrint(obj.scale))
           break
       }
     })

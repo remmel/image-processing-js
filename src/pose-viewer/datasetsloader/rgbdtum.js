@@ -120,7 +120,8 @@ export function exportTumAssociate(poses) {
 
         //q.multiply(new Quaternion(0,0,1,0));
 
-        var id = pose.id;
+        // var id = pose.id
+        var id = pose.rgbFn.substring(0, 8)
 
         //TODO make that more general as expected to come from AREngine
         csv += [
@@ -128,7 +129,7 @@ export function exportTumAssociate(poses) {
             pose.position.x, pose.position.y, pose.position.z, //tx ty tz
             q.x, q.y, q.z, q.w, //qx qy qz qw
             pose.raw.depth_ts ? pose.raw.depth_ts : id, //depth_ts //dumb
-            pose.depthFn, //"_depth16.bin.png" //depth_fn
+            pose.depthFn ? pose.depthFn : id + "_depth16.bin.png", //depth_fn
             pose.raw.rgb_ts ? pose.raw.rgb_ts : id, //rgb_ts //dumb
             pose.rgbFn, //"_image.jpg" //rgb_fn //pose.rgbFn
         ].join(' ') + "\n";

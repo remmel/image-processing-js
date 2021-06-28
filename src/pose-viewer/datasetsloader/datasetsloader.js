@@ -2,11 +2,12 @@ import {Matrix4} from "three";
 import {readAsText} from "../form/formUtils.js";
 import {loadTum, exportTumAssociate} from "./rgbdtum.js";
 import {exportAlicevision, loadAlicevision} from "./alicevision.js";
-import {exportRecorder3D, loadRecorder3D} from "./recorder3d.js";
+import {exportCsv, loadRecorder3D} from "./recorder3d.js";
 import {loadAr3dplan} from "./ar3dplan.js";
 import {loadLubos} from "./3dlivescanner.js";
 import { exportAgisoftReferenceCsv, exportAgisoftXml, loadAgisoft } from './agisoft.js'
 import * as X2JS from 'x2js-fork'
+import { loadTsdfFusion } from './tsdfusion'
 
 export const DATASET_TYPE = {
     RGBDTUM: 'RGBDTUM', //https://vision.in.tum.de/data/datasets/rgbd-dataset //eg https://vision.in.tum.de/rgbd/dataset/freiburg1/rgbd_dataset_freiburg1_desk2.tgz
@@ -15,6 +16,7 @@ export const DATASET_TYPE = {
     RECORDER3D: 'RECORDER3D', //https://github.com/remmel/hms-AREngine-demo
     ALICEVISION_SFM: 'ALICEVISION_SFM', //https://meshroom-manual.readthedocs.io/en/latest/node-reference/nodes/ConvertSfMFormat.html
     AGISOFT: 'AGISOFT', //Agilesoft Metashape format (File > Export > Export Cameras)
+    TSDFFUSION: 'TSDFFUSION'
 };
 
 export const DATASET_TYPE_EXPORT = {
@@ -22,6 +24,7 @@ export const DATASET_TYPE_EXPORT = {
     ALICEVISION_SFM:'ALICEVISION_SFM',
     AGISOFT_CSV: 'AGISOFT_CSV',
     AGISOFT_XML: 'AGISOFT_XML',
+    RECORDER3D: 'RECORDER3D',
     DEFAULT: 'DEFAULT'
 }
 
@@ -48,6 +51,7 @@ export async function loadPoses(type, folder, files, onProgress) {
         case DATASET_TYPE.RECORDER3D: poses = await loadRecorder3D(url, files); break;
         case DATASET_TYPE.ALICEVISION_SFM: poses = await loadAlicevision(url, files); break;
         case DATASET_TYPE.AGISOFT: poses = await loadAgisoft(url, files); break;
+        case DATASET_TYPE.TSDFFUSION: poses = await loadTsdfFusion(url, files); break;
         default: throw "Wrong dataset type:"+type;
     }
 
@@ -111,6 +115,7 @@ export function urlOrFileImage(urlFolder, files, fn) { //TODO handle properly f.
 }
 
 //TODO not sure about that, specially the scale as I do later "position.x *= scale;"
+// use compose instead ? new Matrix4()).compose(
 export function convertM3ToM4(m3, translation, scale) {
     var m4 = new Matrix4();
     var m3arr = m3.elements;
@@ -133,9 +138,11 @@ export function exportPoses(poses, exportType){
             exportAgisoftReferenceCsv(poses); break;
         case DATASET_TYPE_EXPORT.AGISOFT_XML:
             exportAgisoftXml(poses); break;
+        case DATASET_TYPE_EXPORT.RECORDER3D:
+            exportCsv(poses, true); break;
         case DATASET_TYPE_EXPORT.DEFAULT:
         default:
-            exportRecorder3D(poses);
+            exportCsv(poses);
     }
 }
 

@@ -86,6 +86,12 @@ export class PoseWebGlApp {
             case DATASET_TYPE.RGBDTUM:
                 this.webgl.camera.up = new THREE.Vector3(0, 0, 1)
                 break
+            case DATASET_TYPE.TSDFFUSION:
+                //place floor like that as y is height
+                this.floor.rotation.x = THREE.Math.degToRad(90) //plane.rotateX( - Math.PI / 2);
+                this.floor.position.y = 1.6 //as we usually took the first image at that height
+                this.webgl.camera.up = new THREE.Vector3(0, -1, 0)
+                break
             default:
                 console.error('Default floor rotation as that dataset is not handled: ' + datasetType)
         }

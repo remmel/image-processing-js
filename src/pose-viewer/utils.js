@@ -19,6 +19,6 @@ export function accumulate(repeat, step) {
 }
 
 // eg 52 => '00000052' - default is 8
-export function idPad(i) {
-    return (i+'').padStart(8, '0')
+export function idPad(i, count = 8) {
+    return (i+'').padStart(count, '0')
 }

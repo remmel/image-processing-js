@@ -1,4 +1,5 @@
 # Objective of that script is to colorize depth image, knowing that in hsv hue can store 1530 values (0-1529)
+import struct
 
 import cv2 as cv
 import colorsys
@@ -41,27 +42,6 @@ def color_depth16grayscalepng(input, output):
         cv.waitKey(0)
         cv.destroyAllWindows()
 
-# def read_depth16bin(path):
-#     image = np.zeros((h, w, 3), np.uint8)
-#     with open(path, "rb") as f:
-#         ba = bytearray(f.read())
-#         print(len(ba))
-#         for x in range(0, w):
-#             for y in range(0, h):
-#                 value2 = ba[(x+y*w)*2]
-#                 value1 = ba[(x + y * w) * 2]+1
-#                 value16 = (value1 & 255) << 8 | (value2 & 255)
-#                 depth = value16 & 0x1FFF
-#                 # print(b, depth)
-#                 hsv = colorsys.hsv_to_rgb(depth/4000, 1,1) #1530 different possible values
-#                 image[y,x] = tuple(reversed((hsv[0]*255, hsv[1]*255, hsv[2]*255)))
-#     cv.imshow("hsv", image)
-#     cv.waitKey(0)
-#     cv.destroyAllWindows()
-
-
-
-
 def color_folder(dir):
     files = glob.glob(dir + "/" + "*_depth16.bin.png")
     os.makedirs(dir + "/output/240x180/", exist_ok=True)
@@ -97,8 +77,6 @@ def write_json(dir):
 
 
 dir  = '/home/remmel/workspace/dataset/2021-04-12_190518_standupbrown6'
-
-# read_depth16bin(dir + "/00000354_depth16.bin")
 
 color_folder(dir)
 

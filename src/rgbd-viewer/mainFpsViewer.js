@@ -31,7 +31,7 @@ var scenesHtml = `
 `
 
 export async function initFpsViewer() {
-  webglApp = new WebGlApp()
+  webglApp = window.WEBGLAPP = new WebGlApp()
   var gameFps = null //dumb gameFps
 
   var elLoading = addElement(loadingHtml)

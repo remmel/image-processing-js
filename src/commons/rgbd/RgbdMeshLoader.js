@@ -64,7 +64,7 @@ export function correctTriangle(ra, rb, rc) {
  * Color/Uv : if color is used pixel colors will be added in 'color' attribute
  *
  */
-export function createGeometry(dData, width, height, focal, fnToZMm, useIndex = true, colorPixels = null) {
+export function createGeometry(dData, width, height, focal, fnToZMm, useIndex = true, colorPixels = null, discard = null) {
 
   var positionsIdx = [], uvsIdx = [], colorsIdx = [], indices = [] //if uses index
   var positionsUn = [], uvsUn = [] //if doesnt use index
@@ -82,6 +82,8 @@ export function createGeometry(dData, width, height, focal, fnToZMm, useIndex = 
       if(z3 === 0) continue
       var x3 = (x - width / 2) * z3 / focal
       var y3 = (y - height / 2) * z3 / focal
+
+      if(discard !== null && discard(x3,y3,z3)) continue //used by bounding box to remove points
 
       if(useIndex) {
         positionsIdx.push(x3, y3, z3) //==vertices[idVertex*3+0]=x3

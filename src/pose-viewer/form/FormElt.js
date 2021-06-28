@@ -93,6 +93,7 @@ class FormElt extends LitElement {
                     <option value="AGISOFT_CSV">Agisoft (omega,phi,kappa) - .csv</option>
                     <option value="AGISOFT_XML">Agisoft .xml</option>
                     <option value="FAST_FUSION">FastFusion - associate.txt</option>
+                    <option value="RECORDER3D">3D Recorder (AREngine) - .csv</option>
                     <option value="DEFAULT">Default - .csv</option>
                 </select>
                 <input type="file" value="file-general" name="file" style="display: none"/>
