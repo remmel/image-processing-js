@@ -10,19 +10,21 @@ import { closest } from '../../pose-viewer/utils'
 /**
  * Class using VideoTexture for rgb and bins for depth,
  * but the timestamp is provided in poses.csv to sync rgb with depth
+ * TODO (0,0,0) must be feets
  */
 export class RgbdVideoVFR extends Group {
-  constructor(folder, clippingBox) {
+  constructor(folder, showClippingBox) {
     super()
 
     this.folder = folder
     this.name = 'Group-RgbdVideoVFR'
+    this.showClippingBox = showClippingBox
 
     // material
     /** @var {HTMLVideoElement} elVideo  */
     const elVideo = this.elVideo = createElement(`<video width='400' height='80'  controls loop playsinline preload='auto' crossorigin='anonymous'>`)
 
-    elVideo.src = folder + "/video_ffmpeg.mp4" + '?ts=' + new Date().getTime()
+    elVideo.src = folder + "/video_ffmpeg.mp4" //+ '?ts=' + new Date().getTime()
     var texture = this.texture = new THREE.VideoTexture(this.elVideo)
     texture.minFilter = THREE.NearestFilter
 
@@ -38,27 +40,45 @@ export class RgbdVideoVFR extends Group {
 
     window.VVFR = this
 
-    if(clippingBox) { //word position clipping box
-      clippingBox.geometry.computeBoundingBox()
-      this.clippingBoxMin = clippingBox.geometry.boundingBox.min.clone()
-        .multiply(clippingBox.scale)
-        .add(clippingBox.position)
-      this.clippingBoxMax = clippingBox.geometry.boundingBox.max.clone()
-        .multiply(clippingBox.scale)
-        .add(clippingBox.position)
-    }
-
+    //create it directly as we might need it right after creation (no await)
+    this.clippingBox = new THREE.Mesh( //position set later
+      new THREE.BoxGeometry(), //(0.7, 1.85, 1)
+      new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true }),
+    )
 
     this.loadGeometries().then(() => elVideo.play())
   }
 
-  async loadGeometries() {
-    var poses = await this.fetchPoses()
+  //calculate clipping box bounding + show clippingbox if required
+  calculateClippingBox(config) {
+    this.clippingBox.position.set(...config.clippingbox.position)
+    this.clippingBox.scale.set(...config.clippingbox.scale)
 
-    var p = poses[0]
-    this.setRotationFromQuaternion(new Quaternion(p.qx, p.qy, p.qz, p.qw).multiply(new Quaternion(1,0,0,0)))
-    // //why should I rotate by z 90°??
-    // var qquiteinverted = q.clone().invert().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,1.57)))
+    //to display and move the box
+    this.clippingBox.geometry.computeBoundingBox() //as no 1m box, nothing special
+    this.clippingBoxMin = this.clippingBox.geometry.boundingBox.min.clone() //-0.5
+      .multiply(this.clippingBox.scale)
+      .add(this.clippingBox.position)
+    this.clippingBoxMax = this.clippingBox.geometry.boundingBox.max.clone() //0.5
+      .multiply(this.clippingBox.scale)
+      .add(this.clippingBox.position)
+
+    if(this.showClippingBox) {
+      console.log("clippingBox min/max", this.clippingBoxMin, this.clippingBoxMax)
+      this.add(this.clippingBox)
+    }
+  }
+
+  async loadGeometries() {
+    var config = await await (await fetch(this.folder + "/config.json")).json()
+
+    this.rotationConfig = new Quaternion(...config.quaternion).multiply(new Quaternion(1,0,0,0)) //same info in poses[0]
+    //an alternative is to claculate the reverse rotation to apply at clippingbox, in order to able same rotation to video group
+    //var qquiteinverted = q.clone().invert().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,1.57))) //why should I rotate by z 90°??
+
+    this.calculateClippingBox(config)
+
+    var poses = await this.fetchPoses()
 
     var promises = []
 
@@ -73,12 +93,12 @@ export class RgbdVideoVFR extends Group {
 
     // 1st frame
     var m = this.mesh = new THREE.Mesh(geo, this.material)
+    this.mesh.setRotationFromQuaternion(this.rotationConfig)
     this.add(m)
 
     this.geometries.forEach(g => {
       if(g) this.timesms.push(g.timems)
     })
-
   }
 
   async fetchPoses() {
@@ -112,8 +132,9 @@ export class RgbdVideoVFR extends Group {
     var discard = this.clippingBoxMin && this.clippingBoxMax
       ? (x, y, z) => {
         //clipping box is word position relative, thus convert relative depth point to word point
-        let p = new THREE.Vector3(x,y,z).applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(this.quaternion))
+        let p = new THREE.Vector3(x,y,z).applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(this.rotationConfig))
         //this.matrixWorld) //but only want to rotate them, not change position
+        //TODO always min < max ?
         if (p.x < this.clippingBoxMin.x || p.x > this.clippingBoxMax.x) return true
         if (p.y < this.clippingBoxMin.y || p.y > this.clippingBoxMax.y) return true
         if (p.z < this.clippingBoxMin.z || p.z > this.clippingBoxMax.z) return true //my left my right
@@ -128,8 +149,5 @@ export class RgbdVideoVFR extends Group {
   }
 }
 
-function between(a, b, val) {
-  return (a < b && a < val && val < b) || (b > a && b < val && val < a)
-}
 
 

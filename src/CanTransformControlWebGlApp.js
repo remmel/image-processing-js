@@ -46,7 +46,8 @@ export class CanTransformControlWebGlApp {
     var intersects = raycaster.intersectObjects(this._canTransformControlIntersect, true)
     intersects.some(intersect => {
       //FIXME quickfix to match group, should add something if is animatione
-      var m = intersect.object.parent instanceof THREE.Group ? intersect.object.parent : intersect.object
+      var m = intersect.object.parent instanceof THREE.Group && !intersect.object.canTransform ? intersect.object.parent : intersect.object
+      // var m = intersect.object //needed in VideoVFR
       this.attachTransformControl(m)
       return true
     })

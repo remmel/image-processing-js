@@ -144,36 +144,6 @@ export async function initRgbdViewer() {
   //   // rgbdVideo.rotateZ(-90 / RAD2DEG)
   // }
 
-  {
-    // var folder = 'dataset/vidaud/2021-06-28_144242'
-    var folder = 'https://www.kustgame.com/ftp/vidaud/2021-06-28_144242'
-
-    // const geometry = new THREE.BoxGeometry(1.7, 1, 1.2) //red,green,blue
-    // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true })
-    // const clippingBox = new THREE.Mesh(geometry, material)
-    // clippingBox.position.set(0.070, 0.158, 1.702) //box relative to depth
-
-    //TODO put clipping box in Video class
-    let clippingBoxWorld; //world rotation, position relative to video, the rotation is local to video, then the box won't fit the person.
-    // As the person does't stand verticually locally
-    {
-      const geometry = new THREE.BoxGeometry() //(0.7, 1.85, 1)
-      const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true })
-      clippingBoxWorld = new THREE.Mesh(geometry, material)
-      clippingBoxWorld.position.set(1.584,-0.582,-0.204)
-      clippingBoxWorld.scale.set(0.663,1.787,1.082)
-      //to display and move the box
-      webglApp.scene.add(clippingBoxWorld)
-      webglApp.canTransformControl(clippingBoxWorld)
-    }
-
-    var rgbdVideo = new RgbdVideoVFR(folder, clippingBoxWorld)
-    webglApp.canTransformControl(rgbdVideo)
-    // rgbdVideo.position.set(0,0,0.3)
-    webglApp.scene.add(rgbdVideo)
-    webglApp.animateAdd(delta => rgbdVideo.update(delta))
-  }
-
   createZoom()
 }
 

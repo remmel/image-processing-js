@@ -8,6 +8,7 @@ import { RAD2DEG } from '../pose-viewer/utils3d'
 import { loadDepth16BinMesh } from './rgbd/RgbdMeshLoader'
 import { idPad } from '../pose-viewer/utils'
 import { loadDepth16BinPoints } from './rgbd/RgbdPointsLoader'
+import { RgbdVideoVFR } from './rgbd/RgbdVideoVFR'
 
 //online dataset urls
 export var sp1 = {
@@ -52,7 +53,7 @@ export var apartof = 'https://www.kustgame.com/ftp/apartof/apartof2.glb'
 export var appartmyroom360 = 'https://www.kustgame.com/ftp/photovid360/PIC_20210318_181124.jpg'
 
 //TODO use userData.collide = true
-var DUMB_GAMEFPS = {canCollide: () => {}}
+var DUMB_GAMEFPS = {canCollide: () => {}, dumb: true}
 
 export function loadSceneCocina(webglApp, gameFps, onProgress){
   gameFps = gameFps || DUMB_GAMEFPS
@@ -85,8 +86,20 @@ export function loadSceneCocina(webglApp, gameFps, onProgress){
   // })
 }
 
+/**
+ *
+ * @param {WebGlApp} webglApp
+ * @param {GameFps} gameFps
+ * @param onProgress
+ */
 export function loadSceneApartof(webglApp, gameFps, onProgress) {
   gameFps = gameFps || DUMB_GAMEFPS
+
+  // init player position and rotation
+  if(!gameFps.dumb) {
+    gameFps.playerCollider.translate(new Vector3(0.6, 0.35, -1.9))
+    gameFps.camera.setRotationFromEuler(new Euler(0, -0.41, 0))
+  }
 
   {
     var geo = new THREE.PlaneBufferGeometry(5, 5, 8, 8)
@@ -148,6 +161,19 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
     webglApp.scene.add(m)
   }
 
+  {
+    // var folder = 'dataset/vidaud/2021-06-28_144242'
+    var folder = 'https://www.kustgame.com/ftp/vidaud/2021-06-28_144242'
+
+    var rgbdVideo = new RgbdVideoVFR(folder, false)
+    webglApp.canTransformControl(rgbdVideo)
+    // webglApp.canTransformControl(rgbdVideo.clippingBox)
+    rgbdVideo.position.set(0.947,1.54,-2.249)
+    rgbdVideo.rotation.set(0.00,1.01,0.00)
+    webglApp.scene.add(rgbdVideo)
+    webglApp.animateAdd(delta => rgbdVideo.update(delta))
+  }
+
   // {
   //   var urls = generateRgbdUrls(standupbrown, 354, 354+54, 3)
   //   loadRgbdAnim(urls, onProgress, TYPE.BOOMERANG).then(({m, animateCb}) => { //2 onProgress not handled
@@ -175,10 +201,6 @@ export function loadAnimTest(webglApp, gameFps, onProgress) {
     floor.position.y = -0.1
     webglApp.scene.add(floor)
     gameFps.canCollide(floor)
-  }
-
-  {
-
   }
 }
 

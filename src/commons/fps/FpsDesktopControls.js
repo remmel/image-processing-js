@@ -1,6 +1,15 @@
 import { EVENT_MOVE } from './GameFps'
 import { Camera, MathUtils } from 'three'
 
+var blockerHtml = `
+<div style='position:absolute;width:100%;height:100%;opacity:0.7;z-index:100;background:#000;display: table;'>
+  <span style='color: white;text-align: center;display: table-cell;vertical-align: middle;font-size:36px '>
+  Click to start
+  <br />
+  Move with keyboard and mouse
+  </span>
+</div>
+`
 
 export class FpsDesktopControls {
   /**
@@ -18,12 +27,24 @@ export class FpsDesktopControls {
     this.leftPressed = false
     this.jumpPressed = false
 
+    this.initBlocker()
+
     document.addEventListener('keydown', this.onKeyDown.bind(this))
     document.addEventListener('keyup', this.onKeyUp.bind(this))
 
-    //fullscreen mode with infinite cursor move
-    this.domElement.addEventListener('mousedown', () => this.domElement.requestPointerLock())
     document.body.addEventListener('mousemove', this.onMouseMove.bind(this))
+  }
+
+  initBlocker() {
+    var blocker = document.createElement('div')
+    blocker.innerHTML = blockerHtml
+    document.body.insertBefore(blocker, document.body.firstChild)
+    //fullscreen mode with infinite cursor move
+    blocker.addEventListener('mousedown', () => this.domElement.requestPointerLock())
+
+    document.addEventListener('pointerlockchange', () => { // must be listen by document
+      blocker.style.display = document.pointerLockElement ? 'none' : 'inherit'
+    })
   }
 
   onMouseMove(event) {

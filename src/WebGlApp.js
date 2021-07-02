@@ -122,6 +122,7 @@ export default class WebGlApp {
   }
 
   canTransformControl(m){
+    if(!m) console.error("m must be set")
     if(!this.canTransform){
       this.canTransform = new CanTransformControlWebGlApp(this.camera, this.scene, this.renderer, this.orbitControls)
       this.initClickEvent()
