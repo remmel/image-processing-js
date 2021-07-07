@@ -13,19 +13,17 @@ var btnHtml = `
 <style>
   .btn.compass{
     filter: grayscale(100%);
+    font-size: 30px;
+    position: absolute;
+    user-select: none;
+    top: 5px;
+    left: 5px;
   }
   .btn.compass[data-enabled="true"] {
     filter: none
   }
-</style>
-<div style='
-  font-size: 30px;
-  position: absolute;
-  user-select: none;
-  top: 5px;
-  left: 5px;
-  ' class='btn compass'>🧭</div>
-<div style='
+  
+  .arrows{
     font-size: 40px;
     position: absolute;
     bottom: 10px;
@@ -33,17 +31,26 @@ var btnHtml = `
     font-weight: 1000;
     text-align: center;
     user-select: none;
-    '>
-    <div class='btn forward' style='
-      background-color: rgba(255,255,255,0.5);
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;'>↑</div>
-    <div class='btn backward' style='
-      background-color: rgba(255,255,255,0.5);
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;'>↓</div>
+  }
+  
+  .arrows table td{
+    height: 50px;
+    width: 50px;
+    padding: 0;
+  }
+  
+  .arrows table td.btn{
+    background-color: rgba(255,255,255,0.5);
+    border-radius: 50%;
+  }
+</style>
+<div class='btn compass'>🧭</div>
+<div class='arrows'>
+  <table>
+    <tr><td></td><td class='btn forward'>↑</td><td></td></tr>
+    <tr><td class='btn left'>←</td><td></td><td class='btn right'>→</td></tr>
+    <tr><td></td><td class='btn backward'>↓</td><td></td></tr>
+  </table>
 </div>
 `
 
@@ -81,6 +88,8 @@ export class FpsMobileControls {
     document.body.insertBefore(btns, document.body.firstChild)
     this.elBtnForward = btns.querySelector('.forward')
     this.elBtnBackward = btns.querySelector('.backward')
+    this.elBtnLeft = btns.querySelector('.left')
+    this.elBtnRight = btns.querySelector('.right')
     this.elBtnCompass = btns.querySelector('.compass')
 
     btns.addEventListener('touchstart', this.onTouchStartPosition.bind(this), false)
@@ -104,11 +113,15 @@ export class FpsMobileControls {
 
   // touch rotation events
   onTouchStartRotation(event){
+    //ignore 2nd touch
+    if(event.targetTouches.length > 1) return
+
     this.coordsPageInit.x = event.targetTouches[0].pageX
     this.coordsPageInit.y = event.targetTouches[0].pageY
   }
 
   onTouchMoveRotation(event) {
+    // console.log("move", event)
     //pageX and pageY are size in virtual port
     var diffX = event.targetTouches[0].pageX - this.coordsPageInit.x
     var diffY = event.targetTouches[0].pageY - this.coordsPageInit.y
@@ -127,20 +140,22 @@ export class FpsMobileControls {
   }
 
   onTouchEndRotation(event) {
+    if(event.targetTouches.length > 0) return
     this.cameraRotationInit = this.camera.rotation.clone()
   }
 
   // touch position events
   onTouchStartPosition(event) {
-    if (event.target === this.elBtnForward) { //or this.isTouchBtn(event.targetTouches[0], this.btnForward)
-      this.forwardPressed = true
-    } else if (event.target === this.elBtnBackward) {
-      this.backwardPressed = true
+    switch (event.target) { //or this.isTouchBtn(event.targetTouches[0], this.btnForward)
+      case this.elBtnForward: this.forwardPressed = true; break;
+      case this.elBtnBackward: this.backwardPressed = true; break;
+      case this.elBtnLeft: this.leftPressed = true; break;
+      case this.elBtnRight: this.rightPressed = true; break;
     }
   }
 
   onTouchEndPosition(event) {
-    this.forwardPressed = this.backwardPressed = false
+    this.forwardPressed = this.backwardPressed = this.leftPressed = this.rightPressed = false
   }
 
   onCompassClick(e) {
