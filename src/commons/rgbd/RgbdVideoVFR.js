@@ -6,6 +6,7 @@ import { createRgbdUrls } from '../demoscenes'
 import { loadDepthData } from './DataImage'
 import { csv2objects } from '../../pose-viewer/csv'
 import { closest } from '../../pose-viewer/utils'
+import { MultiProgress } from '../MultiProgress'
 
 /**
  * Class using VideoTexture for rgb and bins for depth,
@@ -20,10 +21,11 @@ export class RgbdVideoVFR extends Group {
     this.name = 'Group-RgbdVideoVFR'
     this.showClippingBox = showClippingBox
 
-    //progressbar. Let say that mpg is 50% and depthsbin 50%
-    this.onProgress = onProgress || (() => {})
-    this.progressRgb = 0 //0-1
-    this.progressDepths = 0 //0-1
+    // we have 2 progress bar, thus video is 50%/ depths bin 50%
+    this.multiProgress = new MultiProgress(onProgress)
+    this.onProgressVideo = this.multiProgress.add()
+    this.onProgressDepths = this.multiProgress.add()
+    this.progressDepths = 0 //0-1 - use value has I want to sum values, instead I call use another "binary" MultiProgress
 
     // material
     /** @var {HTMLVideoElement} elVideo  */
@@ -39,10 +41,7 @@ export class RgbdVideoVFR extends Group {
       map: texture
     })
 
-    elVideo.onloadeddata = (e) => {
-      this.progressRgb = 1
-      this.updateProgress()
-    }
+    elVideo.onloadeddata = e => this.onProgressVideo(1)
 
     this.geometries = []
     this.timesms = []
@@ -107,13 +106,13 @@ export class RgbdVideoVFR extends Group {
       promises[parseInt(p.timems)] = promiseGeo
       promiseGeo.then(() => {
         this.progressDepths += 1/poses.length
-        this.updateProgress()
+        this.onProgressDepths(this.progressDepths)
+        // console.log("promiseGeo", this.progressDepths)
       })
     })
 
     this.geometries = await Promise.all(promises)
-    this.progressDepths = 1 //because prev value was not exactly 1 (0.999999)
-    this.updateProgress()
+    this.onProgressDepths(1) //because prev value was not exactly 1 (0.999999)
 
     var geo = this.geometries.find(g => ![undefined, null].includes(g))
 
@@ -172,10 +171,6 @@ export class RgbdVideoVFR extends Group {
 
     geo.timems = timems
     return geo
-  }
-
-  updateProgress() {
-    this.onProgress((this.progressRgb+this.progressDepths)/2)
   }
 }
 

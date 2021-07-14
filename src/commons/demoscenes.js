@@ -9,6 +9,7 @@ import { loadDepth16BinMesh } from './rgbd/RgbdMeshLoader'
 import { idPad } from '../pose-viewer/utils'
 import { loadDepth16BinPoints } from './rgbd/RgbdPointsLoader'
 import { RgbdVideoVFR } from './rgbd/RgbdVideoVFR'
+import { MultiProgress } from './MultiProgress'
 
 //online dataset urls
 export var sp1 = {
@@ -95,18 +96,7 @@ export function loadSceneCocina(webglApp, gameFps, onProgress){
 export function loadSceneApartof(webglApp, gameFps, onProgress) {
   gameFps = gameFps || DUMB_GAMEFPS
 
-  var progress1 = 0 // 0-1
-  var progress2 = 0 // 0-1
-
-  var onProgress1 = percentage => {
-    progress1 = percentage
-    onProgress((progress1+progress2)/2)
-  }
-
-  var onProgress2 = percentage => {
-    progress2 = percentage
-    onProgress((progress1+progress2)/2)
-  }
+  var multiProgress = new MultiProgress(onProgress)
 
   // init player position and rotation
   if(!gameFps.dumb) {
@@ -125,7 +115,7 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
   }
 
   {
-    loadGltf(apartof, onProgress1).then(g => {
+    false && loadGltf(apartof, multiProgress.add()).then(g => {
       var visibles = new Group()
       var colliders = new Group()
 
@@ -178,7 +168,7 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
     // var folder = 'dataset/vidaud/2021-06-28_144242'
     var folder = 'https://www.kustgame.com/ftp/vidaud/2021-06-28_144242'
 
-    var rgbdVideo = new RgbdVideoVFR(folder, false, onProgress2)
+    var rgbdVideo = new RgbdVideoVFR(folder, false, multiProgress.add())
     webglApp.canTransformControl(rgbdVideo)
     // webglApp.canTransformControl(rgbdVideo.clippingBox)
     rgbdVideo.position.set(0.947,1.54,-2.249)
