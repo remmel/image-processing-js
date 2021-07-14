@@ -23,9 +23,8 @@ export class RgbdVideoVFR extends Group {
 
     // we have 2 progress bar, thus video is 50%/ depths bin 50%
     this.multiProgress = new MultiProgress(onProgress)
-    this.onProgressVideo = this.multiProgress.add()
-    this.onProgressDepths = this.multiProgress.add()
-    this.progressDepths = 0 //0-1 - use value has I want to sum values, instead I call use another "binary" MultiProgress
+    this.onProgressVideo = this.multiProgress.add("video")
+    this.multiProgressDepths = new MultiProgress(this.multiProgress.add("depths"))
 
     // material
     /** @var {HTMLVideoElement} elVideo  */
@@ -102,17 +101,11 @@ export class RgbdVideoVFR extends Group {
 
     poses.forEach(p => {
       var url = createRgbdUrls(this.folder, p.frame)
-      let promiseGeo = this.createGeometryDepth(url.depth, parseInt(p.timems), HONOR20VIEW_DEPTH_INTRINSICS)
+      let promiseGeo = this.createGeometryDepth(url.depth, parseInt(p.timems), HONOR20VIEW_DEPTH_INTRINSICS, this.multiProgressDepths.add("depth "+p.frame))
       promises[parseInt(p.timems)] = promiseGeo
-      promiseGeo.then(() => {
-        this.progressDepths += 1/poses.length
-        this.onProgressDepths(this.progressDepths)
-        // console.log("promiseGeo", this.progressDepths)
-      })
     })
 
     this.geometries = await Promise.all(promises)
-    this.onProgressDepths(1) //because prev value was not exactly 1 (0.999999)
 
     var geo = this.geometries.find(g => ![undefined, null].includes(g))
 
@@ -150,7 +143,7 @@ export class RgbdVideoVFR extends Group {
     return closestTimems
   }
 
-  async createGeometryDepth(urlDepth, timems, intrinsics = HONOR20VIEW_DEPTH_INTRINSICS) {
+  async createGeometryDepth(urlDepth, timems, intrinsics = HONOR20VIEW_DEPTH_INTRINSICS, onProgress) {
     var depthData = await loadDepthData(urlDepth)
     var {w, h, fx, rangeToMeters} = intrinsics
 
@@ -170,6 +163,7 @@ export class RgbdVideoVFR extends Group {
     var geo = createGeometry(depthData, w, h, fx, rangeToMeters, true, null, discard)
 
     geo.timems = timems
+    onProgress(1)
     return geo
   }
 }

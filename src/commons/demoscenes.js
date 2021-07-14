@@ -115,7 +115,7 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
   }
 
   {
-    false && loadGltf(apartof, multiProgress.add()).then(g => {
+    loadGltf(apartof, multiProgress.add('gltf apartof')).then(g => {
       var visibles = new Group()
       var colliders = new Group()
 
@@ -168,7 +168,7 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
     // var folder = 'dataset/vidaud/2021-06-28_144242'
     var folder = 'https://www.kustgame.com/ftp/vidaud/2021-06-28_144242'
 
-    var rgbdVideo = new RgbdVideoVFR(folder, false, multiProgress.add())
+    var rgbdVideo = new RgbdVideoVFR(folder, false, multiProgress.add('RgbdVideoVFR'))
     webglApp.canTransformControl(rgbdVideo)
     // webglApp.canTransformControl(rgbdVideo.clippingBox)
     rgbdVideo.position.set(0.947,1.54,-2.249)
