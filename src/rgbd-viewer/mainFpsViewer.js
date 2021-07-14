@@ -38,7 +38,8 @@ export async function initFpsViewer() {
 
   /** @param percentage {Number} : float between 0-1 included */
   function onProgress(percentage) {
-    elLoading.innerText = percentage === 1 ? '' : 'Loading ' + Math.round(percentage * 100) + '%'
+    //if not 1 add 0.001 because of adding floating value, doesn't means 1 (eg thirteen times +=1/13, won't be 1)
+    elLoading.innerText = percentage >= 1  ? '' : 'Loading ' + Math.round(percentage * 100) + '%'
   }
 
   var elScene = addElement(scenesHtml)

@@ -95,6 +95,19 @@ export function loadSceneCocina(webglApp, gameFps, onProgress){
 export function loadSceneApartof(webglApp, gameFps, onProgress) {
   gameFps = gameFps || DUMB_GAMEFPS
 
+  var progress1 = 0 // 0-1
+  var progress2 = 0 // 0-1
+
+  var onProgress1 = percentage => {
+    progress1 = percentage
+    onProgress((progress1+progress2)/2)
+  }
+
+  var onProgress2 = percentage => {
+    progress2 = percentage
+    onProgress((progress1+progress2)/2)
+  }
+
   // init player position and rotation
   if(!gameFps.dumb) {
     gameFps.playerCollider.translate(new Vector3(0.6, 0.35, -1.9))
@@ -102,7 +115,7 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
   }
 
   {
-    var geo = new THREE.PlaneBufferGeometry(5, 5, 8, 8)
+    var geo = new THREE.PlaneBufferGeometry(8, 8)
     var mat = new THREE.MeshBasicMaterial({ color: 0x777777 })
     var floor = new THREE.Mesh(geo, mat)
     floor.rotation.x = -Math.PI / 2
@@ -112,7 +125,7 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
   }
 
   {
-    loadGltf(apartof, onProgress).then(g => {
+    loadGltf(apartof, onProgress1).then(g => {
       var visibles = new Group()
       var colliders = new Group()
 
@@ -165,13 +178,14 @@ export function loadSceneApartof(webglApp, gameFps, onProgress) {
     // var folder = 'dataset/vidaud/2021-06-28_144242'
     var folder = 'https://www.kustgame.com/ftp/vidaud/2021-06-28_144242'
 
-    var rgbdVideo = new RgbdVideoVFR(folder, false)
+    var rgbdVideo = new RgbdVideoVFR(folder, false, onProgress2)
     webglApp.canTransformControl(rgbdVideo)
     // webglApp.canTransformControl(rgbdVideo.clippingBox)
     rgbdVideo.position.set(0.947,1.54,-2.249)
     rgbdVideo.rotation.set(0.00,1.01,0.00)
     webglApp.scene.add(rgbdVideo)
     webglApp.animateAdd(delta => rgbdVideo.update(delta))
+    gameFps.onBlockerClicked = () => rgbdVideo.run()
   }
 
   // {

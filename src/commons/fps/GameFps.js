@@ -21,6 +21,7 @@ export class GameFps {
     else
       this.gamecontrols = new FpsDesktopControls(camera, domElement)
 
+    this.gamecontrols.onClick = () => this.onBlockerClicked()
 
     // document.addEventListener(EVENT_MOVE, e => {
     //   camera.rotation.y -= e.detail.movementX / 500
@@ -30,6 +31,8 @@ export class GameFps {
     this.camera = camera
     camera.rotation.order = 'YXZ'
   }
+
+  onBlockerClicked() {console.warn("must be redefined")}
 
   _playerCollitions() {
     const result = this.worldOctree.capsuleIntersect(this.playerCollider)

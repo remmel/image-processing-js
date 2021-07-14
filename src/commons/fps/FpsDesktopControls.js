@@ -40,12 +40,17 @@ export class FpsDesktopControls {
     blocker.innerHTML = blockerHtml
     document.body.insertBefore(blocker, document.body.firstChild)
     //fullscreen mode with infinite cursor move
-    blocker.addEventListener('mousedown', () => this.domElement.requestPointerLock())
+    blocker.addEventListener('mousedown', () => {
+      this.onClick()
+      this.domElement.requestPointerLock()
+    })
 
     document.addEventListener('pointerlockchange', () => { // must be listen by document
       blocker.style.display = document.pointerLockElement ? 'none' : 'inherit'
     })
   }
+
+  onClick() {console.warn("must be redefined")}
 
   onMouseMove(event) {
     if (document.pointerLockElement === this.domElement) {

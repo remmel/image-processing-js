@@ -2,7 +2,7 @@ import { MathUtils, Camera } from 'three'
 import { DeviceOrientationControls } from 'three/examples/jsm/controls/DeviceOrientationControls'
 
 export var blockerHtml = `
-<div style='position:absolute;width:100%;height:100%;opacity:0.7;z-index:100;background:#000;display: table;'>
+<div style='position:absolute;width:100%;height:100%;opacity:0.7;z-index:100;background:#000;display: table;user-select: none;'>
   <span style='color: white;text-align: center;display: table-cell;vertical-align: middle;font-size:36px '>
   Click to start
   </span>
@@ -101,7 +101,10 @@ export class FpsMobileControls {
     var blocker = document.createElement('div')
     blocker.innerHTML = blockerHtml
     document.body.insertBefore(blocker, document.body.firstChild)
-    blocker.addEventListener('click', () => document.body.requestFullscreen())
+    blocker.addEventListener('click', () => {
+      this.onClick()
+      document.body.requestFullscreen()
+    })
     document.body.addEventListener('fullscreenchange', () => blocker.style.display = document.fullscreen ? 'none' : 'inherit')
   }
 
@@ -110,6 +113,8 @@ export class FpsMobileControls {
     // this.controls.update(delta)
     // if(this.moveForwardPressed) this.moveForward(delta * 0.5 * this.moveForwardPressed)
   }
+
+  onClick() {console.warn("must be redefined")}
 
   // touch rotation events
   onTouchStartRotation(event){

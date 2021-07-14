@@ -35,7 +35,7 @@ export async function loadAlicevision(url, files) {
 
 export async function exportAlicevision(poses) {
     alert("Load cameraInit.sfm (to have same viewId and poseId)"); //or cameras.sfm?
-    var camerasSfm = JSON.parse(await browseFile());
+    var camerasSfm = JSON.parse(await browseFile())
 
     var fn2PoseId = [];
     camerasSfm.views.forEach(view => {
@@ -47,8 +47,9 @@ export async function exportAlicevision(poses) {
     var newalicevisionposes = [];
 
     poses.forEach(pose => {
-        var rgbFn = pose.rgbFn;
-        var poseId = fn2PoseId[rgbFn];
+        var rgbFn = pose.rgbFn
+        var poseId = fn2PoseId[rgbFn]
+        if (!poseId) console.warn('PoseId for fn ' + rgbFn + ' not found. Are you sure that cameraInit.sfm use name image filename that poses.csv ?')
 
         var m3 = new Matrix3();
         var m4 = new Matrix4();
@@ -77,5 +78,5 @@ export async function exportAlicevision(poses) {
     downloadJson(camerasSfm, 'camerasWithPoses.sfm');
     //https://github.com/alicevision/meshroom/wiki/Using-known-camera-positions
 
-    console.log(camerasSfm);
+    console.log(camerasSfm)
 }

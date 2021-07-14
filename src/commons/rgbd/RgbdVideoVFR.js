@@ -13,16 +13,21 @@ import { closest } from '../../pose-viewer/utils'
  * TODO (0,0,0) must be feets
  */
 export class RgbdVideoVFR extends Group {
-  constructor(folder, showClippingBox) {
+  constructor(folder, showClippingBox, onProgress) {
     super()
 
     this.folder = folder
     this.name = 'Group-RgbdVideoVFR'
     this.showClippingBox = showClippingBox
 
+    //progressbar. Let say that mpg is 50% and depthsbin 50%
+    this.onProgress = onProgress || (() => {})
+    this.progressRgb = 0 //0-1
+    this.progressDepths = 0 //0-1
+
     // material
     /** @var {HTMLVideoElement} elVideo  */
-    const elVideo = this.elVideo = createElement(`<video width='400' height='80'  controls loop playsinline preload='auto' crossorigin='anonymous'>`)
+    const elVideo = this.elVideo = createElement(`<video width='400' height='80' muted controls loop playsinline preload='auto' crossorigin='anonymous'>`)
 
     elVideo.src = folder + "/video_ffmpeg.mp4" //+ '?ts=' + new Date().getTime()
     var texture = this.texture = new THREE.VideoTexture(this.elVideo)
@@ -34,11 +39,16 @@ export class RgbdVideoVFR extends Group {
       map: texture
     })
 
+    elVideo.onloadeddata = (e) => {
+      this.progressRgb = 1
+      this.updateProgress()
+    }
+
     this.geometries = []
     this.timesms = []
     this.offsetMs = 0 //color is offsetMs after depth
 
-    window.VVFR = this
+    // window.VVFR = this
 
     //create it directly as we might need it right after creation (no await)
     this.clippingBox = new THREE.Mesh( //position set later
@@ -47,6 +57,15 @@ export class RgbdVideoVFR extends Group {
     )
 
     this.loadGeometries().then(() => elVideo.play())
+  }
+
+  /**
+   * wait for user click to start sound, otherwise Chrome prevent "annoying" sound
+   * alternative is to start video here instead //this.autoplay = false;  this.geoloaded = false
+   * https://sites.google.com/a/chromium.org/dev/audio-video/autoplay
+   */
+  run() {
+    this.elVideo.muted = false
   }
 
   //calculate clipping box bounding + show clippingbox if required
@@ -84,10 +103,17 @@ export class RgbdVideoVFR extends Group {
 
     poses.forEach(p => {
       var url = createRgbdUrls(this.folder, p.frame)
-      promises[parseInt(p.timems)] = this.createGeometryDepth(url.depth, parseInt(p.timems), HONOR20VIEW_DEPTH_INTRINSICS)
+      let promiseGeo = this.createGeometryDepth(url.depth, parseInt(p.timems), HONOR20VIEW_DEPTH_INTRINSICS)
+      promises[parseInt(p.timems)] = promiseGeo
+      promiseGeo.then(() => {
+        this.progressDepths += 1/poses.length
+        this.updateProgress()
+      })
     })
 
     this.geometries = await Promise.all(promises)
+    this.progressDepths = 1 //because prev value was not exactly 1 (0.999999)
+    this.updateProgress()
 
     var geo = this.geometries.find(g => ![undefined, null].includes(g))
 
@@ -146,6 +172,10 @@ export class RgbdVideoVFR extends Group {
 
     geo.timems = timems
     return geo
+  }
+
+  updateProgress() {
+    this.onProgress((this.progressRgb+this.progressDepths)/2)
   }
 }
 
