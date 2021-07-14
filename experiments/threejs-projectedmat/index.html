@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cube - three-projected-material</title>
+</head>
+<body>
+<style>
+  #scene3d{
+      width: 100%;
+      height: 100vh;
+  }
+
+  #gui{
+      color: #ffffff;
+      background-color: rgba(0,0,0,0.4);
+      position: absolute;
+      top: 0;
+      left: 33%;
+  }
+
+  body{
+      margin: 0;
+  }
+</style>
+<div id='gui'>
+  <form>
+    Pose:
+    <label>Img:<input type='checkbox' checked></label> •
+    <label>x:<input class='pose-position' type='number' name='pose-x' step='0.01'/></label>
+    <label>y:<input class='pose-position' type='number' name='pose-y' step='0.01'/></label>
+    <label>z:<input class='pose-position' type='number' name='pose-z' step='0.01'/></label> <br />
+    <label>Y-angle cube:<input type='number' min="-360" max="360" name='cube-rot-y'/></label> •
+
+    <label><input type='button' value='Align camera with pose1'/></label>
+    <br />
+    <span></span>
+  </form>
+</div>
+<div id="scene3d">
+</div>
+<script type="module">
+  import { ProjectedCubeApp } from './src/ProjectedCubeApp.js'
+  ProjectedCubeApp(document.getElementById('scene3d'), document.getElementById('gui'));
+</script>
+</body>
+</html>

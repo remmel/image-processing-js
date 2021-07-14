@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>VR</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+
+<body>
+<style>
+    body {
+        margin: 0;
+        height: 100vh; /* to be able to use document.body.clientHeight */
+    }
+
+    #info {
+        position: absolute;
+        top: 10px;
+        width: 100%;
+        text-align: center;
+        z-index: 100;
+        display:block;
+    }
+
+    .gui canvas{
+        max-width: 320px;
+    }
+
+    .browse-oculus{
+        display: inline-block;
+    }
+</style>
+
+<div id="info">
+  <span style='display: inline-block'>
+    <input type='button' id='loading' value='Load demo .obj'/>
+  </span>
+  - or -
+  <input type='file' multiple id='browse' accept='.obj, .mtl, .jpg, .jpeg, .png'/>
+  - or -
+  <div class='browse-oculus'>
+    <span title='Oculus doesnt seems to handle "multiple" attribute to load mutiples files at once. See https://caniuse.com/input-file-multiple'>
+      Old browser/Oculus : ℹ️
+    </span><br />
+    Obj:<input type='file' id='browse-obj' accept='.obj'/><br />
+    Mtl:<input type='file' id='browse-mtl' accept='.mtl'/><br />
+    Image:<input type='file' id='browse-img' accept='.jpg, .jpeg, .png'/><br />
+    <input type='button' value='OK'/>
+  </div>
+
+</div>
+<script src='js/bundle.rgbd-viewer.js'></script>
+<script type="text/javascript" >
+  mainVr()
+</script>
+
+</body>
+</html>
