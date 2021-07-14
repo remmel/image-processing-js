@@ -154,6 +154,6 @@ We could also set a minrange and maxrange (clipping box) as the first 0.5m is no
 Understand HSV: https://alloyui.com/examples/color-picker/hsv.html
 
 [recorder-3d]: https://github.com/remmel/recorder-3d
-[pose-viewer.html]: https://remmel.github.com/image-processing-js/pose-viewer.html
-[video3d-editor.html]: https://remmel.github.com/image-processing-js/video3d-editor.html
-[fps-viewer.html]: https://remmel.github.com/image-processing-js/fps-viewer.html
+[pose-viewer.html]: https://remmel.github.io/image-processing-js/pose-viewer.html
+[video3d-editor.html]: https://remmel.github.io/image-processing-js/video3d-editor.html
+[fps-viewer.html]: https://remmel.github.io/image-processing-js/fps-viewer.html
